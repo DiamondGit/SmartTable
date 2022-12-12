@@ -1,0 +1,27 @@
+{
+    "table": [
+        {
+            "title": "Title 1",
+            "dataIndex": "name1"
+        },
+        {
+            "title": "Title 2",
+            "dataIndex": "name2",
+            "extra": [
+                "someExtra"
+            ]
+        },
+        {
+            "title": "Title 3",
+            "dataIndex": "name3"
+        },
+        {
+            "title": "Title 4",
+            "dataIndex": "name4"
+        },
+        {
+            "title": "Title 5",
+            "dataIndex": "name5"
+        }
+    ]
+}
