@@ -1,0 +1,32 @@
+.modal {
+    .title {
+        user-select: none;
+        .draggable {
+            width: 100%;
+            cursor: move;
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 12px;
+        }
+    }
+    .footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 24px;
+        .btnContainer {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            &.left {
+                justify-content: flex-start;
+            }
+            &.right {
+                justify-content: flex-end;
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+.MuiSkeleton-root {
+    &:not(.headingSkeleton)::after {
+        background: linear-gradient(90deg, transparent, rgba(184, 184, 184, 0.5), transparent);
+    }
+    &.headingSkeleton {
+        background-color: rgba(113, 138, 173, 0.5);
+        &::after {
+            background: linear-gradient(90deg, transparent, rgba(206, 212, 220, 0.5), transparent);
+        }
+    }
+}

@@ -1,113 +1,99 @@
-import { Skeleton } from "@mui/material";
-import { TableConfigType } from "../../types/general";
+import { useContext, useState } from "react";
+import TableConfigContext from "../../context/TableConfigContext";
+import TableUIContext from "../../context/TableUIContext";
+import "../../styles/global.scss";
+import { TableUIType } from "../../types/general";
+import SettingsModal from "../Modal/SettingsModal";
+import SkeletonFiller from "./SkeletonFiller";
 import style from "./Table.module.scss";
+import TableBody from "./TableBody";
+import TableHead from "./TableHead";
+import TopBar from "./TopBar";
 
-interface TableType {
+export interface TableType {
+    title: string;
     data: any[];
-    tableConfig: TableConfigType;
     tableLoading?: boolean;
     dataLoading?: boolean;
     loadingConfig?: {
         columnCount: number;
         rowCount?: number;
+        noFuncBtnsLeft?: boolean;
+        noFuncBtnsRight?: boolean;
     };
 }
 
-interface SkeletonFillerType {
-    columnCount: number;
-    isHeading?: boolean;
-    rowCount?: number;
+interface TableStartingType extends TableType {
+    UI: TableUIType;
 }
 
-const TableDataSkeleton = () => {
-    return <Skeleton variant={"rectangular"} width={"100%"} height={"18px"} animation={"wave"} />;
-};
+const Table = ({ title, data, tableLoading = true, dataLoading = true, loadingConfig, UI }: TableStartingType) => {
+    const { tableConfig } = useContext(TableConfigContext);
+    const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [isFullscreen, setFullscreen] = useState(false);
 
-const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: SkeletonFillerType) => {
-    if (!isHeading)
-        return (
-            <>
-                {[...Array(rowCount)].map((_, rowIndex) => {
-                    const skeletons = [...Array(columnCount)].map((_, columnIndex) => (
-                        <td key={`skeletonFiller_${rowIndex}_${columnIndex}`}>
-                            <TableDataSkeleton />
-                        </td>
-                    ));
-                    return (
-                        <tr className={style.row} key={`skeletonFiller_${rowIndex}`}>
-                            {skeletons}
-                        </tr>
-                    );
-                })}
-            </>
-        );
-    return (
-        <>
-            {[...Array(columnCount)].map((_, index) => (
-                <th className={style.heading} key={"skeletonFiller_" + index}>
-                    <TableDataSkeleton />
-                </th>
-            ))}
-        </>
-    );
-};
-
-const TableHead = ({ tableConfig }: { tableConfig: TableConfigType | null }) => {
-    if (!tableConfig) return null;
-    return (
-        <>
-            {tableConfig.table.map((column) => (
-                <th className={style.heading} key={column.dataIndex}>
-                    {column.title}
-                </th>
-            ))}
-        </>
-    );
-};
-
-const Table = ({ data, tableConfig, tableLoading, dataLoading, loadingConfig }: TableType) => {
     const loading = tableLoading || dataLoading;
     const computedLoadingConfig = {
-        columnCount: loadingConfig?.columnCount || 4,
+        columnCount: dataLoading
+            ? tableConfig?.table.filter((column) => column.visible).length
+            : loadingConfig?.columnCount || 4,
         rowCount: loadingConfig?.rowCount || 5,
+        noFuncBtnsLeft: loadingConfig?.noFuncBtnsLeft || false,
+        noFuncBtnsRight: loadingConfig?.noFuncBtnsRight || false,
     };
     const computedTableLoading = tableLoading && tableConfig !== null;
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+
+    const toggleFullscreen = () => {
+        setFullscreen((prevState) => !prevState);
+    };
+
+    const openSettingsModal = () => {
+        setSettingsModalOpen(true);
+    };
+
+    const tableContainerClasses = [style.tableContainer];
+    if (isFullscreen) tableContainerClasses.push(style.fullscreen);
+
+    const tableClasses = [style.table];
+    if (loading) tableClasses.push(style.loading);
 
     return (
-        <div className={style.tableContainer}>
-            <div className={`${style.loadingCover} ${loading ? style.active : ""}`} />
-            <table className={`${style.table} ${loading ? style.loading : ""}`}>
-                <thead>
-                    <tr className={style.row}>
-                        {!computedTableLoading ? (
-                            <TableHead tableConfig={tableConfig} />
+        <TableUIContext.Provider value={UI}>
+            <div className={tableContainerClasses.join(" ")}>
+                <SettingsModal open={isSettingsModalOpen} setOpen={setSettingsModalOpen} tableName={title} />
+                <TopBar
+                    title={title}
+                    tableLoading={tableLoading}
+                    dataLoading={dataLoading}
+                    isFullscreen={isFullscreen}
+                    computedLoadingConfig={computedLoadingConfig}
+                    toggleFullscreen={toggleFullscreen}
+                    openSettingsModal={openSettingsModal}
+                />
+                <table className={tableClasses.join(" ")}>
+                    <thead>
+                        <tr className={style.row}>
+                            {!computedTableLoading ? (
+                                <TableHead tableConfig={tableConfig} />
+                            ) : (
+                                <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
+                            )}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {!loading ? (
+                            <TableBody data={data} selectedRows={selectedRows} setSelectedRows={setSelectedRows} />
                         ) : (
-                            <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
+                            <SkeletonFiller
+                                columnCount={computedLoadingConfig.columnCount}
+                                rowCount={computedLoadingConfig.rowCount}
+                            />
                         )}
-                    </tr>
-                </thead>
-                <tbody>
-                    {!loading ? (
-                        <>
-                            {data.map((dataRow) => (
-                                <tr className={style.row}>
-                                    {Object.keys(dataRow).map((dataField) => (
-                                        <td>
-                                            {dataField}: {dataRow[dataField]}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </>
-                    ) : (
-                        <SkeletonFiller
-                            columnCount={dataLoading ? tableConfig?.table.length : computedLoadingConfig.columnCount}
-                            rowCount={computedLoadingConfig.rowCount}
-                        />
-                    )}
-                </tbody>
-            </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
+        </TableUIContext.Provider>
     );
 };
 

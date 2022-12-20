@@ -1,93 +1,109 @@
-import "./styles/resetStyles.css";
-import style from "./styles/App.module.scss";
-import _tableConfig_ from "./config/table.json";
+import { FormControlLabel, FormGroup, Switch } from "@mui/material";
+import { useState } from "react";
+import Aligner from "./components/Aligner";
 import JsonPreviewer from "./components/JsonPreviewer";
-import Table from "./components/Table";
-import CenteredContainer from "./components/CenteredContainer";
-import { useEffect, useState } from "react";
-import { LoadingButton } from "@mui/lab";
-import Autorenew from "@mui/icons-material/Autorenew";
-import { TableConfigType } from "./types/general";
+import { TableType } from "./components/Table";
+import _data_ from "./config/data.json";
+import _tableConfig_ from "./config/table.json";
+import TableConfigContext from "./context/TableConfigContext";
+import MyTable from "./MyTable";
+import style from "./styles/App.module.scss";
+import "./styles/resetStyles.css";
+import { TableConfigSchema } from "./types/general";
+
+const defaultTableConfig = TableConfigSchema.parse(_tableConfig_);
 
 const App = () => {
+    const [jsonPreviewerVisible, setJsonPreviewerVisible] = useState(true);
     const [tableLoading, setTableLoading] = useState(false);
     const [dataLoading, setDataLoading] = useState(false);
-    const [data, setData] = useState<any>([]);
-    const [tableConfig, setTableConfig] = useState<TableConfigType>(_tableConfig_);
+    const [hasData, setHasData] = useState(false);
+    const [data, setData] = useState<{ [key: string]: any }[]>(hasData ? _data_ : []);
+    const [tableConfig, setTableConfig] = useState(defaultTableConfig);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
+    const handleChangeFetchPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setTableLoading(event.target.checked);
 
-    const fetchPage = () => {
-        setTableLoading(true);
-        setTableConfig({ table: [] });
-
-        setTimeout(() => {
-            setTableLoading(false);
-            setTableConfig(_tableConfig_);
-        }, 1000);
+        if (!event.target.checked) {
+            setTableConfig(defaultTableConfig);
+        }
     };
 
-    const fetchData = () => {
-        setDataLoading(true);
-        setData([]);
-
-        setTimeout(() => {
-            setDataLoading(false);
-            setData(
-                [...Array(1)].map((rowData) => {
-                    const result: { [key: string]: any } = {};
-                    _tableConfig_.table.forEach((column) => {
-                        result[column.dataIndex] = Math.floor(Math.random() * 100);
-                    });
-                    return result;
-                })
-            );
-        }, 1000);
+    const handleChangeFetchData = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setDataLoading(event.target.checked);
     };
 
-    const handleClickFetchPage = () => {
-        fetchPage();
+    const handleChangeHasData = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setHasData(event.target.checked);
+        setData(event.target.checked ? _data_ : []);
     };
 
-    const handleClickFetchData = () => {
-        fetchData();
+    const handleChangeJSONVisible = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setJsonPreviewerVisible(event.target.checked);
+    };
+
+    const tableProps: TableType = {
+        title: "ПТО детали",
+        data: data,
+        tableLoading: tableLoading,
+        dataLoading: dataLoading,
+        loadingConfig: {
+            columnCount: 3,
+        },
     };
 
     return (
-        <div className={style.mainContainer}>
-            <CenteredContainer>
-                <JsonPreviewer json={tableConfig} />
-                <LoadingButton
-                    onClick={handleClickFetchPage}
-                    endIcon={<Autorenew />}
-                    loading={tableLoading}
-                    loadingPosition="end"
-                    variant="contained"
-                >
-                    Get page
-                </LoadingButton>
-                <LoadingButton
-                    onClick={handleClickFetchData}
-                    endIcon={<Autorenew />}
-                    loading={dataLoading}
-                    loadingPosition="end"
-                    variant="contained"
-                >
-                    Refresh data
-                </LoadingButton>
-            </CenteredContainer>
-            <Table
-                data={data}
-                tableConfig={tableConfig}
-                tableLoading={tableLoading}
-                dataLoading={dataLoading}
-                loadingConfig={{
-                    columnCount: 20,
-                }}
-            />
-        </div>
+        <TableConfigContext.Provider
+            value={{
+                tableConfig: tableConfig,
+                setTableConfig: setTableConfig,
+            }}
+        >
+            <div className={style.mainContainer}>
+                {jsonPreviewerVisible && (
+                    <Aligner>
+                        <Aligner isVertical>
+                            Original
+                            <JsonPreviewer json={defaultTableConfig} />
+                        </Aligner>
+                        <Aligner isVertical>
+                            Edited
+                            <JsonPreviewer json={tableConfig} />
+                        </Aligner>
+                    </Aligner>
+                )}
+                <Aligner style={{ marginTop: "24px" }}>
+                    <FormGroup>
+                        <Aligner>
+                            <Aligner isVertical style={{ alignItems: "flex-start" }}>
+                                <FormControlLabel
+                                    disabled={dataLoading}
+                                    control={<Switch checked={tableLoading} onChange={handleChangeFetchPage} />}
+                                    label="Getting page"
+                                />
+                                <FormControlLabel
+                                    disabled={tableLoading}
+                                    control={<Switch checked={dataLoading} onChange={handleChangeFetchData} />}
+                                    label="Refreshing data"
+                                />
+                            </Aligner>
+                            <Aligner isVertical style={{ alignItems: "flex-start" }}>
+                                <FormControlLabel
+                                    disabled={dataLoading || tableLoading}
+                                    control={<Switch checked={hasData} onChange={handleChangeHasData} />}
+                                    label="With data"
+                                />
+                                <FormControlLabel
+                                    control={<Switch checked={jsonPreviewerVisible} onChange={handleChangeJSONVisible} />}
+                                    label="JSON preview"
+                                />
+                            </Aligner>
+                        </Aligner>
+                    </FormGroup>
+                </Aligner>
+                <MyTable {...tableProps} />
+            </div>
+        </TableConfigContext.Provider>
     );
 };
 

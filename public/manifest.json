@@ -1,0 +1,6 @@
+{
+    "short_name": "Smart Table",
+    "name": "Smart React Table",
+    "start_url": ".",
+    "display": "standalone"
+  }

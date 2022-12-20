@@ -1,27 +1,31 @@
 {
     "table": [
         {
-            "title": "Title 1",
-            "dataIndex": "name1"
+            "title": "Наименование",
+            "dataIndex": "name",
+            "visible": true,
+            "hidable": false
         },
         {
-            "title": "Title 2",
-            "dataIndex": "name2",
-            "extra": [
-                "someExtra"
-            ]
+            "title": "Регион",
+            "dataIndex": "region",
+            "visible": true
         },
         {
-            "title": "Title 3",
-            "dataIndex": "name3"
+            "title": "Подрегион",
+            "dataIndex": "subregion",
+            "visible": true
         },
         {
-            "title": "Title 4",
-            "dataIndex": "name4"
+            "title": "Скорость",
+            "dataIndex": "speed",
+            "visible": true
         },
         {
-            "title": "Title 5",
-            "dataIndex": "name5"
+            "title": "Размер",
+            "dataIndex": "size",
+            "visible": true
         }
-    ]
+    ],
+    "cellSize": "MEDIUM"
 }

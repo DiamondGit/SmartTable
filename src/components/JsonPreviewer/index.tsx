@@ -1,4 +1,4 @@
-import { TableColumnType, TableConfigType } from "../../types/general";
+import { TableColumnSchema, TableConfigSchema, TableConfigType } from "../../types/general";
 import style from "./JsonPreviewer.module.scss";
 
 interface JsonPreviewerType {
@@ -10,13 +10,10 @@ const JsonPreviewer = ({ json }: JsonPreviewerType) => {
 
     let jsonString = JSON.stringify(json, null, 2);
 
-    const regexes = ["title", "dataIndex", "extra"];
-    const regexColors = ["#ff8052", "#41e799", "#e7415d"];
-
-    regexes.forEach((regex, index) => {
+    TableColumnSchema._getCached().keys.concat(TableConfigSchema._getCached().keys).forEach((regex, index) => {
         jsonString = jsonString.replaceAll(
             JSON.stringify(regex) + ":",
-            `<span style="color: ${regexColors[index % regexColors.length]}">${JSON.stringify(regex)}</span>:`
+            `<span style="color: #afcdfa">${JSON.stringify(regex)}</span>:`
         );
     });
 

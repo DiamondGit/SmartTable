@@ -1,0 +1,26 @@
+.draggableList {
+    .draggableContainer {
+        .listItem {
+            margin-bottom: 8px;
+            width: 100%;
+            padding: 5px 10px;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+            overflow: hidden;
+            user-select: none;
+            border: 2px solid rgba(206, 206, 206, 0.5);
+            background-color: rgb(248, 248, 248);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0);
+            transition: box-shadow 1s;
+            &.dragging, &:hover {
+                background: rgb(241, 241, 241);
+            }
+            &.dragging {
+                box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+    }
+}
