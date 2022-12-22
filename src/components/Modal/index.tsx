@@ -15,6 +15,7 @@ export interface ModalType {
     rightFooter?: React.ReactNode;
     type: ModalTypes;
     children?: React.ReactNode;
+    style?: React.CSSProperties;
 }
 
 const Modal = ({ title, open, onCancel, leftFooter = null, rightFooter = null, type, children, ...props }: ModalType) => {

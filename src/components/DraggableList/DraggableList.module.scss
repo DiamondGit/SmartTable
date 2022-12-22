@@ -1,3 +1,7 @@
+@import "../../styles/colors.scss";
+
+$hover_transition: .3s;
+
 .draggableList {
     .draggableContainer {
         .listItem {
@@ -13,13 +17,85 @@
             user-select: none;
             border: 2px solid rgba(206, 206, 206, 0.5);
             background-color: rgb(248, 248, 248);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0);
-            transition: box-shadow 1s;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            transition: box-shadow 1s, background $hover_transition;
             &.dragging, &:hover {
-                background: rgb(241, 241, 241);
+                background: rgb(238, 238, 238);
             }
             &.dragging {
                 box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+            }
+            .dragIcon {
+                color: $gray-400;
+                transition: color $hover_transition;
+            }
+            &:hover .dragIcon, &.dragging .dragIcon {
+                color: $gray-500;
+            }
+            .btn {
+                padding-left: 0;
+                padding-right: 0;
+                &.pinBtn {
+                    position: relative;
+                    .arrowIcon {
+                        position: absolute;
+                        top: 50%;
+                        transform: translateY(calc(-50% - 3px));
+                        $pinsShift: -14px;
+                        font-size: 24px;
+                        transition: color $hover_transition;
+                        pointer-events: none;
+                        &.left {
+                            left: $pinsShift;
+                            &.active {
+                                color: $orange-400;
+                            }
+                        }
+                        &.right {
+                            right: $pinsShift;
+                            &.active {
+                                color: $orange-400;
+                            }
+                        }
+                    }
+                    .pinIcon {
+                        color: $gray-400;
+                        transition: color $hover_transition;
+                        &.active {
+                            color: $orange-400;
+                        }
+                    }
+                    &:hover {
+                        .arrowIcon {
+                            &.left.active, &.right.active {
+                                color: $orange-500;
+                            }
+                        }
+                        .pinIcon {
+                            color: $gray-500;
+                            &.active {
+                                color: $orange-500;
+                            }
+                        }
+                    }
+                }
+                &.highlightBtn {
+                    .highlight {
+                        color: $gray-400;
+                        transition: color $hover_transition;
+                        &.active {
+                            color: $orange-400;
+                        }
+                    }
+                    &:hover {
+                        .highlight {
+                            color: $gray-500;
+                            &.active {
+                                color: $orange-500;
+                            }
+                        }
+                    }
+                }
             }
         }
     }

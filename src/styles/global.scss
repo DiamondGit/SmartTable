@@ -1,3 +1,7 @@
+@import "./colors.scss";
+
+$hover_transition: .3s;
+
 .MuiSkeleton-root {
     &:not(.headingSkeleton)::after {
         background: linear-gradient(90deg, transparent, rgba(184, 184, 184, 0.5), transparent);
@@ -8,4 +12,9 @@
             background: linear-gradient(90deg, transparent, rgba(206, 212, 220, 0.5), transparent);
         }
     }
+}
+
+.ant-modal-root .ant-modal-wrap,
+.ant-modal-root .ant-modal-mask {
+    z-index: 1500;
 }

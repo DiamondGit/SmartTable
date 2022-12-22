@@ -1,9 +1,12 @@
 import { createContext } from "react";
-import { TableConfigType } from "../types/general";
+import { SavedTableConfigType, TableConfigType } from "../types/general";
 
 interface TableConfigContextType {
-    tableConfig: TableConfigType;
+    readonly defaultTableConfig: TableConfigType;
+    savedTableConfigs: SavedTableConfigType[];
+    selectedSavedTableConfigId: number | null;
     setTableConfig: React.Dispatch<React.SetStateAction<TableConfigType>>;
+    tableConfig: TableConfigType;
 }
 
 const TableConfigContext = createContext<TableConfigContextType>({} as TableConfigContextType);

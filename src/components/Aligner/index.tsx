@@ -1,11 +1,11 @@
-type AlignerType = {
+interface AlignerType extends React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement> {
     isVertical?: boolean;
     gutter?: number;
     children?: any;
     style?: React.CSSProperties;
 }
 
-const Aligner = ({ isVertical = false, gutter = 24, style, children }: AlignerType) => {
+const Aligner = ({ isVertical = false, gutter = 24, style, children, ...props }: AlignerType) => {
     return (
         <div
             style={{
@@ -17,6 +17,7 @@ const Aligner = ({ isVertical = false, gutter = 24, style, children }: AlignerTy
                 gap: `${gutter}px`,
                 ...style,
             }}
+            {...props}
         >
             {children}
         </div>

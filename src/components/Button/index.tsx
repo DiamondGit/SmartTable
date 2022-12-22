@@ -21,6 +21,9 @@ const Button = ({btnType = "secondary", outlined = false, loading = false, ...pr
     if (outlined) classes.push(style.outlined);
     if (loading) classes.push(style.loading);
 
+    const className = props.className || "";
+    if (className) classes.push(className);
+
     return (
         <button {...props} className={classes.join(" ")} disabled={props.disabled || loading}>{props.children}</button>
     )

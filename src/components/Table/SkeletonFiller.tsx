@@ -1,5 +1,7 @@
 import { Skeleton } from "@mui/lab";
 import style from "./Table.module.scss";
+import { useState, useEffect, useContext } from "react";
+import TableStateContext from "../../context/TableStateContext";
 
 interface SkeletonFillerType {
     columnCount: number;
@@ -8,12 +10,31 @@ interface SkeletonFillerType {
 }
 
 const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: SkeletonFillerType) => {
-    const TableDataSkeleton = ({ isHeadingRow = false }) => {
+    const { isConfigLoading } = useContext(TableStateContext);
+    const [skeletonHeadingLengths, setSkeletonHeadingLengths] = useState<number[]>();
+    const [skeletonLengths, setSkeletonLengths] = useState<number[][]>();
+
+    useEffect(() => {
+        setSkeletonHeadingLengths([...Array(columnCount)].map(() => Math.random() * 30 + 60));
+        setSkeletonLengths(
+            [...Array(rowCount)].map(() => [...Array(columnCount)].map(() => Math.random() * 20 + 60))
+        );
+    }, [columnCount]);
+
+    const TableDataSkeleton = ({
+        index,
+        columnIndex = 0,
+        isHeadingRow = false,
+    }: {
+        index: number;
+        columnIndex?: number;
+        isHeadingRow?: boolean;
+    }) => {
         return (
             <Skeleton
                 className={isHeadingRow ? "headingSkeleton" : ""}
                 variant={"rounded"}
-                width={`${Math.random() * 30 + (isHeadingRow ? 35 : 25)}%`}
+                width={`${(isHeadingRow ? skeletonHeadingLengths?.[index] : skeletonLengths?.[index][columnIndex]) || 75}%`}
                 height={"18px"}
                 animation={"wave"}
             />
@@ -26,11 +47,24 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
                 {[...Array(rowCount)].map((_, rowIndex) => {
                     const skeletons = [...Array(columnCount)].map((_, columnIndex) => (
                         <td key={`skeletonFiller_${rowIndex}_${columnIndex}`}>
-                            <TableDataSkeleton />
+                            <TableDataSkeleton index={rowIndex} columnIndex={columnIndex} />
                         </td>
                     ));
                     return (
-                        <tr className={style.row} key={`skeletonFiller_${rowIndex}`}>
+                        <tr key={`skeletonFiller_${rowIndex}`}>
+                            {
+                                !isConfigLoading &&
+                                <td className={style.actionCell}>
+                                    <div>
+                                        <Skeleton
+                                            variant={"rounded"}
+                                            width={"18px"}
+                                            height={"18px"}
+                                            animation={"wave"}
+                                        />
+                                    </div>
+                                </td>
+                            }
                             {skeletons}
                         </tr>
                     );
@@ -41,7 +75,7 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
         <>
             {[...Array(columnCount)].map((_, index) => (
                 <th className={style.heading} key={"skeletonFiller_" + index}>
-                    <TableDataSkeleton isHeadingRow />
+                    <TableDataSkeleton isHeadingRow index={index} />
                 </th>
             ))}
         </>

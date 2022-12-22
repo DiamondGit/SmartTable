@@ -2,13 +2,19 @@ import { TableConfigType } from "../../types/general";
 import style from "./Table.module.scss";
 
 const TableHead = ({ tableConfig }: { tableConfig: TableConfigType | null }) => {
+    const handleClick = (dataIndex: string) => () => {
+        console.log("Click", dataIndex);
+    }
+
     if (!tableConfig) return null;
     return (
         <>
+            <th className={style.actionCell}>
+            </th>
             {tableConfig.table
                 .filter((column) => !column.hidable || column.visible)
                 .map((column) => (
-                    <th className={style.heading} key={column.dataIndex}>
+                    <th key={column.dataIndex} onClick={handleClick(column.dataIndex)}>
                         {column.title}
                     </th>
                 ))}
@@ -17,20 +23,3 @@ const TableHead = ({ tableConfig }: { tableConfig: TableConfigType | null }) => 
 };
 
 export default TableHead;
-
-// "hidable": true
-// "visible": true
-
-
-// "hidable": true     *
-// "visible": false
-
-
-// "hidable": false
-// "visible": true
-
-
-// "hidable": false
-// "visible": false
-
-

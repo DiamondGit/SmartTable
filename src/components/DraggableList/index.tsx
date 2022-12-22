@@ -5,19 +5,19 @@ import style from "./DraggableList.module.scss";
 import DraggableListItem from "./DraggableListItem";
 
 export type DraggableListProps = {
-    items: TableColumnType[];
+    columns: TableColumnType[];
     onDragEnd: OnDragEndResponder;
 };
 
-const DraggableList = memo(({ items, onDragEnd }: DraggableListProps) => {
+const DraggableList = memo(({ columns, onDragEnd }: DraggableListProps) => {
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="droppable-list" ignoreContainerClipping>
                 {(provided) => {
                     return (
                         <div ref={provided.innerRef} {...provided.droppableProps} className={style.draggableList}>
-                            {items.map((item, index) => (
-                                <DraggableListItem item={item} index={index} key={item.dataIndex} />
+                            {columns.map((column, index) => (
+                                <DraggableListItem column={column} index={index} key={column.dataIndex} />
                             ))}
                             {provided.placeholder}
                         </div>

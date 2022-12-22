@@ -1,17 +1,42 @@
 @import "../../styles/colors.scss";
 
 .tableContainer {
+    min-width: 600px;
     margin: 24px 0;
-    overflow-x: auto;
     font-family: Arial, Helvetica, sans-serif;
+    .scrollShadowContainer {
+        position: relative;
+        $shadowSize: 16px;
+        $shadowOffset: 24px;
+        $shadowColor: rgba(0, 0, 0, 0.5);
+        $leftShadow: inset $shadowSize 0 $shadowOffset (-$shadowOffset) $shadowColor;
+        $rightShadow: inset (-$shadowSize) 0 $shadowOffset (-$shadowOffset) $shadowColor;
+        &::before, &::after {
+            content: "";
+            width: 100%;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            transition: box-shadow .3s;
+            pointer-events: none;
+            box-shadow: none;
+        }
+        &.left::before {
+            box-shadow: $leftShadow;
+        }
+        &.right::after {
+            box-shadow: $rightShadow;
+        }
+    }
     &.fullscreen {
-        position: absolute;
+        position: fixed;
+        z-index: 1000;
         top: 0;
         right: 0;
         bottom: 0;
         left: 0;
         background-color: white;
-        padding: 24px 50px;
+        padding: 24px 32px;
         margin: 0;
     }
     .activeIcon {
@@ -32,27 +57,53 @@
             &.right {
                 justify-content: flex-end;
             }
+            .acitveIcon {
+                color: $orange-400;
+            }
         }
         .title {
             font-size: 28px;
             font-weight: 700;
             margin-right: 14px;
+            line-height: 32px;
+        }
+    }
+    &.size_SMALL {
+        .table {
+            th,
+            td {
+                padding: 4px 6px;
+            }
+            .actionCell {
+                padding: 2px 4px !important;
+            }
+        }
+    }
+    &.size_MEDIUM {
+        .table {
+            th,
+            td {
+                padding: 8px 12px;
+            }
+        }
+    }
+    &.size_LARGE {
+        .table {
+            th,
+            td {
+                padding: 12px 16px;
+            }
         }
     }
     .table {
-        z-index: 100;
-        position: relative;
         width: 100%;
         border-spacing: 0;
         text-align: left;
-        th, td {
-            padding: 10px 15px;
-        }
         &.loading {
-            .row {
+            tr {
                 opacity: 0.5;
             }
-            &::after{
+            &::after {
                 content: "";
                 top: 0;
                 right: 0;
@@ -67,25 +118,30 @@
                 position: absolute;
             }
         }
-        .row {
+        tr {
             font-size: 16px;
-            .heading {
-                min-width: 150px;
+            th:not(.actionCell) {
+                padding-right: 24px;
+                // min-width: 100px;
+            }
+            th.actionCell {
+                pointer-events: none;
             }
         }
-        thead .row {
+        thead tr {
             background-color: $blue-400;
-            .heading {
+            th {
                 color: white;
                 cursor: pointer;
                 line-height: 18px;
+                user-select: none;
                 &:hover {
                     background-color: $blue-500;
                 }
             }
         }
-        tbody .row {
-            .boxLogo {
+        tbody tr {
+            .emptyBoxImg {
                 width: 150px;
                 height: 165px;
                 background-image: url("../../pictures/open_empty_box.png");
@@ -114,11 +170,37 @@
                 line-height: 18px;
             }
         }
+        .loadingError {
+            height: 165px;
+            // background-image: url("../../pictures/loading_error.png");
+            // background-repeat: no-repeat;
+            // background-position: bottom center;
+            // background-size: contain;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .actionCell {
+            width: 36px;
+            padding: 4px !important;
+            text-align: center;
+            & > div {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                .actionButton {
+                    color: $black-300;
+                    padding: 2px;
+                }
+            }
+        }
     }
     th {
-        border: 1px solid #223C60;
+        border: 1px solid #223c60;
     }
-    .table, .row, td {
+    .table,
+    tr,
+    td {
         border: 1px solid #e6e6e6;
     }
 }
