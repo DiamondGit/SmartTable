@@ -7,9 +7,12 @@ import { useContext, useState } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import TableConfigContext from "../../context/TableConfigContext";
 import TableUIContext from "../../context/TableUIContext";
-import { TableColumnType, TablePinOptions, Z_TablePinOptions } from "../../types/general";
+import { TableColumnType, TablePinOptions, Z_TablePinOptions, Z_TableSortOptions } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./DraggableList.module.scss";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import TableStateContext from "../../context/TableStateContext";
 
 type DraggableListItemProps = {
     column: TableColumnType;
@@ -20,12 +23,13 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const [isDragDisabled, setDragDisabled] = useState(false);
     const UI = useContext(TableUIContext);
     const tableConfigContext = useContext(TableConfigContext);
+    const tableStateContext = useContext(TableStateContext);
 
     const setVisibleTableColumn = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (tableConfigContext.tableConfig) {
-            tableConfigContext.setTableConfig({
-                ...tableConfigContext.tableConfig,
-                table: [...tableConfigContext.tableConfig.table].map((targetColumn) =>
+        if (tableConfigContext.modalTableConfig) {
+            tableConfigContext.setModalTableConfig({
+                ...tableConfigContext.modalTableConfig,
+                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, visible: event.target.checked }
                         : targetColumn
@@ -46,10 +50,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
             }
         };
 
-        if (tableConfigContext.tableConfig) {
-            tableConfigContext.setTableConfig({
-                ...tableConfigContext.tableConfig,
-                table: [...tableConfigContext.tableConfig.table].map((targetColumn) =>
+        if (tableConfigContext.modalTableConfig) {
+            tableConfigContext.setModalTableConfig({
+                ...tableConfigContext.modalTableConfig,
+                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, pin: switchPin(targetColumn.pin) }
                         : targetColumn
@@ -59,10 +63,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     };
 
     const toggleHighlight = () => {
-        if (tableConfigContext.tableConfig) {
-            tableConfigContext.setTableConfig({
-                ...tableConfigContext.tableConfig,
-                table: [...tableConfigContext.tableConfig.table].map((targetColumn) =>
+        if (tableConfigContext.modalTableConfig) {
+            tableConfigContext.setModalTableConfig({
+                ...tableConfigContext.modalTableConfig,
+                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, highlighted: !targetColumn.highlighted }
                         : targetColumn
@@ -95,52 +99,74 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const highlightClasses = [style.highlight];
     if (column.highlighted) highlightClasses.push(style.active);
 
+    //HIGHLIGHT BUTTON CLASSES
+    const dragItemClasses = [style.listItem];
+    if (!column.visible) dragItemClasses.push(style.hiddenItem);
+
     return (
         <div className={style.draggableContainer}>
             <Draggable draggableId={column.dataIndex} index={index} isDragDisabled={isDragDisabled}>
-                {(provided, snapshot) => (
-                    <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                        className={`${style.listItem} ${
-                            snapshot.isDragging && !snapshot.isDropAnimating ? style.dragging : ""
-                        }`}
-                    >
-                        <Aligner style={{ width: "100%", justifyContent: "space-between" }}>
-                            <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
-                                <UI.Checkbox
-                                    checked={column.visible}
-                                    onChange={setVisibleTableColumn}
-                                    disabled={!column.hidable}
-                                />
-                                {column.title}
-                            </Aligner>
-                            <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
-                                <Aligner
-                                    style={{ justifyContent: "flex-end" }}
-                                    gutter={16}
-                                    onMouseEnter={() => {
-                                        setDragDisabled(true);
-                                    }}
-                                    onMouseLeave={() => {
-                                        setDragDisabled(false);
-                                    }}
-                                >
-                                    <UI.SecondaryBtn onClick={toggleColumnPin} className={pinBtnClasses.join(" ")}>
-                                        {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
-                                        <PushPinIcon className={pinClasses.join(" ")} />
-                                        {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
-                                    </UI.SecondaryBtn>
-                                    <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
-                                        <LightbulbIcon className={highlightClasses.join(" ")} />
-                                    </UI.SecondaryBtn>
+                {(provided, snapshot) => {
+                    if (snapshot.isDragging && !snapshot.isDropAnimating) dragItemClasses.push(style.dragging);
+                    return (
+                        <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={dragItemClasses.join(" ")}
+                        >
+                            <Aligner style={{ width: "100%", justifyContent: "space-between" }}>
+                                <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
+                                    <UI.Checkbox
+                                        checked={column.visible}
+                                        onChange={setVisibleTableColumn}
+                                        disabled={!column.hidable || tableStateContext.sortingColumn === column.dataIndex}
+                                    />
+                                    <span className={style.title}>{column.title}</span>
+                                    <Aligner className={style.sortingArrow}>
+                                        {tableStateContext.sortingColumn === column.dataIndex && (
+                                            <>
+                                                {tableStateContext.sortingDirection === Z_TableSortOptions.enum.ASC ? (
+                                                    <ArrowDownwardIcon
+                                                        className={style.activeIcon}
+                                                        style={{ fontSize: "20px" }}
+                                                    />
+                                                ) : (
+                                                    <ArrowUpwardIcon
+                                                        className={style.activeIcon}
+                                                        style={{ fontSize: "20px" }}
+                                                    />
+                                                )}
+                                            </>
+                                        )}
+                                    </Aligner>
                                 </Aligner>
-                                <DragHandleIcon className={style.dragIcon} />
+                                <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
+                                    <Aligner
+                                        style={{ justifyContent: "flex-end" }}
+                                        gutter={16}
+                                        onMouseEnter={() => {
+                                            setDragDisabled(true);
+                                        }}
+                                        onMouseLeave={() => {
+                                            setDragDisabled(false);
+                                        }}
+                                    >
+                                        <UI.SecondaryBtn onClick={toggleColumnPin} className={pinBtnClasses.join(" ")}>
+                                            {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
+                                            <PushPinIcon className={pinClasses.join(" ")} />
+                                            {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
+                                        </UI.SecondaryBtn>
+                                        <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
+                                            <LightbulbIcon className={highlightClasses.join(" ")} />
+                                        </UI.SecondaryBtn>
+                                    </Aligner>
+                                    <DragHandleIcon className={style.dragIcon} />
+                                </Aligner>
                             </Aligner>
-                        </Aligner>
-                    </div>
-                )}
+                        </div>
+                    );
+                }}
             </Draggable>
         </div>
     );

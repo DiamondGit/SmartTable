@@ -5,8 +5,10 @@ interface TableConfigContextType {
     readonly defaultTableConfig: TableConfigType;
     savedTableConfigs: SavedTableConfigType[];
     selectedSavedTableConfigId: number | null;
-    setTableConfig: React.Dispatch<React.SetStateAction<TableConfigType>>;
+    setTableConfig: (newTableConfig: TableConfigType) => void;
     tableConfig: TableConfigType;
+    setModalTableConfig: (newTableConfig: TableConfigType, isResetHard?: boolean) => void;
+    modalTableConfig: TableConfigType;
 }
 
 const TableConfigContext = createContext<TableConfigContextType>({} as TableConfigContextType);

@@ -12,15 +12,19 @@ const defaultUI: TableUIType = {
         </Button>
     ),
     SecondaryBtn: ({ onClick, loading, disabled, children, className }) => (
-        <Button btnType={"secondary"} onClick={onClick} loading={loading} disabled={disabled || loading} className={className}>
+        <Button
+            btnType={"secondary"}
+            onClick={onClick}
+            loading={loading}
+            disabled={disabled || loading}
+            className={className}
+        >
             {children}
         </Button>
     ),
     OutlinedBtn: ({ onClick, loading, disabled, children, className }) => (
-        <Button onClick={onClick}>
-            loading={loading}
-            disabled={disabled || loading}
-            {children} className={className}
+        <Button onClick={onClick} loading={loading} disabled={disabled || loading} className={className} outlined>
+            {children}
         </Button>
     ),
     Checkbox: ({ checked, onChange, disabled, className }) => (

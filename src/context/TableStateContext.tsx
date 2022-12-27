@@ -1,15 +1,24 @@
 import { createContext } from "react";
+import { TableSortOptions } from "../types/general";
 
 interface TableStateContextType {
-    isSettingsChanged: boolean;
-    setSettingsChanged: React.Dispatch<React.SetStateAction<boolean>>;
     isSavedSettings: boolean;
     setSavedSettings: React.Dispatch<React.SetStateAction<boolean>>;
+    isModalTableConfigResetHard: boolean;
+    setModalTableConfigResetHard: React.Dispatch<React.SetStateAction<boolean>>;
     checkChanges: () => void;
     isConfigLoadingError: boolean;
     isDataLoadingError: boolean;
     isConfigLoading: boolean;
     isDataLoading: boolean;
+    sortingColumn: string;
+    setSortingColumn: React.Dispatch<React.SetStateAction<string>>;
+    sortingDirection: TableSortOptions;
+    setSortingDirection: React.Dispatch<React.SetStateAction<TableSortOptions>>;
+    actionCellWidth: number;
+    setActionCellWidth: React.Dispatch<React.SetStateAction<number>>;
+    searchValue: string;
+    setSearchValue: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const TableStateContext = createContext<TableStateContextType>({} as TableStateContextType);

@@ -5,7 +5,10 @@
         "region": "Antarctica",
         "subregion": "Barbados",
         "speed": "10.9344",
-        "size": "73"
+        "size": "73",
+        "date": "1.4.2043",
+        "segment": "04fb:e7e7:d370:60c8:3205:4d19:ded7:fd23",
+        "transport": "cotton"
     },
     {
         "id": 2,
@@ -13,7 +16,11 @@
         "region": "South_Georgia_& South Sandwich Islands",
         "subregion": "Guatemala",
         "speed": "73.5232",
-        "size": "53"
+        "size": "53",
+        "date": "10.30.2022",
+        "segment": "3f8d:7e04:0fcc:7eb3:6873:3bf3:31a9:f51a",
+        "transport": "form",
+        "equipment": "somebody"
     },
     {
         "id": 3,
@@ -21,7 +28,11 @@
         "region": "Ethiopia",
         "subregion": "Uruguay",
         "speed": "57.2308",
-        "size": "42"
+        "size": "42",
+        "date": "10.9.2041",
+        "segment": "4d72:e844:039f:8416:a44a:005f:0ff8:2d23",
+        "transport": "third",
+        "equipment": "too"
     },
     {
         "id": 4,
@@ -29,7 +40,10 @@
         "region": "Lesotho",
         "subregion": "Papua New Guinea",
         "speed": "17.0302",
-        "size": "14"
+        "size": "14",
+        "date": "1.7.2087",
+        "segment": "1295:3d16:66de:8ce9:3ff9:364e:2184:ceca",
+        "transport": "thousand"
     },
     {
         "id": 5,
@@ -37,7 +51,10 @@
         "region": "Austria",
         "subregion": "Papua New Guinea",
         "speed": "91.5615",
-        "size": "46"
+        "size": "46",
+        "date": "3.10.2074",
+        "segment": "f407:0873:053d:63a0:d9fd:b2d1:50d6:21ae",
+        "transport": "stomach"
     },
     {
         "id": 6,
@@ -45,7 +62,11 @@
         "region": "American Samoa",
         "subregion": "Georgia",
         "speed": "74.0592",
-        "size": "16"
+        "size": "16",
+        "date": "12.25.2060",
+        "segment": "6122:1788:3b4a:d6ec:8021:f991:941e:980d",
+        "transport": "check",
+        "equipment": "location"
     },
     {
         "id": 7,
@@ -53,7 +74,11 @@
         "region": "St. Barthélemy",
         "subregion": "Brunei",
         "speed": "22.4446",
-        "size": "100"
+        "size": "100",
+        "date": "8.21.2057",
+        "segment": "1089:441f:720d:a10f:dc79:0331:8e66:2ed4",
+        "transport": "principal",
+        "equipment": "route"
     },
     {
         "id": 8,
@@ -61,7 +86,11 @@
         "region": "Palau",
         "subregion": "Guyana",
         "speed": "91.5177",
-        "size": "4"
+        "size": "4",
+        "date": "4.9.2036",
+        "segment": "cd9e:d444:5166:7c99:93b2:220b:b256:60c2",
+        "transport": "mental",
+        "equipment": "member"
     },
     {
         "id": 9,
@@ -69,7 +98,11 @@
         "region": "Malawi",
         "subregion": "Hong Kong SAR China",
         "speed": "88.4257",
-        "size": "73"
+        "size": "73",
+        "date": "5.25.2111",
+        "segment": "04ab:73a9:5f70:b451:1085:091f:5467:3367",
+        "transport": "note",
+        "equipment": "date"
     },
     {
         "id": 10,
@@ -77,7 +110,10 @@
         "region": "Venezuela",
         "subregion": "Malaysia",
         "speed": "4.06",
-        "size": "46"
+        "size": "46",
+        "date": "5.3.2052",
+        "segment": "82fb:dbea:b134:432a:62fa:bbf9:1a78:d5c8",
+        "transport": "enemy"
     },
     {
         "id": 11,
@@ -85,7 +121,10 @@
         "region": "Cuba",
         "subregion": "Chad",
         "speed": "14.2019",
-        "size": "60"
+        "size": "60",
+        "date": "9.20.2092",
+        "segment": "274d:75f0:e0d4:1bd9:20db:696e:533a:dc6d",
+        "transport": "club"
     },
     {
         "id": 12,
@@ -93,7 +132,10 @@
         "region": "Northern Mariana Islands",
         "subregion": "Nigeria",
         "speed": "69.4571",
-        "size": "58"
+        "size": "58",
+        "date": "11.9.2047",
+        "segment": "a399:6bb3:21c4:20c1:0c5e:33e1:87f9:c6a1",
+        "transport": "cannot"
     },
     {
         "id": 13,
@@ -101,6 +143,10 @@
         "region": "Gibraltar",
         "subregion": "French Guiana",
         "speed": "60.4975",
-        "size": "65"
+        "size": "65",
+        "date": "1.3.2047",
+        "segment": "0a9a:611e:a3f2:4f5b:4f6c:8073:e8e7:b916",
+        "transport": "find",
+        "equipment": "shadow"
     }
 ]

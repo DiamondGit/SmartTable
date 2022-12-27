@@ -1,7 +1,7 @@
-@import "../../styles/colors.scss";
+@import "../../styles/constants.scss";
 
 .tableContainer {
-    min-width: 600px;
+    min-width: 720px;
     margin: 24px 0;
     font-family: Arial, Helvetica, sans-serif;
     .scrollShadowContainer {
@@ -11,13 +11,14 @@
         $shadowColor: rgba(0, 0, 0, 0.5);
         $leftShadow: inset $shadowSize 0 $shadowOffset (-$shadowOffset) $shadowColor;
         $rightShadow: inset (-$shadowSize) 0 $shadowOffset (-$shadowOffset) $shadowColor;
-        &::before, &::after {
+        &::before,
+        &::after {
             content: "";
             width: 100%;
             position: absolute;
             top: 0;
             bottom: 0;
-            transition: box-shadow .3s;
+            transition: box-shadow 0.3s;
             pointer-events: none;
             box-shadow: none;
         }
@@ -30,7 +31,7 @@
     }
     &.fullscreen {
         position: fixed;
-        z-index: 1000;
+        z-index: $zIndex_fullscreen_table_container;
         top: 0;
         right: 0;
         bottom: 0;
@@ -44,15 +45,54 @@
     }
     .topBar {
         margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         .bar {
-            display: flex;
-            align-items: center;
             gap: 6px;
             &.left {
                 justify-content: flex-start;
+                .searchBar {
+                    position: relative;
+                    &.loading {
+                        cursor: wait;
+                        opacity: 0.5;
+                        .searchBtn {
+                            pointer-events: none !important;
+                        }
+                    }
+                    .slider {
+                        overflow: hidden;
+                        width: 0;
+                        transition: width 0.3s linear;
+                        position: absolute;
+                        bottom: 0;
+                        left: 100%;
+                        transform: translateX(8px);
+                        .inputContainer {
+                            display: flex;
+                            justify-content: flex-start;
+                            align-items: center;
+                            width: 300px;
+                        }
+                    }
+                    &.open {
+                        .slider {
+                            width: 300px;
+                        }
+                    }
+                    .searchBtn {
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        color: $black-400;
+                        transition: background 0.2s;
+                        &:hover {
+                            background-color: rgba(0, 0, 0, 0.1);
+                        }
+                    }
+                    &.loading .searchBtn {
+                        pointer-events: none;
+                    }
+                }
             }
             &.right {
                 justify-content: flex-end;
@@ -64,7 +104,7 @@
         .title {
             font-size: 28px;
             font-weight: 700;
-            margin-right: 14px;
+            margin-right: 8px;
             line-height: 32px;
         }
     }
@@ -98,49 +138,104 @@
     .table {
         width: 100%;
         border-spacing: 0;
-        text-align: left;
-        &.loading {
-            tr {
-                opacity: 0.5;
-            }
-            &::after {
-                content: "";
-                top: 0;
-                right: 0;
-                bottom: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                display: none;
-                z-index: 150;
-                opacity: 0;
-                display: block;
-                position: absolute;
-            }
-        }
-        tr {
-            font-size: 16px;
-            th:not(.actionCell) {
-                padding-right: 24px;
-                // min-width: 100px;
-            }
-            th.actionCell {
-                pointer-events: none;
-            }
+        background-color: red;
+        &.loading::after {
+            content: "";
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 150;
+            display: block;
+            position: absolute;
+            background-color: rgba(230, 230, 230, 0.5);
         }
         thead tr {
+            font-size: 16px;
             background-color: $blue-400;
             th {
-                color: white;
+                color: $white-400;
                 cursor: pointer;
                 line-height: 18px;
                 user-select: none;
                 &:hover {
                     background-color: $blue-500;
+                    &:not(:first-child) {
+                        border-left-color: $blue-500;
+                    }
+                }
+                &:not(:first-child) {
+                    border-left: 1px solid $blue-400;
+                }
+                &:not(.actionCell) {
+                    position: relative;
+                    padding-right: 48px;
+                    &.sortColumn {
+                        color: $orange-400;
+                    }
+                    .sortingArrow {
+                        position: absolute;
+                        top: 50%;
+                        right: 24px;
+                        transform: translate(50%, -50%);
+                    }
+                }
+                &.pin {
+                    position: sticky;
+                    background-color: $blue-400;
+                    z-index: 100;
+                }
+                &.actionCell {
+                    pointer-events: none;
                 }
             }
         }
         tbody tr {
+            td {
+                line-height: 18px;
+                background-color: $white-400;
+                &:not(.actionCell) {
+                    text-align: left;
+                    vertical-align: top;
+                }
+                &.pin {
+                    position: sticky;
+                    background-color: white;
+                    z-index: 100;
+                }
+                &:not(:first-child) {
+                    border-left: 1px solid $gray-300;
+                }
+                &.numericField {
+                    text-align: right;
+                }
+            }
+            &:nth-child(even) td {
+                background-color: $blue-100;
+            }
+            td.sortColumn {
+                background-color: $gray-250;
+            }
+            &:nth-child(even) td.sortColumn {
+                background-color: $gray-250;
+            }
+            &:hover td {
+                background-color: $blue-150;
+                &.sortColumn {
+                    background-color: $gray-300;
+                }
+            }
+            &.selected {
+                td {
+                    background-color: $gray-300;
+                }
+                &:hover td {
+                    background-color: $gray-350;
+                }
+            }
             .emptyBoxImg {
                 width: 150px;
                 height: 165px;
@@ -148,59 +243,25 @@
                 background-repeat: no-repeat;
                 background-position: bottom center;
                 background-size: contain;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
                 .label {
-                    width: 100%;
                     text-align: center;
                 }
-            }
-            &:hover {
-                background-color: #f3f3f3;
-            }
-            &.clicked {
-                background-color: $gray-300;
-                &:hover {
-                    background-color: $gray-400;
-                }
-            }
-            td {
-                text-align: left;
-                line-height: 18px;
             }
         }
         .loadingError {
             height: 165px;
-            // background-image: url("../../pictures/loading_error.png");
-            // background-repeat: no-repeat;
-            // background-position: bottom center;
-            // background-size: contain;
-            display: flex;
-            justify-content: center;
-            align-items: center;
         }
-        .actionCell {
-            width: 36px;
+        th.actionCell,
+        td.actionCell {
             padding: 4px !important;
             text-align: center;
-            & > div {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                .actionButton {
-                    color: $black-300;
-                    padding: 2px;
-                }
-            }
         }
-    }
-    th {
-        border: 1px solid #223c60;
-    }
-    .table,
-    tr,
-    td {
-        border: 1px solid #e6e6e6;
+        td.actionCell .actionButton {
+            color: $black-300;
+            padding: 2px;
+        }
+        th.actionCell {
+            background-color: $blue-400;
+        }
     }
 }

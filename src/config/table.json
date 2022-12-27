@@ -3,27 +3,56 @@
         {
             "title": "Наименование",
             "dataIndex": "name",
+            "dataType": "STRING",
             "visible": true,
             "hidable": false
         },
         {
             "title": "Регион",
             "dataIndex": "region",
+            "dataType": "STRING",
             "visible": true
         },
         {
             "title": "Подрегион",
             "dataIndex": "subregion",
+            "dataType": "STRING",
             "visible": true
         },
         {
             "title": "Скорость",
             "dataIndex": "speed",
+            "dataType": "NUMBER",
             "visible": true
         },
         {
             "title": "Размер",
             "dataIndex": "size",
+            "dataType": "NUMBER",
+            "visible": true
+        },
+        {
+            "title": "Дата",
+            "dataIndex": "date",
+            "dataType": "DATE",
+            "visible": true
+        },
+        {
+            "title": "Оборудование",
+            "dataIndex": "equipment",
+            "dataType": "STRING",
+            "visible": true
+        },
+        {
+            "title": "Транспорт",
+            "dataIndex": "transport",
+            "dataType": "STRING",
+            "visible": true
+        },
+        {
+            "title": "Сегмент",
+            "dataIndex": "segment",
+            "dataType": "STRING",
             "visible": true
         }
     ],

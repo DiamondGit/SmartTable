@@ -1,17 +1,16 @@
-import ReplayIcon from "@mui/icons-material/Replay";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { ToggleButtonGroup } from "@mui/material";
+import { TextField, ToggleButtonGroup } from "@mui/material";
 import ToggleButton from "@mui/material/ToggleButton";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { DropResult } from "react-beautiful-dnd";
 import Modal, { ModalType } from "..";
-import _tableConfig_ from "../../../config/table.json";
 import TableConfigContext from "../../../context/TableConfigContext";
 import TableStateContext from "../../../context/TableStateContext";
 import TableUIContext from "../../../context/TableUIContext";
-import { TableCellSizes, TableColumnType, TableConfigSchema, Z_ModalTypes, Z_TableCellSizes } from "../../../types/general";
+import { TableCellSizes, TableColumnType, Z_ModalTypes, Z_TableCellSizes } from "../../../types/general";
 import Aligner from "../../Aligner";
 import DraggableList from "../../DraggableList";
+import AddIcon from '@mui/icons-material/Add';
 
 interface SettingsModalType {
     tableTitle?: string;
@@ -23,18 +22,19 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
     const tableStateContext = useContext(TableStateContext);
     const UI = useContext(TableUIContext);
     const tableConfigContext = useContext(TableConfigContext);
-    const [tableSize, setTableSize] = useState<TableCellSizes>(tableConfigContext?.tableConfig?.cellSize || Z_TableCellSizes.enum.MEDIUM);
+    const [tableSize, setTableSize] = useState<TableCellSizes>(Z_TableCellSizes.enum.MEDIUM);
+    const [isSavingSettings, setSavingSettings] = useState(false);
+    const [settingsName, setSettingsName] = useState("");
 
     const handleChange = (event: React.MouseEvent<HTMLElement>, newTableSize: string | null) => {
         if (newTableSize !== null) {
             setTableSize(newTableSize as TableCellSizes);
-            if (tableConfigContext.tableConfig) {
-                tableConfigContext.setTableConfig({
-                    ...tableConfigContext.tableConfig,
+            if (tableConfigContext.modalTableConfig) {
+                tableConfigContext.setModalTableConfig({
+                    ...tableConfigContext.modalTableConfig,
                     cellSize: newTableSize as TableCellSizes,
                 });
             }
-            tableStateContext.isSettingsChanged = true;
         }
     };
 
@@ -59,8 +59,50 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
         },
     ];
 
-    const onCancel = () => {
+    useEffect(() => {
+        if (tableConfigContext?.modalTableConfig?.cellSize) {
+            setTableSize(tableConfigContext?.modalTableConfig?.cellSize);
+        }
+    }, [tableConfigContext?.modalTableConfig?.cellSize]);
+
+    const closeModal = () => {
         setOpen(false);
+        setSavingSettings(false);
+        tableStateContext.setModalTableConfigResetHard(false);
+    };
+
+    const applySettings = () => {
+        tableConfigContext.setTableConfig(tableConfigContext.modalTableConfig);
+    };
+
+    const resetSettings = () => {
+        tableConfigContext.setModalTableConfig(tableConfigContext.tableConfig);
+    };
+
+    const resetHardSettings = () => {
+        tableConfigContext.setModalTableConfig(tableConfigContext.defaultTableConfig, true);
+    };
+
+    const onConfirmSettings = () => {
+        closeModal();
+        applySettings();
+    };
+
+    const onCancelSettings = () => {
+        closeModal();
+        resetSettings();
+    };
+
+    const startSaveSettings = () => {
+        setSavingSettings(true);
+    };
+
+    const confirmSaveSettings = () => {
+        setSavingSettings(false);
+    };
+
+    const onChangeSettingsName = (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (event.target.value.length < 16) setSettingsName(event.target.value);
     };
 
     const modalProps: ModalType = {
@@ -71,8 +113,31 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
             </Aligner>
         ),
         open: open,
-        onCancel: onCancel,
+        onConfirm: onConfirmSettings,
+        onCancel: onCancelSettings,
         type: Z_ModalTypes.enum.SETTINGS,
+        isSavingSettings: isSavingSettings,
+        leftFooter:
+            tableConfigContext.savedTableConfigs.length < 3 ? (
+                !isSavingSettings ? (
+                    <UI.OutlinedBtn onClick={startSaveSettings}>Сохранить настройку</UI.OutlinedBtn>
+                ) : (
+                    <Aligner style={{ justifyContent: "space-between", width: "100%" }}>
+                        <TextField
+                            label="Название"
+                            variant="outlined"
+                            size={"small"}
+                            style={{ width: "150px" }}
+                            value={settingsName}
+                            onChange={onChangeSettingsName}
+                        />
+                        <Aligner style={{ justifyContent: "flex-end" }} gutter={8}>
+                            <UI.SecondaryBtn onClick={confirmSaveSettings}>Отмена</UI.SecondaryBtn>
+                            <UI.PrimaryBtn onClick={confirmSaveSettings}>Сохранить и применить</UI.PrimaryBtn>
+                        </Aligner>
+                    </Aligner>
+                )
+            ) : undefined,
     };
 
     const reorder = (list: TableColumnType[], startIndex: number, endIndex: number): TableColumnType[] => {
@@ -86,47 +151,69 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
     const onDragEnd = ({ destination, source }: DropResult) => {
         if (!destination) return;
 
-        if (tableConfigContext.tableConfig) {
-            const newItems = reorder(tableConfigContext.tableConfig.table, source.index, destination.index);
-    
-            tableConfigContext.setTableConfig({
-                ...tableConfigContext.tableConfig,
+        if (tableConfigContext.modalTableConfig) {
+            const newItems = reorder(tableConfigContext.modalTableConfig.table, source.index, destination.index);
+            tableConfigContext.setModalTableConfig({
+                ...tableConfigContext.modalTableConfig,
                 table: newItems,
             });
         }
     };
 
-    const resetSettings = () => {
-        tableConfigContext.setTableConfig(TableConfigSchema.parse(_tableConfig_));
-        setTableSize(Z_TableCellSizes.enum.MEDIUM);
-    };
+    const isTableDefaultSettings = JSON.stringify(tableConfigContext.tableConfig) === JSON.stringify(tableConfigContext.defaultTableConfig);
+    const isDefaultSettings = JSON.stringify(tableConfigContext.modalTableConfig) === JSON.stringify(tableConfigContext.defaultTableConfig);
+    const isTableSettings = JSON.stringify(tableConfigContext.modalTableConfig) === JSON.stringify(tableConfigContext.tableConfig);
 
-    if (tableStateContext.isConfigLoadingError || !tableConfigContext.tableConfig) return null;
+    if (tableStateContext.isConfigLoadingError || !tableConfigContext.modalTableConfig) return null;
     return (
         <Modal {...modalProps}>
             <Aligner isVertical style={{ alignItems: "stretch", marginTop: "24px" }}>
                 <Aligner style={{ justifyContent: "space-between" }}>
-                    <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
+                    <Aligner style={{ alignItems: "flex-start" }} isVertical gutter={4}>
                         Размер ячеек:
                         <ToggleButtonGroup size={"small"} {...tableSizeControl}>
                             {tableSizeOptions.map((tableSizeOption) => (
                                 <ToggleButton value={tableSizeOption.key} key={tableSizeOption.key}>
-                                    {tableSizeOption.label}
+                                    <span style={{ width: "16px" }}>
+                                        {tableSizeOption.label}
+                                    </span>
                                 </ToggleButton>
                             ))}
                         </ToggleButtonGroup>
                     </Aligner>
-                    {tableStateContext.isSettingsChanged && (
-                        <UI.SecondaryBtn onClick={resetSettings}>
-                            <Aligner gutter={6}>
-                                <span>Сброс настроек</span>
-                                <ReplayIcon />
+                    {
+                        ((!isDefaultSettings && !isTableDefaultSettings) || !isTableSettings) &&
+                        <Aligner style={{ alignItems: "flex-end" }} isVertical gutter={8}>
+                            <Aligner style={{ justifyContent: "flex-start" }} gutter={4}>
+                                Сбросить настройки:
                             </Aligner>
-                        </UI.SecondaryBtn>
-                    )}
+                            <Aligner gutter={8}>
+                                {!isDefaultSettings && !isTableDefaultSettings && (
+                                    <UI.SecondaryBtn onClick={resetHardSettings}>
+                                        <Aligner gutter={6}>
+                                            <span>По умолчанию</span>
+                                        </Aligner>
+                                    </UI.SecondaryBtn>
+                                )}
+                                {!isTableSettings && (
+                                    <UI.SecondaryBtn onClick={resetSettings}>
+                                        <Aligner gutter={6}>
+                                            <span>По текущей таблице</span>
+                                        </Aligner>
+                                    </UI.SecondaryBtn>
+                                )}
+                            </Aligner>
+                        </Aligner>
+                    }
                 </Aligner>
-                <DraggableList columns={tableConfigContext.tableConfig.table} onDragEnd={onDragEnd} />
+                <DraggableList columns={tableConfigContext.modalTableConfig.table} onDragEnd={onDragEnd} />
             </Aligner>
+            {/* <UI.SecondaryBtn>
+                <Aligner style={{ justifyContent: "flex-start" }} gutter={4}>
+                    <AddIcon />
+                    Добавить колонку
+                </Aligner>
+            </UI.SecondaryBtn> */}
         </Modal>
     );
 };

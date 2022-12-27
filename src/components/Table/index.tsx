@@ -10,9 +10,12 @@ import {
     TableConfigSchema,
     TableConfigType,
     TableInitializationType,
+    TableSortOptions,
     TableUIType,
     Z_TableCellSizes,
+    Z_TableSortOptions,
 } from "../../types/general";
+import Aligner from "../Aligner";
 import SettingsModal from "../Modal/SettingsModal";
 import SkeletonFiller from "./SkeletonFiller";
 import style from "./Table.module.scss";
@@ -25,7 +28,6 @@ interface TableStartingType extends TableInitializationType {
 }
 
 const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStartingType) => {
-    const [isSettingsChanged, setSettingsChanged] = useState(false);
     const [isSavedSettings, setSavedSettings] = useState(false);
 
     const [isConfigLoading, setConfigLoading] = useState(false);
@@ -38,7 +40,10 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
 
     const [defaultTableConfig, setDefaultTableConfig] = useState<TableConfigType>();
     const [tableConfig, setTableConfig] = useState<TableConfigType>();
+    const [modalTableConfig, setModalTableConfig] = useState<TableConfigType>();
     const [savedTableConfigs, setSavedTableConfigs] = useState<SavedTableConfigType[]>([]);
+
+    const [isModalTableConfigResetHard, setModalTableConfigResetHard] = useState(false);
 
     const [data, setData] = useState<any[]>([]);
 
@@ -47,6 +52,13 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
 
     const isConfigLoaded = !isConfigLoading && !isConfigLoadingError && tableConfig;
     const defaultColumnCount = loadingConfig?.columnCount || 4;
+
+    const [sortingColumn, setSortingColumn] = useState("id");
+    const [sortingDirection, setSortingDirection] = useState<TableSortOptions>(Z_TableSortOptions.enum.ASC);
+
+    const [actionCellWidth, setActionCellWidth] = useState<number>(0);
+
+    const [searchValue, setSearchValue] = useState("");
 
     const { scrollContainer, boxShadowClasses, onScrollHandler, doShadow } = useScrollWithShadow();
 
@@ -73,7 +85,11 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                 setSavedTableConfigs(_savedTableConfigs_);
 
                 const _recentTableConfig_ = _savedTableConfigs_.find((savedTableConfig) => savedTableConfig.isRecent);
-                setTableConfig(_recentTableConfig_ ? TableConfigSchema.parse(_recentTableConfig_) : _defaultTableConfig_);
+                const computedTableConfig = _recentTableConfig_
+                    ? TableConfigSchema.parse(_recentTableConfig_)
+                    : _defaultTableConfig_;
+                setTableConfig(computedTableConfig);
+                setModalTableConfig(computedTableConfig);
 
                 console.log("--- Success CONFIG ---");
             })
@@ -114,6 +130,7 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
 
     const openSettingsModal = () => {
         setSettingsModalOpen(true);
+        setModalTableConfig(tableConfig);
     };
 
     const tableContainerClasses = [
@@ -129,7 +146,16 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
 
     useEffect(() => {
         doShadow();
-    }, [tableConfig, data])
+    }, [tableConfig, data]);
+
+    const setAndCompareTempTableConfig = (newTableConfig: TableConfigType, isResetHard = false) => {
+        setModalTableConfig(newTableConfig);
+        setModalTableConfigResetHard(isResetHard);
+    };
+
+    const setAndCompareTableConfig = (newTableConfig: TableConfigType) => {
+        setTableConfig(newTableConfig);
+    };
 
     return (
         <TableConfigContext.Provider
@@ -137,21 +163,41 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                 defaultTableConfig: defaultTableConfig,
                 savedTableConfigs: savedTableConfigs,
                 selectedSavedTableConfigId: null,
-                setTableConfig: setTableConfig,
+
                 tableConfig: tableConfig,
+                setTableConfig: setAndCompareTableConfig,
+
+                modalTableConfig: modalTableConfig,
+                setModalTableConfig: setAndCompareTempTableConfig,
             }}
         >
             <TableStateContext.Provider
                 value={{
-                    isSettingsChanged: isSettingsChanged,
-                    setSettingsChanged: setSettingsChanged,
+                    isModalTableConfigResetHard: isModalTableConfigResetHard,
+                    setModalTableConfigResetHard: setModalTableConfigResetHard,
+
                     isSavedSettings: isSavedSettings,
                     setSavedSettings: setSavedSettings,
+
                     checkChanges: checkChanges,
+
                     isConfigLoadingError: isConfigLoadingError,
                     isDataLoadingError: isDataLoadingError,
+
                     isConfigLoading: isConfigLoading,
                     isDataLoading: isDataLoading,
+
+                    sortingColumn: sortingColumn,
+                    setSortingColumn: setSortingColumn,
+
+                    sortingDirection: sortingDirection,
+                    setSortingDirection: setSortingDirection,
+
+                    actionCellWidth: actionCellWidth,
+                    setActionCellWidth: setActionCellWidth,
+
+                    searchValue: searchValue,
+                    setSearchValue: setSearchValue,
                 }}
             >
                 <TableUIContext.Provider value={UI}>
@@ -167,7 +213,7 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                             toggleFullscreen={toggleFullscreen}
                             openSettingsModal={openSettingsModal}
                         />
-                        <div className={boxShadowClasses.map(boxShadowClass => style[boxShadowClass]).join(" ")}>
+                        <div className={boxShadowClasses.map((boxShadowClass) => style[boxShadowClass]).join(" ")}>
                             <div ref={scrollContainer} style={{ overflowX: "auto" }} onScroll={onScrollHandler}>
                                 <table className={tableClasses.join(" ")}>
                                     {(!isError || isConfigLoading) && (
@@ -176,7 +222,10 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                                                 {!isConfigLoading ? (
                                                     <TableHead tableConfig={tableConfig} />
                                                 ) : (
-                                                    <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
+                                                    <SkeletonFiller
+                                                        columnCount={computedLoadingConfig.columnCount}
+                                                        isHeading
+                                                    />
                                                 )}
                                             </tr>
                                         </thead>
@@ -204,13 +253,13 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                                                         padding: 0,
                                                     }}
                                                 >
-                                                    <div className={style.loadingError}>
+                                                    <Aligner className={style.loadingError}>
                                                         {isConfigLoadingError
                                                             ? isDataLoadingError
                                                                 ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
                                                                 : "ОШИБКА ТАБЛИЦЫ"
                                                             : isDataLoadingError && "ОШИБКА ДАННЫХ"}
-                                                    </div>
+                                                    </Aligner>
                                                 </td>
                                             </tr>
                                         </tbody>

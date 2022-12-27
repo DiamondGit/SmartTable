@@ -10,20 +10,33 @@ import style from "./Modal.module.scss";
 export interface ModalType {
     title?: React.ReactNode;
     open: boolean;
+    onConfirm: () => void;
     onCancel: () => void;
     leftFooter?: React.ReactNode;
     rightFooter?: React.ReactNode;
     type: ModalTypes;
+    isSavingSettings?: boolean;
     children?: React.ReactNode;
     style?: React.CSSProperties;
 }
 
-const Modal = ({ title, open, onCancel, leftFooter = null, rightFooter = null, type, children, ...props }: ModalType) => {
+const Modal = ({
+    title,
+    open,
+    onConfirm,
+    onCancel,
+    leftFooter = null,
+    rightFooter = null,
+    type,
+    isSavingSettings = false,
+    children,
+    ...props
+}: ModalType) => {
     const UI = useContext(TableUIContext);
     const [disabled, setDisabled] = useState(true);
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);
-    
+
     const modalProps = {
         title: (
             <div className={style.title}>
@@ -56,16 +69,19 @@ const Modal = ({ title, open, onCancel, leftFooter = null, rightFooter = null, t
         footer: (
             <div className={style.footer}>
                 {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
-                <div className={`${style.btnContainer} ${style.right}`}>
-                    {!!rightFooter ? (
-                        <>{rightFooter}</>
-                    ) : (
-                        <>
-                            <UI.SecondaryBtn onClick={onCancel}>Закрыть</UI.SecondaryBtn>
-                            <UI.SecondaryBtn>ОК</UI.SecondaryBtn>
-                        </>
-                    )}
-                </div>
+                {
+                    !isSavingSettings &&
+                    <div className={`${style.btnContainer} ${style.right}`}>
+                        {!!rightFooter ? (
+                            <>{rightFooter}</>
+                        ) : (
+                            <>
+                                <UI.SecondaryBtn onClick={onCancel}>Отмена</UI.SecondaryBtn>
+                                <UI.PrimaryBtn onClick={onConfirm}>Применить</UI.PrimaryBtn>
+                            </>
+                        )}
+                    </div>
+                }
             </div>
         ),
         onCancel: onCancel,

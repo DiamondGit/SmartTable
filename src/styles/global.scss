@@ -1,4 +1,4 @@
-@import "./colors.scss";
+@import "./constants.scss";
 
 $hover_transition: .3s;
 
@@ -14,7 +14,18 @@ $hover_transition: .3s;
     }
 }
 
-.ant-modal-root .ant-modal-wrap,
-.ant-modal-root .ant-modal-mask {
-    z-index: 1500;
+.ant-modal {
+    padding-bottom: 200px;
+
+    //For fullscreen mode
+    &-root {
+        .ant-modal-wrap,
+        .ant-modal-mask {
+            z-index: 1500;
+        }
+    }
+}
+
+body {
+    background-color: rgb(230, 213, 169);
 }

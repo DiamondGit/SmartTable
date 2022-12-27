@@ -2,6 +2,7 @@ import { Skeleton } from "@mui/lab";
 import style from "./Table.module.scss";
 import { useState, useEffect, useContext } from "react";
 import TableStateContext from "../../context/TableStateContext";
+import Aligner from "../Aligner";
 
 interface SkeletonFillerType {
     columnCount: number;
@@ -55,14 +56,14 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
                             {
                                 !isConfigLoading &&
                                 <td className={style.actionCell}>
-                                    <div>
+                                    <Aligner style={{ width: "100%" }}>
                                         <Skeleton
                                             variant={"rounded"}
                                             width={"18px"}
                                             height={"18px"}
                                             animation={"wave"}
                                         />
-                                    </div>
+                                    </Aligner>
                                 </td>
                             }
                             {skeletons}
