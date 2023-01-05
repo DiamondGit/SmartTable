@@ -4,6 +4,8 @@
             "title": "Наименование",
             "dataIndex": "name",
             "dataType": "STRING",
+            "sortable": true,
+            "filterType": "NONE",
             "visible": true,
             "hidable": false
         },
@@ -11,48 +13,64 @@
             "title": "Регион",
             "dataIndex": "region",
             "dataType": "STRING",
+            "sortable": true,
+            "filterType": "SELECT",
             "visible": true
         },
         {
             "title": "Подрегион",
             "dataIndex": "subregion",
             "dataType": "STRING",
+            "sortable": true,
+            "filterType": "SELECT",
             "visible": true
         },
         {
             "title": "Скорость",
             "dataIndex": "speed",
             "dataType": "NUMBER",
+            "sortable": true,
+            "filterType": "CONDITION",
             "visible": true
         },
         {
             "title": "Размер",
             "dataIndex": "size",
             "dataType": "NUMBER",
+            "sortable": true,
+            "filterType": "CONDITION",
             "visible": true
         },
         {
             "title": "Дата",
             "dataIndex": "date",
             "dataType": "DATE",
+            "sortable": true,
+            "filterType": "DATE",
             "visible": true
         },
         {
             "title": "Оборудование",
             "dataIndex": "equipment",
             "dataType": "STRING",
+            "sortable": false,
+            "filterType": "SELECT",
             "visible": true
         },
         {
-            "title": "Транспорт",
-            "dataIndex": "transport",
-            "dataType": "STRING",
+            "title": "Статус",
+            "dataIndex": "status",
+            "dataType": "OTHER",
+            "sortable": true,
+            "filterType": "BOOLEAN",
             "visible": true
         },
         {
             "title": "Сегмент",
             "dataIndex": "segment",
-            "dataType": "STRING",
+            "dataType": "OTHER",
+            "sortable": false,
+            "filterType": "TEXT",
             "visible": true
         }
     ],

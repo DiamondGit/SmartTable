@@ -1,267 +1,279 @@
 @import "../../styles/constants.scss";
 
-.tableContainer {
-    min-width: 720px;
-    margin: 24px 0;
-    font-family: Arial, Helvetica, sans-serif;
-    .scrollShadowContainer {
-        position: relative;
-        $shadowSize: 16px;
-        $shadowOffset: 24px;
-        $shadowColor: rgba(0, 0, 0, 0.5);
-        $leftShadow: inset $shadowSize 0 $shadowOffset (-$shadowOffset) $shadowColor;
-        $rightShadow: inset (-$shadowSize) 0 $shadowOffset (-$shadowOffset) $shadowColor;
-        &::before,
-        &::after {
-            content: "";
-            width: 100%;
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            transition: box-shadow 0.3s;
-            pointer-events: none;
-            box-shadow: none;
-        }
-        &.left::before {
-            box-shadow: $leftShadow;
-        }
-        &.right::after {
-            box-shadow: $rightShadow;
-        }
-    }
-    &.fullscreen {
+.fullscreenContainer {
+    &.active {
         position: fixed;
         z-index: $zIndex_fullscreen_table_container;
         top: 0;
         right: 0;
         bottom: 0;
+        overflow: auto;
         left: 0;
         background-color: white;
         padding: 24px 32px;
         margin: 0;
     }
-    .activeIcon {
-        color: $orange-400;
-    }
-    .topBar {
-        margin-bottom: 12px;
-        .bar {
-            gap: 6px;
-            &.left {
-                justify-content: flex-start;
-                .searchBar {
-                    position: relative;
-                    &.loading {
-                        cursor: wait;
-                        opacity: 0.5;
-                        .searchBtn {
-                            pointer-events: none !important;
+    .tableContainer {
+        min-width: 720px;
+        margin: 24px 0;
+        font-family: Arial, Helvetica, sans-serif;
+        padding: 0 24px;
+        .scrollShadowContainer {
+            position: relative;
+            $shadowSize: 16px;
+            $shadowOffset: 24px;
+            $shadowColor: rgba(0, 0, 0, 0.5);
+            $leftShadow: inset $shadowSize 0 $shadowOffset (-$shadowOffset) $shadowColor;
+            $rightShadow: inset (-$shadowSize) 0 $shadowOffset (-$shadowOffset) $shadowColor;
+            &::before,
+            &::after {
+                content: "";
+                width: 100%;
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                transition: box-shadow 0.3s;
+                pointer-events: none;
+                box-shadow: none;
+            }
+            &.left::before {
+                box-shadow: $leftShadow;
+            }
+            &.right::after {
+                box-shadow: $rightShadow;
+            }
+        }
+        .activeIcon {
+            color: $orange-400;
+        }
+        .topBar {
+            margin-bottom: 12px;
+            .bar {
+                gap: 6px;
+                &.left {
+                    justify-content: flex-start;
+                    .searchBar {
+                        position: relative;
+                        &.loading {
+                            cursor: wait;
+                            opacity: 0.5;
+                            .searchBtn {
+                                pointer-events: none !important;
+                            }
                         }
-                    }
-                    .slider {
-                        overflow: hidden;
-                        width: 0;
-                        transition: width 0.3s linear;
-                        position: absolute;
-                        bottom: 0;
-                        left: 100%;
-                        transform: translateX(8px);
-                        .inputContainer {
-                            display: flex;
-                            justify-content: flex-start;
-                            align-items: center;
-                            width: 300px;
-                        }
-                    }
-                    &.open {
                         .slider {
-                            width: 300px;
+                            overflow: hidden;
+                            width: 0;
+                            transition: width 0.3s linear;
+                            position: absolute;
+                            bottom: 0;
+                            left: 100%;
+                            transform: translateX(8px);
+                            .inputContainer {
+                                display: flex;
+                                justify-content: flex-start;
+                                align-items: center;
+                                width: 300px;
+                            }
+                        }
+                        &.open {
+                            .slider {
+                                width: 300px;
+                            }
+                        }
+                        .searchBtn {
+                            width: 32px;
+                            height: 32px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            color: $black-400;
+                            transition: background 0.2s;
+                            &:hover {
+                                background-color: rgba(0, 0, 0, 0.1);
+                            }
+                        }
+                        &.loading .searchBtn {
+                            pointer-events: none;
                         }
                     }
-                    .searchBtn {
-                        width: 32px;
-                        height: 32px;
-                        border-radius: 8px;
-                        cursor: pointer;
-                        color: $black-400;
-                        transition: background 0.2s;
-                        &:hover {
-                            background-color: rgba(0, 0, 0, 0.1);
-                        }
-                    }
-                    &.loading .searchBtn {
-                        pointer-events: none;
-                    }
+                }
+                &.right {
+                    justify-content: flex-end;
+                }
+                .acitveIcon {
+                    color: $orange-400;
                 }
             }
-            &.right {
-                justify-content: flex-end;
-            }
-            .acitveIcon {
-                color: $orange-400;
+            .title {
+                font-size: 28px;
+                font-weight: 700;
+                margin-right: 8px;
+                line-height: 32px;
             }
         }
-        .title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-right: 8px;
-            line-height: 32px;
-        }
-    }
-    &.size_SMALL {
-        .table {
-            th,
-            td {
-                padding: 4px 6px;
-            }
-            .actionCell {
-                padding: 2px 4px !important;
-            }
-        }
-    }
-    &.size_MEDIUM {
-        .table {
-            th,
-            td {
-                padding: 8px 12px;
-            }
-        }
-    }
-    &.size_LARGE {
-        .table {
-            th,
-            td {
-                padding: 12px 16px;
-            }
-        }
-    }
-    .table {
-        width: 100%;
-        border-spacing: 0;
-        background-color: red;
-        &.loading::after {
-            content: "";
-            top: 0;
-            right: 0;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: none;
-            z-index: 150;
-            display: block;
-            position: absolute;
-            background-color: rgba(230, 230, 230, 0.5);
-        }
-        thead tr {
-            font-size: 16px;
-            background-color: $blue-400;
-            th {
-                color: $white-400;
-                cursor: pointer;
-                line-height: 18px;
-                user-select: none;
-                &:hover {
-                    background-color: $blue-500;
-                    &:not(:first-child) {
-                        border-left-color: $blue-500;
-                    }
-                }
-                &:not(:first-child) {
-                    border-left: 1px solid $blue-400;
-                }
-                &:not(.actionCell) {
-                    position: relative;
-                    padding-right: 48px;
-                    &.sortColumn {
-                        color: $orange-400;
-                    }
-                    .sortingArrow {
-                        position: absolute;
-                        top: 50%;
-                        right: 24px;
-                        transform: translate(50%, -50%);
-                    }
-                }
-                &.pin {
-                    position: sticky;
-                    background-color: $blue-400;
-                    z-index: 100;
-                }
-                &.actionCell {
-                    pointer-events: none;
-                }
-            }
-        }
-        tbody tr {
-            td {
-                line-height: 18px;
-                background-color: $white-400;
-                &:not(.actionCell) {
-                    text-align: left;
-                    vertical-align: top;
-                }
-                &.pin {
-                    position: sticky;
-                    background-color: white;
-                    z-index: 100;
-                }
-                &:not(:first-child) {
-                    border-left: 1px solid $gray-300;
-                }
-                &.numericField {
-                    text-align: right;
-                }
-            }
-            &:nth-child(even) td {
-                background-color: $blue-100;
-            }
-            td.sortColumn {
-                background-color: $gray-250;
-            }
-            &:nth-child(even) td.sortColumn {
-                background-color: $gray-250;
-            }
-            &:hover td {
-                background-color: $blue-150;
-                &.sortColumn {
-                    background-color: $gray-300;
-                }
-            }
-            &.selected {
+        &.size_SMALL {
+            .table {
+                th,
                 td {
-                    background-color: $gray-300;
+                    padding: 4px 6px;
+                }
+                .actionCell {
+                    padding: 2px 4px !important;
+                }
+            }
+        }
+        &.size_MEDIUM {
+            .table {
+                th,
+                td {
+                    padding: 8px 12px;
+                }
+            }
+        }
+        &.size_LARGE {
+            .table {
+                th,
+                td {
+                    padding: 12px 16px;
+                }
+            }
+        }
+        .table {
+            width: 100%;
+            border-spacing: 0;
+            background-color: red;
+            &.loading::after {
+                content: "";
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: none;
+                z-index: 150;
+                display: block;
+                position: absolute;
+                background-color: rgba(230, 230, 230, 0.5);
+            }
+            thead 
+                
+                tr {
+                    font-size: 16px;
+                    background-color: $blue-400;
+                    th {
+                        
+                        color: $white-400;
+                        cursor: pointer;
+                        line-height: 18px;
+                        user-select: none;
+                        &:hover {
+                            background-color: $blue-500;
+                            &:not(:first-child) {
+                                border-left-color: $blue-500;
+                            }
+                        }
+                        &:not(:first-child) {
+                            border-left: 1px solid $blue-400;
+                        }
+                        &:not(.actionCell) {
+                            position: relative;
+                            padding-right: 48px;
+                            &.sortColumn {
+                                color: $orange-400;
+                            }
+                            .sortingArrow {
+                                position: absolute;
+                                top: 50%;
+                                right: 24px;
+                                transform: translate(50%, -50%);
+                            }
+                        }
+                        position: sticky !important;
+                        top: 0 !important;
+                        z-index: 10 !important;
+                        &.pin {
+                            background-color: $blue-400;
+                            z-index: 100;
+                        }
+                        &.actionCell {
+                            pointer-events: none;
+                        }
+                    
+                }
+            }
+            tbody tr {
+                td {
+                    line-height: 18px;
+                    background-color: $white-400;
+                    &:not(.actionCell) {
+                        text-align: left;
+                        vertical-align: top;
+                    }
+                    &.pin {
+                        position: sticky;
+                        z-index: 100;
+                    }
+                    &:not(:first-child) {
+                        border-left: 1px solid $gray-300;
+                    }
+                    &.numericField {
+                        text-align: right;
+                    }
+                    &.centeredField {
+                        text-align: center;
+                    }
+                }
+                &:nth-child(even) td {
+                    background-color: $blue-100;
+                }
+                td.sortColumn {
+                    background-color: $gray-250;
+                }
+                &:nth-child(even) td.sortColumn {
+                    background-color: $gray-250;
                 }
                 &:hover td {
-                    background-color: $gray-350;
+                    background-color: $blue-150;
+                    &.sortColumn {
+                        background-color: $gray-300;
+                    }
+                }
+                &.selected {
+                    td {
+                        background-color: $gray-300;
+                    }
+                    &:hover td {
+                        background-color: $gray-350;
+                    }
+                }
+                .emptyBoxImg {
+                    width: 150px;
+                    height: 165px;
+                    background-image: url("../../pictures/open_empty_box.png");
+                    background-repeat: no-repeat;
+                    background-position: bottom center;
+                    background-size: contain;
+                    .label {
+                        text-align: center;
+                    }
                 }
             }
-            .emptyBoxImg {
-                width: 150px;
+            .loadingError {
                 height: 165px;
-                background-image: url("../../pictures/open_empty_box.png");
-                background-repeat: no-repeat;
-                background-position: bottom center;
-                background-size: contain;
-                .label {
-                    text-align: center;
-                }
             }
-        }
-        .loadingError {
-            height: 165px;
-        }
-        th.actionCell,
-        td.actionCell {
-            padding: 4px !important;
-            text-align: center;
-        }
-        td.actionCell .actionButton {
-            color: $black-300;
-            padding: 2px;
-        }
-        th.actionCell {
-            background-color: $blue-400;
+            th.actionCell,
+            td.actionCell {
+                padding: 4px !important;
+                text-align: center;
+            }
+            td.actionCell .actionButton {
+                color: $black-300;
+                padding: 2px;
+            }
+            th.actionCell {
+                background-color: $blue-400;
+            }
         }
     }
 }

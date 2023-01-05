@@ -1,0 +1,98 @@
+@import "../../../styles/constants.scss";
+
+.filterContainer {
+    width: 100%;
+    max-height: 500px;
+    margin-bottom: 16px;
+    list-style: none;
+    .filterTable {
+        width: 100%;
+        border-spacing: 0;
+        th {
+            text-align: left;
+        }
+        th,
+        td {
+            padding: 4px;
+        }
+        .activeStatus {
+            width: 40px;
+        }
+        .order {
+            width: 24px;
+        }
+        .columnSelect {
+            width: 180px;
+        }
+        .exclusion {
+            text-align: center;
+            width: 100px;
+        }
+        .filterValue {
+            width: 100%;
+        }
+        .columnSelect,
+        .exclusion,
+        .filterValue {
+            padding: 4px 8px;
+        }
+        .delete {
+            width: max-content;
+        }
+        .filterItem {
+            background-color: transparent;
+            border-radius: 4px;
+            &:not(.active) {
+                opacity: 0.75;
+            }
+            &.highlight {
+                &.highlighted_0 {
+                    animation: highlight_0 2s;
+                }
+                &.highlighted_1 {
+                    animation: highlight_1 2s;
+                }
+            }
+            &.warning {
+                &.highlighted_0 {
+                    animation: warning_0 2s;
+                }
+                &.highlighted_1 {
+                    animation: warning_1 2s;
+                }
+            }
+            @keyframes highlight_0 {
+                from {
+                    background-color: $blue-200;
+                }
+                to {
+                    background-color: transparent;
+                }
+            }
+            @keyframes highlight_1 {
+                from {
+                    background-color: $blue-200;
+                }
+                to {
+                    background-color: transparent;
+                }
+            }
+            @keyframes warning_0 {
+                from {
+                    background-color: $orange-200;
+                }
+                to {
+                    background-color: transparent;
+                }
+            }
+            @keyframes warning_1 {
+                from {
+                    background-color: $orange-200;
+                }
+                to {
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+}

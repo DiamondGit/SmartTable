@@ -6,7 +6,6 @@ interface TableStateContextType {
     setSavedSettings: React.Dispatch<React.SetStateAction<boolean>>;
     isModalTableConfigResetHard: boolean;
     setModalTableConfigResetHard: React.Dispatch<React.SetStateAction<boolean>>;
-    checkChanges: () => void;
     isConfigLoadingError: boolean;
     isDataLoadingError: boolean;
     isConfigLoading: boolean;
@@ -19,6 +18,8 @@ interface TableStateContextType {
     setActionCellWidth: React.Dispatch<React.SetStateAction<number>>;
     searchValue: string;
     setSearchValue: React.Dispatch<React.SetStateAction<string>>;
+    isFiltersFilled: boolean;
+    setFiltersFilled: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const TableStateContext = createContext<TableStateContextType>({} as TableStateContextType);

@@ -10,7 +10,6 @@ import TableUIContext from "../../../context/TableUIContext";
 import { TableCellSizes, TableColumnType, Z_ModalTypes, Z_TableCellSizes } from "../../../types/general";
 import Aligner from "../../Aligner";
 import DraggableList from "../../DraggableList";
-import AddIcon from '@mui/icons-material/Add';
 
 interface SettingsModalType {
     tableTitle?: string;
@@ -83,12 +82,12 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
         tableConfigContext.setModalTableConfig(tableConfigContext.defaultTableConfig, true);
     };
 
-    const onConfirmSettings = () => {
+    const handleConfirmSettings = () => {
         closeModal();
         applySettings();
     };
 
-    const onCancelSettings = () => {
+    const handleCancelSettings = () => {
         closeModal();
         resetSettings();
     };
@@ -101,20 +100,20 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
         setSavingSettings(false);
     };
 
-    const onChangeSettingsName = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChangeSettingsName = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (event.target.value.length < 16) setSettingsName(event.target.value);
     };
 
     const modalProps: ModalType = {
-        title: (
+        Title: () => (
             <Aligner style={{ justifyContent: "flex-start" }} gutter={8}>
                 <SettingsIcon sx={{ fontSize: 24 }} />
                 {`Настройка таблицы "${tableTitle}"`.trim()}
             </Aligner>
         ),
         open: open,
-        onConfirm: onConfirmSettings,
-        onCancel: onCancelSettings,
+        onConfirm: handleConfirmSettings,
+        onCancel: handleCancelSettings,
         type: Z_ModalTypes.enum.SETTINGS,
         isSavingSettings: isSavingSettings,
         leftFooter:
@@ -129,7 +128,7 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
                             size={"small"}
                             style={{ width: "150px" }}
                             value={settingsName}
-                            onChange={onChangeSettingsName}
+                            onChange={handleChangeSettingsName}
                         />
                         <Aligner style={{ justifyContent: "flex-end" }} gutter={8}>
                             <UI.SecondaryBtn onClick={confirmSaveSettings}>Отмена</UI.SecondaryBtn>
@@ -138,6 +137,12 @@ const SettingsModal = ({ tableTitle = "", open, setOpen }: SettingsModalType) =>
                     </Aligner>
                 )
             ) : undefined,
+        rightFooter: (
+            <>
+                <UI.SecondaryBtn onClick={handleCancelSettings}>Отмена</UI.SecondaryBtn>
+                <UI.PrimaryBtn onClick={handleConfirmSettings}>Применить</UI.PrimaryBtn>
+            </>
+        )
     };
 
     const reorder = (list: TableColumnType[], startIndex: number, endIndex: number): TableColumnType[] => {

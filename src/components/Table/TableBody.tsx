@@ -50,7 +50,13 @@ const TableBody = ({
     const getPinOffset = (pin: TablePinOptions, order: number): number => {
         return (
             tableColumnWidths.current
-                .filter((tableColumnWidth) => tableColumnWidth.pin === pin && (pin === Z_TablePinOptions.enum.LEFT ? tableColumnWidth.order < order : tableColumnWidth.order > order))
+                .filter(
+                    (tableColumnWidth) =>
+                        tableColumnWidth.pin === pin &&
+                        (pin === Z_TablePinOptions.enum.LEFT
+                            ? tableColumnWidth.order < order
+                            : tableColumnWidth.order > order)
+                )
                 .reduce((widthSum, columnWidth) => widthSum + columnWidth.width, 0) || 0
         );
     };
@@ -67,9 +73,9 @@ const TableBody = ({
                     pin: Z_TablePinOptions.enum.LEFT,
                     order: -1,
                     width: actionCellRef.current?.clientWidth,
-                })
+                });
             }
-        }, [actionCellRef.current])
+        }, [actionCellRef.current]);
 
         const toggleRowClick = (event: React.MouseEvent<HTMLElement>) => {
             if (event.ctrlKey) {
@@ -115,11 +121,11 @@ const TableBody = ({
             let columnClasses: string[] = [];
 
             if (tableStateContext.sortingColumn === column.dataIndex) columnClasses.push(style.sortColumn);
-            if (column.pin !== Z_TablePinOptions.enum.NONE) 
-                columnClasses.push(style.pin);
-            
+            if (column.pin !== Z_TablePinOptions.enum.NONE) columnClasses.push(style.pin);
 
-            if (column.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField)
+            if (column.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField);
+            if (column.dataType !== Z_TableDataTypes.enum.STRING && column.dataType !== Z_TableDataTypes.enum.NUMBER)
+                columnClasses.push(style.centeredField);
 
             return columnClasses;
         };
@@ -128,7 +134,9 @@ const TableBody = ({
             const cellRef = useRef<HTMLTableCellElement>(null);
             const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
             const isLeftPin = column.pin === Z_TablePinOptions.enum.LEFT;
-            const leftPinsCount = tableColumnWidths.current.filter(tableColumnWidth => tableColumnWidth.pin === Z_TablePinOptions.enum.LEFT).length;
+            const leftPinsCount = tableColumnWidths.current.filter(
+                (tableColumnWidth) => tableColumnWidth.pin === Z_TablePinOptions.enum.LEFT
+            ).length;
 
             useEffect(() => {
                 updateTableColumnWidth({
@@ -140,7 +148,12 @@ const TableBody = ({
             }, [cellRef.current]);
 
             const columnStyle = {
-                ...(isPinned ? { [getPinSide(column.pin)]: getPinOffset(column.pin, order) + (isLeftPin ? order : leftPinsCount - order) } : {}),
+                ...(isPinned
+                    ? {
+                          [getPinSide(column.pin)]:
+                              getPinOffset(column.pin, order) + (isLeftPin ? order : leftPinsCount - order),
+                      }
+                    : {}),
             };
 
             let field = dataRow[column.dataIndex];
@@ -171,11 +184,15 @@ const TableBody = ({
             );
         };
 
-        const hasLeftPin = tableConfig.table.some(column => column.pin === Z_TablePinOptions.enum.LEFT);
+        const hasLeftPin = tableConfig.table.some((column) => column.pin === Z_TablePinOptions.enum.LEFT);
 
         return (
             <tr className={`${isClicked ? style.selected : ""}`} onClick={toggleRowClick}>
-                <td className={style.actionCell} style={hasLeftPin ? {position: "sticky", left: 0} : {}} ref={actionCellRef}>
+                <td
+                    className={style.actionCell}
+                    style={hasLeftPin ? { position: "sticky", left: 0 } : {}}
+                    ref={actionCellRef}
+                >
                     <Aligner>
                         <IconButton size={"small"} onClick={handleClick} className={style.actionButton}>
                             <MoreVertIcon />

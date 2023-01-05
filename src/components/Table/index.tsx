@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from "react";
+import { ConfigProvider as AntdConfigProvider } from "antd";
+import { useEffect, useState } from "react";
 import TableConfigContext from "../../context/TableConfigContext";
 import TableStateContext from "../../context/TableStateContext";
 import TableUIContext from "../../context/TableUIContext";
@@ -9,25 +10,32 @@ import {
     SavedTableConfigType,
     TableConfigSchema,
     TableConfigType,
+    TableFilterHighlightType,
+    TableFilterItemType,
     TableInitializationType,
     TableSortOptions,
     TableUIType,
+    Z_FilterHighlights,
     Z_TableCellSizes,
     Z_TableSortOptions,
 } from "../../types/general";
 import Aligner from "../Aligner";
 import SettingsModal from "../Modal/SettingsModal";
+import PaginationWrapper from "../PaginationWrapper";
 import SkeletonFiller from "./SkeletonFiller";
 import style from "./Table.module.scss";
 import TableBody from "./TableBody";
 import TableHead from "./TableHead";
 import TopBar from "./TopBar";
+import ruRU from "antd/locale/ru_RU";
+import FilterModal from "../Modal/FilterModal";
+import TableFilterContext from "../../context/TableFilterContext";
 
 interface TableStartingType extends TableInitializationType {
     UI: TableUIType;
 }
 
-const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStartingType) => {
+const Table = ({ tableTitle, tableName, userId, loadingConfig, paginationConfig, UI }: TableStartingType) => {
     const [isSavedSettings, setSavedSettings] = useState(false);
 
     const [isConfigLoading, setConfigLoading] = useState(false);
@@ -49,6 +57,7 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
 
     const [isFullscreen, setFullscreen] = useState(false);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+    const [isFilterModalOpen, setFilterModalOpen] = useState(false);
 
     const isConfigLoaded = !isConfigLoading && !isConfigLoadingError && tableConfig;
     const defaultColumnCount = loadingConfig?.columnCount || 4;
@@ -61,6 +70,19 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
     const [searchValue, setSearchValue] = useState("");
 
     const { scrollContainer, boxShadowClasses, onScrollHandler, doShadow } = useScrollWithShadow();
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pageSize, setPageSize] = useState(0);
+
+    const [filterHighlight, setFilterHighlight] = useState<TableFilterHighlightType>({
+        type: Z_FilterHighlights.enum.HIGHLIGHT,
+        filterIds: [],
+    });
+    const [filtersList, setFiltersList] = useState<TableFilterItemType[]>([]);
+    const [modalFiltersList, setModalFiltersList] = useState<TableFilterItemType[]>(filtersList);
+    const [modalFiltersChangesList, setModalFiltersChangesList] = useState<TableFilterItemType[]>(filtersList);
+
+    const [isFiltersFilled, setFiltersFilled] = useState(false);
 
     const computedLoadingConfig = {
         columnCount:
@@ -133,16 +155,27 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
         setModalTableConfig(tableConfig);
     };
 
+    const openFilterModal = () => {
+        setFilterModalOpen(true);
+    };
+
+    const handleChangePage = (newPage: number) => {
+        if (paginationConfig?.perPageFetch) {
+            console.log("--- FETCH NEW DATA ---");
+        }
+        setCurrentPage(newPage);
+    };
+
+    const fullscreenContainerClasses = [style.fullscreenContainer];
+    if (isFullscreen) fullscreenContainerClasses.push(style.active);
+
     const tableContainerClasses = [
         style.tableContainer,
         style[`size_${tableConfig?.cellSize || Z_TableCellSizes.enum.MEDIUM}`],
     ];
-    if (isFullscreen) tableContainerClasses.push(style.fullscreen);
 
     const tableClasses = [style.table];
     if (isLoading) tableClasses.push(style.loading);
-
-    const checkChanges = () => {};
 
     useEffect(() => {
         doShadow();
@@ -156,6 +189,8 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
     const setAndCompareTableConfig = (newTableConfig: TableConfigType) => {
         setTableConfig(newTableConfig);
     };
+
+    const slicedDataStartIndex = (currentPage - 1) * pageSize;
 
     return (
         <TableConfigContext.Provider
@@ -171,105 +206,169 @@ const Table = ({ tableTitle, tableName, userId, loadingConfig, UI }: TableStarti
                 setModalTableConfig: setAndCompareTempTableConfig,
             }}
         >
-            <TableStateContext.Provider
+            <TableFilterContext.Provider
                 value={{
-                    isModalTableConfigResetHard: isModalTableConfigResetHard,
-                    setModalTableConfigResetHard: setModalTableConfigResetHard,
+                    filtersList: filtersList,
+                    setFiltersList: setFiltersList,
 
-                    isSavedSettings: isSavedSettings,
-                    setSavedSettings: setSavedSettings,
+                    modalFiltersList: modalFiltersList,
+                    setModalFiltersList: setModalFiltersList,
 
-                    checkChanges: checkChanges,
+                    modalFiltersChangesList: modalFiltersChangesList,
+                    setModalFiltersChangesList: setModalFiltersChangesList,
 
-                    isConfigLoadingError: isConfigLoadingError,
-                    isDataLoadingError: isDataLoadingError,
-
-                    isConfigLoading: isConfigLoading,
-                    isDataLoading: isDataLoading,
-
-                    sortingColumn: sortingColumn,
-                    setSortingColumn: setSortingColumn,
-
-                    sortingDirection: sortingDirection,
-                    setSortingDirection: setSortingDirection,
-
-                    actionCellWidth: actionCellWidth,
-                    setActionCellWidth: setActionCellWidth,
-
-                    searchValue: searchValue,
-                    setSearchValue: setSearchValue,
+                    filterHighlight: filterHighlight,
+                    setFilterHighlight: setFilterHighlight,
                 }}
             >
-                <TableUIContext.Provider value={UI}>
-                    <div className={tableContainerClasses.join(" ")}>
-                        <SettingsModal open={isSettingsModalOpen} setOpen={setSettingsModalOpen} tableTitle={tableTitle} />
-                        <TopBar
-                            title={tableTitle}
-                            isConfigLoading={isConfigLoading}
-                            isDataLoading={isDataLoading}
-                            isError={isError}
-                            isFullscreen={isFullscreen}
-                            computedLoadingConfig={computedLoadingConfig}
-                            toggleFullscreen={toggleFullscreen}
-                            openSettingsModal={openSettingsModal}
-                        />
-                        <div className={boxShadowClasses.map((boxShadowClass) => style[boxShadowClass]).join(" ")}>
-                            <div ref={scrollContainer} style={{ overflowX: "auto" }} onScroll={onScrollHandler}>
-                                <table className={tableClasses.join(" ")}>
-                                    {(!isError || isConfigLoading) && (
-                                        <thead>
-                                            <tr>
-                                                {!isConfigLoading ? (
-                                                    <TableHead tableConfig={tableConfig} />
-                                                ) : (
-                                                    <SkeletonFiller
-                                                        columnCount={computedLoadingConfig.columnCount}
-                                                        isHeading
-                                                    />
-                                                )}
-                                            </tr>
-                                        </thead>
-                                    )}
-                                    {!isError || isConfigLoading ? (
-                                        <tbody>
-                                            {!isLoading ? (
-                                                <TableBody
-                                                    data={data}
-                                                    selectedRows={selectedRows}
-                                                    setSelectedRows={setSelectedRows}
-                                                />
-                                            ) : (
-                                                <SkeletonFiller
-                                                    columnCount={computedLoadingConfig.columnCount}
-                                                    rowCount={computedLoadingConfig.rowCount}
-                                                />
-                                            )}
-                                        </tbody>
-                                    ) : (
-                                        <tbody>
-                                            <tr>
-                                                <td
-                                                    style={{
-                                                        padding: 0,
-                                                    }}
-                                                >
-                                                    <Aligner className={style.loadingError}>
-                                                        {isConfigLoadingError
-                                                            ? isDataLoadingError
-                                                                ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
-                                                                : "ОШИБКА ТАБЛИЦЫ"
-                                                            : isDataLoadingError && "ОШИБКА ДАННЫХ"}
-                                                    </Aligner>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    )}
-                                </table>
+                <TableStateContext.Provider
+                    value={{
+                        isModalTableConfigResetHard: isModalTableConfigResetHard,
+                        setModalTableConfigResetHard: setModalTableConfigResetHard,
+
+                        isSavedSettings: isSavedSettings,
+                        setSavedSettings: setSavedSettings,
+
+                        isConfigLoadingError: isConfigLoadingError,
+                        isDataLoadingError: isDataLoadingError,
+
+                        isConfigLoading: isConfigLoading,
+                        isDataLoading: isDataLoading,
+
+                        sortingColumn: sortingColumn,
+                        setSortingColumn: setSortingColumn,
+
+                        sortingDirection: sortingDirection,
+                        setSortingDirection: setSortingDirection,
+
+                        actionCellWidth: actionCellWidth,
+                        setActionCellWidth: setActionCellWidth,
+
+                        searchValue: searchValue,
+                        setSearchValue: setSearchValue,
+
+                        isFiltersFilled: isFiltersFilled,
+                        setFiltersFilled: setFiltersFilled,
+                    }}
+                >
+                    <TableUIContext.Provider value={UI}>
+                        <AntdConfigProvider
+                            theme={{
+                                token: {
+                                    colorPrimary: "#223c60",
+                                },
+                            }}
+                            locale={ruRU}
+                        >
+                            <div className={fullscreenContainerClasses.join(" ")}>
+                                <div className={tableContainerClasses.join(" ")}>
+                                    <SettingsModal
+                                        open={isSettingsModalOpen}
+                                        setOpen={setSettingsModalOpen}
+                                        tableTitle={tableTitle}
+                                    />
+                                    <FilterModal
+                                        open={isFilterModalOpen}
+                                        setOpen={setFilterModalOpen}
+                                        tableTitle={tableTitle}
+                                    />
+                                    <TopBar
+                                        title={tableTitle}
+                                        isConfigLoading={isConfigLoading}
+                                        isDataLoading={isDataLoading}
+                                        isError={isError}
+                                        isFullscreen={isFullscreen}
+                                        computedLoadingConfig={computedLoadingConfig}
+                                        toggleFullscreen={toggleFullscreen}
+                                        openSettingsModal={openSettingsModal}
+                                        openFilterModal={openFilterModal}
+                                    />
+                                    <PaginationWrapper
+                                        total={data.length}
+                                        current={currentPage}
+                                        handlePageChange={handleChangePage}
+                                        pageSize={pageSize}
+                                        setPageSize={setPageSize}
+                                        paginationConfig={paginationConfig}
+                                        disabled={isLoading}
+                                        openFilterModal={openFilterModal}
+                                    >
+                                        <div
+                                            className={boxShadowClasses
+                                                .map((boxShadowClass) => style[boxShadowClass])
+                                                .join(" ")}
+                                        >
+                                            <div
+                                                ref={scrollContainer}
+                                                style={{ overflowX: "auto" }}
+                                                onScroll={onScrollHandler}
+                                            >
+                                                <table className={tableClasses.join(" ")}>
+                                                    {(!isError || isConfigLoading) && (
+                                                        <thead>
+                                                            <tr>
+                                                                {!isConfigLoading ? (
+                                                                    <TableHead tableConfig={tableConfig} />
+                                                                ) : (
+                                                                    <SkeletonFiller
+                                                                        columnCount={computedLoadingConfig.columnCount}
+                                                                        isHeading
+                                                                    />
+                                                                )}
+                                                            </tr>
+                                                        </thead>
+                                                    )}
+                                                    {!isError || isConfigLoading ? (
+                                                        <tbody>
+                                                            {!isLoading ? (
+                                                                <TableBody
+                                                                    data={
+                                                                        paginationConfig?.perPageFetch
+                                                                            ? data
+                                                                            : data.slice(
+                                                                                  slicedDataStartIndex,
+                                                                                  slicedDataStartIndex + pageSize
+                                                                              )
+                                                                    }
+                                                                    selectedRows={selectedRows}
+                                                                    setSelectedRows={setSelectedRows}
+                                                                />
+                                                            ) : (
+                                                                <SkeletonFiller
+                                                                    columnCount={computedLoadingConfig.columnCount}
+                                                                    rowCount={computedLoadingConfig.rowCount}
+                                                                />
+                                                            )}
+                                                        </tbody>
+                                                    ) : (
+                                                        <tbody>
+                                                            <tr>
+                                                                <td
+                                                                    style={{
+                                                                        padding: 0,
+                                                                    }}
+                                                                >
+                                                                    <Aligner className={style.loadingError}>
+                                                                        {isConfigLoadingError
+                                                                            ? isDataLoadingError
+                                                                                ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
+                                                                                : "ОШИБКА ТАБЛИЦЫ"
+                                                                            : isDataLoadingError && "ОШИБКА ДАННЫХ"}
+                                                                    </Aligner>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    )}
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </PaginationWrapper>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </TableUIContext.Provider>
-            </TableStateContext.Provider>
+                        </AntdConfigProvider>
+                    </TableUIContext.Provider>
+                </TableStateContext.Provider>
+            </TableFilterContext.Provider>
         </TableConfigContext.Provider>
     );
 };

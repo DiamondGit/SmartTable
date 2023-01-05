@@ -6,6 +6,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import { Skeleton } from "@mui/lab";
 import { useContext } from "react";
 import TableConfigContext from "../../context/TableConfigContext";
+import TableFilterContext from "../../context/TableFilterContext";
 import TableUIContext from "../../context/TableUIContext";
 import Aligner from "../Aligner";
 import Tooltip from "../Tooltip";
@@ -26,6 +27,7 @@ interface TopBarType {
     };
     toggleFullscreen: () => void;
     openSettingsModal: () => void;
+    openFilterModal: () => void;
 }
 
 const TopBar = ({
@@ -37,12 +39,16 @@ const TopBar = ({
     computedLoadingConfig,
     toggleFullscreen,
     openSettingsModal,
+    openFilterModal,
 }: TopBarType) => {
     const tableConfigContext = useContext(TableConfigContext);
+    const tableFilterContext = useContext(TableFilterContext);
     const UI = useContext(TableUIContext);
     const iconStyle = {
         fontSize: 22,
     };
+
+    const hasFilters = tableFilterContext.filtersList.length > 0;
 
     const isTableDefaultSettings =
         JSON.stringify(tableConfigContext.tableConfig) === JSON.stringify(tableConfigContext.defaultTableConfig);
@@ -65,7 +71,7 @@ const TopBar = ({
                     : !computedLoadingConfig.noFuncBtnsLeft && (
                           <>
                               <Skeleton variant={"rounded"} width={40} height={32} animation={"wave"} />
-                              <Skeleton variant={"circular"} width={32} height={32} animation={"wave"} />
+                              <Skeleton variant={"rounded"} width={32} height={32} animation={"wave"} />
                           </>
                       )}
             </Aligner>
@@ -86,8 +92,8 @@ const TopBar = ({
                                   </UI.SecondaryBtn>
                               </Tooltip>
                               <Tooltip title={"Фильтр"} placement={"top-end"} disableHoverListener={isDataLoading}>
-                                  <UI.SecondaryBtn loading={isDataLoading}>
-                                      <FilterAltIcon sx={iconStyle} />
+                                  <UI.SecondaryBtn loading={isDataLoading} onClick={openFilterModal}>
+                                      <FilterAltIcon sx={iconStyle} className={hasFilters ? style.acitveIcon : ""} />
                                   </UI.SecondaryBtn>
                               </Tooltip>
                               <Tooltip
@@ -98,7 +104,7 @@ const TopBar = ({
                                   <UI.SecondaryBtn loading={isDataLoading} onClick={openSettingsModal}>
                                       <SettingsIcon
                                           sx={iconStyle}
-                                          className={`${!isTableDefaultSettings ? style.acitveIcon : ""}`}
+                                          className={!isTableDefaultSettings ? style.acitveIcon : ""}
                                       />
                                   </UI.SecondaryBtn>
                               </Tooltip>

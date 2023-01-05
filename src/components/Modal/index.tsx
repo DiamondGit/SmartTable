@@ -8,7 +8,7 @@ import { ModalTypes, Z_ModalTypes } from "../../types/general";
 import style from "./Modal.module.scss";
 
 export interface ModalType {
-    title?: React.ReactNode;
+    Title: () => JSX.Element;
     open: boolean;
     onConfirm: () => void;
     onCancel: () => void;
@@ -17,11 +17,12 @@ export interface ModalType {
     type: ModalTypes;
     isSavingSettings?: boolean;
     children?: React.ReactNode;
+    width?: number;
     style?: React.CSSProperties;
 }
 
 const Modal = ({
-    title,
+    Title,
     open,
     onConfirm,
     onCancel,
@@ -29,6 +30,7 @@ const Modal = ({
     rightFooter = null,
     type,
     isSavingSettings = false,
+    width = 520,
     children,
     ...props
 }: ModalType) => {
@@ -37,35 +39,38 @@ const Modal = ({
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);
 
+    const defaultOkText = "ОК";
+    const defaultCancelText = "Отмена";
     const modalProps = {
         title: (
             <div className={style.title}>
                 {type !== Z_ModalTypes.enum.SETTINGS ? (
                     <div
                         className={style.draggable}
-                        onMouseOver={() => {
+                        onMouseEnter={() => {
                             if (disabled) {
-                                setDisabled(false);
+                                setDisabled(prevState => false);
                             }
                         }}
-                        onMouseOut={() => {
-                            setDisabled(true);
+                        onMouseLeave={() => {
+                            setDisabled(prevState => true);
                         }}
                         onFocus={() => {}}
                         onBlur={() => {}}
                     >
-                        {title} <DragIndicatorIcon sx={{ opacity: 0.3 }} />
+                        <Title />
+                        <DragIndicatorIcon sx={{ opacity: 0.3 }} />
                     </div>
                 ) : (
-                    title
+                    <Title />
                 )}
             </div>
         ),
         open: open,
         closeIcon: <CloseIcon />,
         closable: true,
-        okText: "ОК",
-        cancelText: "Отмена",
+        okText: defaultOkText,
+        cancelText: defaultCancelText,
         footer: (
             <div className={style.footer}>
                 {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
@@ -76,8 +81,8 @@ const Modal = ({
                             <>{rightFooter}</>
                         ) : (
                             <>
-                                <UI.SecondaryBtn onClick={onCancel}>Отмена</UI.SecondaryBtn>
-                                <UI.PrimaryBtn onClick={onConfirm}>Применить</UI.PrimaryBtn>
+                                <UI.SecondaryBtn onClick={onCancel}>{defaultCancelText}</UI.SecondaryBtn>
+                                <UI.PrimaryBtn onClick={onConfirm}>{defaultOkText}</UI.PrimaryBtn>
                             </>
                         )}
                     </div>
@@ -86,6 +91,7 @@ const Modal = ({
         ),
         onCancel: onCancel,
         forceRender: true,
+        width: width,
         modalRender:
             type !== Z_ModalTypes.enum.SETTINGS
                 ? (modal: React.ReactNode) => (
@@ -112,7 +118,7 @@ const Modal = ({
     };
 
     return (
-        <AntdModal {...modalProps} {...props} style={{ top: 200 }} className={style.modal}>
+        <AntdModal {...modalProps} style={{ top: 150, ...props.style }} className={style.modal}>
             {children}
         </AntdModal>
     );

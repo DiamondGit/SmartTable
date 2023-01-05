@@ -1,0 +1,22 @@
+.wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 8px;
+    .paginationContainer {
+        &.position_LEFT {
+            align-self: flex-start;
+        }
+        &.position_CENTER {
+            align-self: center;
+        }
+        &.position_RIGHT {
+            align-self: flex-end;
+        }
+    }
+    .content {
+        align-self: stretch;
+    }
+}
