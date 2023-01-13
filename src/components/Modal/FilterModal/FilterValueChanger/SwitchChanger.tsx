@@ -1,14 +1,14 @@
 import { Switch } from "@mui/material";
 import { useContext, useEffect } from "react";
-import TableFilterContext from "../../../context/TableFilterContext";
-import { TableFilterItemType } from "../../../types/general";
-import Aligner from "../../Aligner";
+import FilterContext from "../../../../context/FilterContext";
+import { TableFilterItemType } from "../../../../types/general";
+import Aligner from "../../../Aligner";
 
 const SwitchChanger = ({ filter }: { filter: TableFilterItemType }) => {
-    const tableFilterContext = useContext(TableFilterContext);
+    const filterContext = useContext(FilterContext);
 
     useEffect(() => {
-        tableFilterContext.setModalFiltersChangesList((prevFilters) => {
+        filterContext.setModalFiltersChangesList((prevFilters) => {
             const filterItemIndex = prevFilters.findIndex((prevFilter) => prevFilter.id === filter.id);
             const currentFilter = prevFilters[filterItemIndex];
             if (typeof currentFilter.field === "string") {
@@ -25,7 +25,7 @@ const SwitchChanger = ({ filter }: { filter: TableFilterItemType }) => {
         const {
             target: { checked },
         } = event;
-        tableFilterContext.setModalFiltersChangesList((prevFilters) => {
+        filterContext.setModalFiltersChangesList((prevFilters) => {
             const filterItemIndex = prevFilters.findIndex((prevFilter) => prevFilter.id === filter.id);
             const currentFilter = prevFilters[filterItemIndex];
             if (typeof currentFilter.field === "string") {

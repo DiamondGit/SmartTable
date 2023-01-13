@@ -5,19 +5,17 @@ import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Skeleton } from "@mui/lab";
 import { useContext } from "react";
-import TableConfigContext from "../../context/TableConfigContext";
-import TableFilterContext from "../../context/TableFilterContext";
-import TableUIContext from "../../context/TableUIContext";
-import Aligner from "../Aligner";
-import Tooltip from "../Tooltip";
+import ConfigContext from "../../../context/ConfigContext";
+import FilterContext from "../../../context/FilterContext";
+import PropsContext from "../../../context/PropsContext";
+import StateContext from "../../../context/StateContext";
+import UIContext from "../../../context/UIContext";
+import Aligner from "../../Aligner";
+import Tooltip from "../../Tooltip";
+import style from "../Table.module.scss";
 import SearchInput from "./SearchInput";
-import style from "./Table.module.scss";
 
 interface TopBarType {
-    title: string;
-    isConfigLoading: boolean;
-    isDataLoading: boolean;
-    isError: boolean;
     isFullscreen: boolean;
     computedLoadingConfig: {
         columnCount: number;
@@ -31,41 +29,40 @@ interface TopBarType {
 }
 
 const TopBar = ({
-    title,
-    isConfigLoading,
-    isDataLoading,
-    isError,
     isFullscreen,
     computedLoadingConfig,
     toggleFullscreen,
     openSettingsModal,
     openFilterModal,
 }: TopBarType) => {
-    const tableConfigContext = useContext(TableConfigContext);
-    const tableFilterContext = useContext(TableFilterContext);
-    const UI = useContext(TableUIContext);
+    const { isConfigLoading, isDataLoading, isConfigLoadingError, isDataLoadingError } = useContext(StateContext);
+    const configContext = useContext(ConfigContext);
+    const filterContext = useContext(FilterContext);
+    const propsContext = useContext(PropsContext);
+    const UI = useContext(UIContext);
+    const isError = isConfigLoadingError || isDataLoadingError;
     const iconStyle = {
         fontSize: 22,
     };
 
-    const hasFilters = tableFilterContext.filtersList.length > 0;
+    const hasFilters = filterContext.filtersList.length > 0;
 
     const isTableDefaultSettings =
-        JSON.stringify(tableConfigContext.tableConfig) === JSON.stringify(tableConfigContext.defaultTableConfig);
+        JSON.stringify(configContext.tableConfig) === JSON.stringify(configContext.defaultTableConfig);
 
     return (
         <Aligner style={{ justifyContent: "space-between" }} className={style.topBar}>
             <Aligner className={`${style.bar} ${style.left}`} gutter={12}>
-                <h3 className={style.title}>{title}</h3>
+                <h3 className={style.title}>{propsContext.tableTitle}</h3>
                 {!isConfigLoading
                     ? !isError && (
                           <>
-                            <Tooltip title={"Добавить"} placement={"top"} disableHoverListener={isDataLoading}>
-                                <UI.PrimaryBtn loading={isDataLoading}>
-                                    <AddIcon sx={iconStyle} />
-                                </UI.PrimaryBtn>
-                            </Tooltip>
-                            <SearchInput loading={isDataLoading} />
+                              <Tooltip title={"Добавить"} placement={"top"} disableHoverListener={isDataLoading}>
+                                  <UI.PrimaryBtn loading={isDataLoading}>
+                                      <AddIcon sx={iconStyle} />
+                                  </UI.PrimaryBtn>
+                              </Tooltip>
+                              <SearchInput loading={isDataLoading} />
                           </>
                       )
                     : !computedLoadingConfig.noFuncBtnsLeft && (

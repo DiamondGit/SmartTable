@@ -1,8 +1,8 @@
 import { Skeleton } from "@mui/lab";
-import style from "./Table.module.scss";
-import { useState, useEffect, useContext } from "react";
-import TableStateContext from "../../context/TableStateContext";
+import { useContext, useEffect, useState } from "react";
+import StateContext from "../../context/StateContext";
 import Aligner from "../Aligner";
+import style from "./Table.module.scss";
 
 interface SkeletonFillerType {
     columnCount: number;
@@ -11,7 +11,7 @@ interface SkeletonFillerType {
 }
 
 const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: SkeletonFillerType) => {
-    const { isConfigLoading } = useContext(TableStateContext);
+    const { isConfigLoading } = useContext(StateContext);
     const [skeletonHeadingLengths, setSkeletonHeadingLengths] = useState<number[]>();
     const [skeletonLengths, setSkeletonLengths] = useState<number[][]>();
 

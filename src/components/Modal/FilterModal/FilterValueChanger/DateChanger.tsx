@@ -1,16 +1,16 @@
 import { TextField } from "@mui/material";
 import { useContext } from "react";
-import TableFilterContext from "../../../context/TableFilterContext";
-import { TableFilterItemType } from "../../../types/general";
+import FilterContext from "../../../../context/FilterContext";
+import { TableFilterItemType } from "../../../../types/general";
 
-const TextChanger = ({ filter }: { filter: TableFilterItemType }) => {
-    const tableFilterContext = useContext(TableFilterContext);
+const DateChanger = ({ filter }: { filter: TableFilterItemType }) => {
+    const filterContext = useContext(FilterContext);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const {
             target: { value },
         } = event;
-        tableFilterContext.setModalFiltersChangesList((prevFilters) => {
+        filterContext.setModalFiltersChangesList((prevFilters) => {
             const filterItemIndex = prevFilters.findIndex((prevFilter) => prevFilter.id === filter.id);
             const currentFilter = prevFilters[filterItemIndex];
             if (typeof currentFilter.field === "string") {
@@ -25,7 +25,7 @@ const TextChanger = ({ filter }: { filter: TableFilterItemType }) => {
 
     return (
         <TextField
-            type={"text"}
+            type={"date"}
             size={"small"}
             disabled={!filter.isActive}
             value={filter.field ? filter.value : ""}
@@ -37,4 +37,4 @@ const TextChanger = ({ filter }: { filter: TableFilterItemType }) => {
     );
 };
 
-export default TextChanger;
+export default DateChanger;

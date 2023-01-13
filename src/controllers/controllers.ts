@@ -1,15 +1,19 @@
-import _tableConfig_ from "../config/table.json";
 import _tableData_ from "../config/data.json";
+import _tableConfig_ from "../config/table.json";
 
-export const getTableConfig = async (tableName: string, userId: number): Promise<{
+interface GetTableConfigType {
     defaultTableConfig: {},
     savedTableConfigs: any[],
-}> => {
+}
+
+export const getTableConfig = async (tableName: string, userId: number): Promise<GetTableConfigType> => {
     return await new Promise((resolve, reject) => {
-        const dataToSend = {
+        let dataToSend: GetTableConfigType;
+
+        dataToSend = {
             defaultTableConfig: _tableConfig_,
             savedTableConfigs: [],
-        };
+        }
 
         return setTimeout(() => resolve(dataToSend), 500);
     });

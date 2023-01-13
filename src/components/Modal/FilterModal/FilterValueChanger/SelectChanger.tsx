@@ -1,11 +1,11 @@
 import { Box, Chip, MenuItem, Select, SelectChangeEvent } from "@mui/material";
 import { useContext } from "react";
-import TableFilterContext from "../../../context/TableFilterContext";
-import { TableFilterItemType } from "../../../types/general";
+import FilterContext from "../../../../context/FilterContext";
+import { TableFilterItemType } from "../../../../types/general";
 
 const SelectChanger = ({ filter }: { filter: TableFilterItemType }) => {
-    const tableFilterContext = useContext(TableFilterContext);
-    const currentFilter = tableFilterContext.modalFiltersChangesList.find((filterItem) => filterItem.id === filter.id);
+    const filterContext = useContext(FilterContext);
+    const currentFilter = filterContext.modalFiltersChangesList.find((filterItem) => filterItem.id === filter.id);
     const selectedOptions = currentFilter?.field ? currentFilter.value || [] : [];
     const options = ["zoo", "baseball", "kids", "mine", "largest", "father", "wealth"];
 
@@ -14,7 +14,7 @@ const SelectChanger = ({ filter }: { filter: TableFilterItemType }) => {
             target: { value },
         } = event;
         const result = typeof value === "string" ? value.split(",") : value;
-        tableFilterContext.setModalFiltersChangesList((prevFilters) => {
+        filterContext.setModalFiltersChangesList((prevFilters) => {
             const filterItemIndex = prevFilters.findIndex((prevFilter) => prevFilter.id === filter.id);
             const currentFilter = prevFilters[filterItemIndex];
             if (typeof currentFilter.field === "string") {

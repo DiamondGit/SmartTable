@@ -3,7 +3,7 @@ import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { Modal as AntdModal } from "antd";
 import { useContext, useRef, useState } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
-import TableUIContext from "../../context/TableUIContext";
+import UIContext from "../../context/UIContext";
 import { ModalTypes, Z_ModalTypes } from "../../types/general";
 import style from "./Modal.module.scss";
 
@@ -34,7 +34,7 @@ const Modal = ({
     children,
     ...props
 }: ModalType) => {
-    const UI = useContext(TableUIContext);
+    const UI = useContext(UIContext);
     const [disabled, setDisabled] = useState(true);
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { TableFilterHighlightType, TableFilterItemType } from "../types/general";
 
-interface TableFilterContextType {
+interface FilterContextType {
     filtersList: TableFilterItemType[];
     setFiltersList: React.Dispatch<React.SetStateAction<TableFilterItemType[]>>;
     modalFiltersList: TableFilterItemType[];
@@ -12,6 +12,6 @@ interface TableFilterContextType {
     setFilterHighlight: React.Dispatch<React.SetStateAction<TableFilterHighlightType>>;
 }
 
-const TableFilterContext = createContext<TableFilterContextType>({} as TableFilterContextType);
+const FilterContext = createContext<FilterContextType>({} as FilterContextType);
 
-export default TableFilterContext;
+export default FilterContext;

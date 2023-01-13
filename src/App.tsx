@@ -11,6 +11,7 @@ const App = () => {
                         tableTitle: "ПТО детали",
                         tableName: "PTO_DETAILS",
                         userId: 27,
+                        // saveLocally: true,
                         loadingConfig: { columnCount: 3 },
                         paginationConfig: {
                             perPageFetch: false,

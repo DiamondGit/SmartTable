@@ -1,13 +1,13 @@
-import SearchIcon from "@mui/icons-material/Search";
-import { useContext, useEffect, useState } from "react";
-import Aligner from "../Aligner";
-import style from "./Table.module.scss";
-import { TextField, IconButton, Menu, MenuItem } from "@mui/material";
-import TableConfigContext from "../../context/TableConfigContext";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CloseIcon from "@mui/icons-material/Close";
-import TableStateContext from "../../context/TableStateContext";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import SearchIcon from "@mui/icons-material/Search";
+import { IconButton, Menu, MenuItem, TextField } from "@mui/material";
+import { useContext, useEffect, useState } from "react";
+import ConfigContext from "../../../context/ConfigContext";
+import StateContext from "../../../context/StateContext";
+import Aligner from "../../Aligner";
+import style from "../Table.module.scss";
 
 const iconStyle = {
     fontSize: 22,
@@ -23,13 +23,13 @@ interface OptionType {
 }
 
 const SearchInput = ({ loading = false }: SearchInputType) => {
-    const tableStateContext = useContext(TableStateContext);
-    const tableConfigContext = useContext(TableConfigContext);
+    const stateContext = useContext(StateContext);
+    const configContext = useContext(ConfigContext);
     const [isOpen, setOpen] = useState(false);
     const searchBarClasses = [style.searchBar];
 
     const searchOptions: OptionType[] =
-        tableConfigContext.defaultTableConfig?.table.map((column) => ({
+        configContext.defaultTableConfig?.table.map((column) => ({
             label: column.title,
             searchValue: column.dataIndex,
         })) || [];
@@ -49,19 +49,21 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     };
 
     useEffect(() => {
-        let timeout = setTimeout(() => {
-            console.log("--- Request ---", tableStateContext.searchValue);
-        }, 400);
-
-        return () => {
-            if (timeout) {
-                clearTimeout(timeout);
-            }
-        };
-    }, [tableStateContext.searchValue]);
+        if (!stateContext.isDataLoading) {
+            let timeout = setTimeout(() => {
+                console.log("--- Request ---", stateContext.searchValue);
+            }, 400);
+    
+            return () => {
+                if (timeout) {
+                    clearTimeout(timeout);
+                }
+            };
+        }
+    }, [stateContext.searchValue]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        tableStateContext.setSearchValue(event.target.value);
+        stateContext.setSearchValue(event.target.value);
     };
 
     if (loading) searchBarClasses.push(style.loading);
@@ -91,7 +93,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     return (
         <div className={searchBarClasses.join(" ")}>
             <Aligner className={style.searchBtn} onClick={toggleOpen}>
-                <SearchIcon sx={iconStyle} className={(!isOpen && tableStateContext.searchValue !== "") ? style.activeIcon : ""} />
+                <SearchIcon sx={iconStyle} className={(!isOpen && stateContext.searchValue !== "") ? style.activeIcon : ""} />
             </Aligner>
             <div className={style.slider}>
                 <div className={style.inputContainer}>
@@ -99,7 +101,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
                         style={{ width: "100%" }}
                         label={getLabel()}
                         variant="standard"
-                        value={tableStateContext.searchValue}
+                        value={stateContext.searchValue}
                         onChange={handleChange}
                         size={"small"}
                     />

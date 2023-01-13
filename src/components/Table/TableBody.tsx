@@ -1,15 +1,15 @@
+import ControlPointDuplicateIcon from "@mui/icons-material/ControlPointDuplicate";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditIcon from "@mui/icons-material/Edit";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { IconButton, Menu, MenuItem } from "@mui/material";
-import { useContext, useState, useRef, useEffect } from "react";
-import TableConfigContext from "../../context/TableConfigContext";
+import { useContext, useEffect, useRef, useState } from "react";
+import ConfigContext from "../../context/ConfigContext";
+import StateContext from "../../context/StateContext";
+import { formatDate } from "../../functions/global";
+import { TableColumnType, TablePinOptions, Z_TableDataTypes, Z_TablePinOptions } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./Table.module.scss";
-import ControlPointDuplicateIcon from "@mui/icons-material/ControlPointDuplicate";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import TableStateContext from "../../context/TableStateContext";
-import { TableColumnType, TablePinOptions, Z_TableDataTypes, Z_TablePinOptions } from "../../types/general";
-import { formatDate } from "../../functions/global";
 
 interface TableColumnWidth {
     dataIndex: string;
@@ -28,8 +28,8 @@ const TableBody = ({
     setSelectedRows: React.Dispatch<React.SetStateAction<number[]>>;
 }) => {
     const tableColumnWidths = useRef<TableColumnWidth[]>([]);
-    const tableStateContext = useContext(TableStateContext);
-    const { tableConfig } = useContext(TableConfigContext);
+    const stateContext = useContext(StateContext);
+    const { tableConfig } = useContext(ConfigContext);
     if (!tableConfig) return null;
 
     const updateTableColumnWidth = (tableColumnWidth: TableColumnWidth) => {
@@ -67,7 +67,7 @@ const TableBody = ({
 
         useEffect(() => {
             if (actionCellRef.current?.clientWidth) {
-                tableStateContext.setActionCellWidth(actionCellRef.current?.clientWidth);
+                stateContext.setActionCellWidth(actionCellRef.current?.clientWidth);
                 updateTableColumnWidth({
                     dataIndex: "_actionCell_",
                     pin: Z_TablePinOptions.enum.LEFT,
@@ -120,7 +120,7 @@ const TableBody = ({
         const getColumnClasses = (column: TableColumnType): string[] => {
             let columnClasses: string[] = [];
 
-            if (tableStateContext.sortingColumn === column.dataIndex) columnClasses.push(style.sortColumn);
+            if (stateContext.sortingColumn === column.dataIndex) columnClasses.push(style.sortColumn);
             if (column.pin !== Z_TablePinOptions.enum.NONE) columnClasses.push(style.pin);
 
             if (column.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField);

@@ -1,10 +1,10 @@
-import { useContext } from "react";
-import TableConfigContext from "../../context/TableConfigContext";
-import TableFilterContext from "../../context/TableFilterContext";
-import { TableFilterItemType, Z_FilterHighlights } from "../../types/general";
-import style from "./FilterChips.module.scss";
 import { Chip } from "@mui/material";
+import { useContext } from "react";
+import ConfigContext from "../../context/ConfigContext";
+import FilterContext from "../../context/FilterContext";
+import { TableFilterItemType, Z_FilterHighlights } from "../../types/general";
 import Aligner from "../Aligner";
+import style from "./FilterChips.module.scss";
 
 interface FilterChipsType {
     openFilterModal: () => void;
@@ -16,8 +16,8 @@ interface FilterChipType {
 }
 
 const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
-    const tableConfigContext = useContext(TableConfigContext);
-    const tableFilterContext = useContext(TableFilterContext);
+    const configContext = useContext(ConfigContext);
+    const filterContext = useContext(FilterContext);
 
     const getValue = () => {
         if (Array.isArray(filter.value)) return filter.value.join(", ");
@@ -26,7 +26,7 @@ const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
     };
 
     const handleClick = () => {
-        tableFilterContext.setFilterHighlight(() => ({
+        filterContext.setFilterHighlight(() => ({
             type: Z_FilterHighlights.enum.HIGHLIGHT,
             filterIds: [
                 filter.id,
@@ -37,7 +37,7 @@ const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
 
     const handleDelete = () => {
         console.log("--- Here ---");
-        tableFilterContext.setFiltersList((prevFilterList) =>
+        filterContext.setFiltersList((prevFilterList) =>
             [...prevFilterList].filter((tableFilter) => tableFilter.id !== filter.id)
         );
     };
@@ -48,7 +48,7 @@ const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
                 <div className={style.chip}>
                     <h6 className={style.title}>
                         {
-                            tableConfigContext.defaultTableConfig?.table.find(
+                            configContext.defaultTableConfig?.table.find(
                                 (columnConfig) => columnConfig.dataIndex === filter.field
                             )?.title
                         }
@@ -64,9 +64,9 @@ const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
 };
 
 const FilterChips = ({ openFilterModal }: FilterChipsType) => {
-    const tableFilterContext = useContext(TableFilterContext);
+    const filterContext = useContext(FilterContext);
 
-    const activeFilters = tableFilterContext.filtersList.filter((tableFilter) => tableFilter.isActive);
+    const activeFilters = filterContext.filtersList.filter((tableFilter) => tableFilter.isActive);
     const ordinaryFilters = activeFilters.filter((tableFilter) => !tableFilter.isExclusion);
     const exclusionFilters = activeFilters.filter((tableFilter) => tableFilter.isExclusion);
 

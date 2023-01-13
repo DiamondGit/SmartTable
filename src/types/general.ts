@@ -33,6 +33,7 @@ export interface TableInitializationType {
     tableTitle: string;
     tableName: string;
     userId: number;
+    saveLocally?: boolean;
     loadingConfig?: {
         columnCount: number;
         rowCount?: number;
@@ -133,6 +134,7 @@ export type TableFilterItemType = {
     value: any;
 };
 
+export type SavedTableFilterItemType = TableFilterItemType & { name: string; isRecent: boolean };
 
 export const Z_FilterHighlights = z.enum(["WARNING", "HIGHLIGHT"]);
 export type TableFilterHighlightType = {

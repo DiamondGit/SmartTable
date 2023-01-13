@@ -1,18 +1,18 @@
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import { useContext, useState } from "react";
 import { Draggable } from "react-beautiful-dnd";
-import TableConfigContext from "../../context/TableConfigContext";
-import TableUIContext from "../../context/TableUIContext";
+import ConfigContext from "../../context/ConfigContext";
+import StateContext from "../../context/StateContext";
+import UIContext from "../../context/UIContext";
 import { TableColumnType, TablePinOptions, Z_TablePinOptions, Z_TableSortOptions } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./DraggableList.module.scss";
-import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import TableStateContext from "../../context/TableStateContext";
 
 type DraggableListItemProps = {
     column: TableColumnType;
@@ -21,15 +21,15 @@ type DraggableListItemProps = {
 
 const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const [isDragDisabled, setDragDisabled] = useState(false);
-    const UI = useContext(TableUIContext);
-    const tableConfigContext = useContext(TableConfigContext);
-    const tableStateContext = useContext(TableStateContext);
+    const UI = useContext(UIContext);
+    const configContext = useContext(ConfigContext);
+    const stateContext = useContext(StateContext);
 
     const setVisibleTableColumn = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (tableConfigContext.modalTableConfig) {
-            tableConfigContext.setModalTableConfig({
-                ...tableConfigContext.modalTableConfig,
-                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
+        if (configContext.modalTableConfig) {
+            configContext.setModalTableConfig({
+                ...configContext.modalTableConfig,
+                table: [...configContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, visible: event.target.checked }
                         : targetColumn
@@ -50,10 +50,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
             }
         };
 
-        if (tableConfigContext.modalTableConfig) {
-            tableConfigContext.setModalTableConfig({
-                ...tableConfigContext.modalTableConfig,
-                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
+        if (configContext.modalTableConfig) {
+            configContext.setModalTableConfig({
+                ...configContext.modalTableConfig,
+                table: [...configContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, pin: switchPin(targetColumn.pin) }
                         : targetColumn
@@ -63,10 +63,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     };
 
     const toggleHighlight = () => {
-        if (tableConfigContext.modalTableConfig) {
-            tableConfigContext.setModalTableConfig({
-                ...tableConfigContext.modalTableConfig,
-                table: [...tableConfigContext.modalTableConfig.table].map((targetColumn) =>
+        if (configContext.modalTableConfig) {
+            configContext.setModalTableConfig({
+                ...configContext.modalTableConfig,
+                table: [...configContext.modalTableConfig.table].map((targetColumn) =>
                     targetColumn.dataIndex === column.dataIndex
                         ? { ...targetColumn, highlighted: !targetColumn.highlighted }
                         : targetColumn
@@ -120,13 +120,13 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                                     <UI.Checkbox
                                         checked={column.visible}
                                         onChange={setVisibleTableColumn}
-                                        disabled={!column.hidable || tableStateContext.sortingColumn === column.dataIndex}
+                                        disabled={!column.hidable || stateContext.sortingColumn === column.dataIndex}
                                     />
                                     <span className={style.title}>{column.title}</span>
                                     <Aligner className={style.sortingArrow}>
-                                        {tableStateContext.sortingColumn === column.dataIndex && (
+                                        {stateContext.sortingColumn === column.dataIndex && (
                                             <>
-                                                {tableStateContext.sortingDirection === Z_TableSortOptions.enum.ASC ? (
+                                                {stateContext.sortingDirection === Z_TableSortOptions.enum.ASC ? (
                                                     <ArrowDownwardIcon
                                                         className={style.activeIcon}
                                                         style={{ fontSize: "20px" }}

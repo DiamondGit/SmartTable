@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import { SavedTableConfigType, TableConfigType } from "../types/general";
 
-interface TableConfigContextType {
+interface ConfigContextType {
     readonly defaultTableConfig: TableConfigType;
     savedTableConfigs: SavedTableConfigType[];
     selectedSavedTableConfigId: number | null;
@@ -11,6 +11,6 @@ interface TableConfigContextType {
     modalTableConfig: TableConfigType;
 }
 
-const TableConfigContext = createContext<TableConfigContextType>({} as TableConfigContextType);
+const ConfigContext = createContext<ConfigContextType>({} as ConfigContextType);
 
-export default TableConfigContext;
+export default ConfigContext;

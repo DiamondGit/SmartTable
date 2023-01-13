@@ -1,21 +1,21 @@
-import { Pagination as AntdPagination } from "antd";
-import { PaginationConfigType, PaginationPositionParser, PaginationPositionType } from "../../types/general";
-import style from "./PaginationWrapper.module.scss";
-import { useEffect, useContext } from "react";
-import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
+import NavigateNextIcon from "@mui/icons-material/NavigateNext";
+import { Pagination as AntdPagination } from "antd";
+import { useContext, useEffect } from "react";
+import FilterContext from "../../context/FilterContext";
+import PropsContext from "../../context/PropsContext";
+import StateContext from "../../context/StateContext";
+import { PaginationConfigType, PaginationPositionParser, PaginationPositionType } from "../../types/general";
 import Aligner from "../Aligner";
 import FilterChips from "../FilterChips";
-import TableFilterContext from "../../context/TableFilterContext";
+import style from "./PaginationWrapper.module.scss";
 
 interface PaginationWrapperType {
     total: number;
     current: number;
     handlePageChange: (newPage: number) => void;
-    paginationConfig?: PaginationConfigType;
     pageSize: number;
     setPageSize: React.Dispatch<React.SetStateAction<number>>;
-    disabled: boolean;
     openFilterModal: () => void;
     children: React.ReactNode;
 }
@@ -24,15 +24,15 @@ const PaginationWrapper = ({
     total,
     current,
     handlePageChange = () => {},
-    paginationConfig = {} as PaginationConfigType,
     pageSize,
     setPageSize,
-    disabled,
     openFilterModal,
     children,
 }: PaginationWrapperType) => {
-    const tableFilterContext = useContext(TableFilterContext);
+    const filterContext = useContext(FilterContext);
     const defaultPageSizeOptions = [10, 20, 50, 100];
+    const stateContext = useContext(StateContext);
+    const { paginationConfig = {} as PaginationConfigType } = useContext(PropsContext);
 
     const computedPaginationConfig = {
         pageSize: pageSize || paginationConfig.pageSizeOptions?.[0] || defaultPageSizeOptions[0],
@@ -66,7 +66,7 @@ const PaginationWrapper = ({
                 showSizeChanger={computedPaginationConfig.showSizeChanger}
                 pageSizeOptions={computedPaginationConfig.pageSizeOptions}
                 size={"small"}
-                disabled={disabled}
+                disabled={stateContext.isLoading}
                 itemRender={(
                     _page: number,
                     type: "page" | "prev" | "next" | "jump-prev" | "jump-next",
@@ -96,14 +96,16 @@ const PaginationWrapper = ({
 
     return (
         <div className={style.wrapper}>
-            {(visibleTopPagination || tableFilterContext.filtersList.length > 0) && (
+            {(visibleTopPagination || filterContext.filtersList.length > 0) && !stateContext.isError && (
                 <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr max-content" }}>
                     <FilterChips openFilterModal={openFilterModal} />
                     {visibleTopPagination && <Pagination />}
                 </div>
             )}
             <div className={style.content}>{children}</div>
-            {visibleBottomPagination && <Pagination position={computedPaginationConfig.bottomPosition} />}
+            {visibleBottomPagination && !stateContext.isError && (
+                <Pagination position={computedPaginationConfig.bottomPosition} />
+            )}
         </div>
     );
 };
