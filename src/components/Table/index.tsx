@@ -5,10 +5,10 @@ import "../../styles/global.scss";
 import {
     TableInitializationType, TableUIType
 } from "../../types/general";
-import ConfigWrapper from "../Wrappers/ConfigWrapper";
-import FilterWrapper from "../Wrappers/FilterWrapper";
-import PropsWrapper from "../Wrappers/PropsWrapper";
-import StateWrapper from "../Wrappers/StateWrapper";
+import ConfigProvider from "../Providers/ConfigProvider";
+import FilterProvider from "../Providers/FilterProvider";
+import PropsProvider from "../Providers/PropsProvider";
+import StateProvider from "../Providers/StateProvider";
 import MainContent from "./MainContent";
 
 interface TableStartingType extends TableInitializationType {
@@ -17,10 +17,10 @@ interface TableStartingType extends TableInitializationType {
 
 const Table = ({ UI, ...props }: TableStartingType) => {
     return (
-        <PropsWrapper props={props}>
-            <StateWrapper>
-                <ConfigWrapper>
-                    <FilterWrapper>
+        <PropsProvider props={props}>
+            <StateProvider>
+                <ConfigProvider>
+                    <FilterProvider>
                         <UIContext.Provider value={UI}>
                             <AntdConfigProvider
                                 theme={{
@@ -33,10 +33,10 @@ const Table = ({ UI, ...props }: TableStartingType) => {
                                 <MainContent />
                             </AntdConfigProvider>
                         </UIContext.Provider>
-                    </FilterWrapper>
-                </ConfigWrapper>
-            </StateWrapper>
-        </PropsWrapper>
+                    </FilterProvider>
+                </ConfigProvider>
+            </StateProvider>
+        </PropsProvider>
     );
 };
 

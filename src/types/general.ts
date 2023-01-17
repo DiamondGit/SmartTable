@@ -41,6 +41,7 @@ export interface TableInitializationType {
         noFuncBtnsRight?: boolean;
     };
     paginationConfig?: PaginationConfigType;
+    contentModifier?: { [key: string]: any };
 }
 
 export const Z_ModalTypes = z.enum(["ADD", "EDIT", "FILTER", "SETTINGS"]);
@@ -140,4 +141,11 @@ export const Z_FilterHighlights = z.enum(["WARNING", "HIGHLIGHT"]);
 export type TableFilterHighlightType = {
     type: z.infer<typeof Z_FilterHighlights>;
     filterIds: number[];
+};
+
+export type TableColumnPin = {
+    dataIndex: string;
+    pin: TablePinOptions;
+    order: number;
+    width: number;
 };

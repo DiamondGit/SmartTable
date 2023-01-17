@@ -3,35 +3,27 @@ import ConfigContext from "../../../context/ConfigContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import {
-    TableColumnType, TablePinOptions,
+    TableColumnPin,
     TableSortOptions,
     Z_TablePinOptions,
-    Z_TableSortOptions
+    Z_TableSortOptions,
 } from "../../../types/general";
+import SideColumns from "../SideColumns";
 import style from "../Table.module.scss";
-import SideColumns from "./SideColumns";
-
-export interface TableColumnWidth {
-    dataIndex: string;
-    pin: TablePinOptions;
-    order: number;
-    width: number;
-}
 
 const Head = () => {
-    const { tableConfig } = useContext(ConfigContext);
+    const { hasLeftPin } = useContext(ConfigContext);
     const actionCellRef = useRef<HTMLTableCellElement>(null);
-    const tableColumnWidths = useRef<TableColumnWidth[]>([]);
     const stateContext = useContext(StateContext);
 
     useEffect(() => {
-        updateTableColumnWidth({
+        addOrReplaceTableColumnPin({
             dataIndex: "_actionCell_",
             pin: Z_TablePinOptions.enum.LEFT,
             order: -1,
-            width: stateContext.actionCellWidth,
+            width: actionCellRef.current?.clientWidth || 0,
         });
-    }, [stateContext.actionCellWidth]);
+    }, [actionCellRef.current?.clientWidth]);
 
     const handleClick = (dataIndex: string) => () => {
         const switchDirection = (sortingDirection: TableSortOptions): TableSortOptions => {
@@ -52,82 +44,54 @@ const Head = () => {
         }
     };
 
-    const getColumnSortClass = (column: TableColumnType): string[] => {
-        const defaultSortClass = [style.sortColumn];
-        if (stateContext.sortingColumn !== column.dataIndex) return [];
-        switch (stateContext.sortingDirection) {
-            case Z_TableSortOptions.enum.ASC:
-                defaultSortClass.push(style.asc);
-                break;
-            case Z_TableSortOptions.enum.DESC:
-                defaultSortClass.push(style.desc);
-                break;
-            default:
-                return [];
-        }
-        return defaultSortClass;
+    const addOrReplaceTableColumnPin = (targetColumn: TableColumnPin) => {
+        stateContext.setTableColumnPins((prevColumnPins) => {
+            prevColumnPins = prevColumnPins.filter(
+                (prevColumnPin) => prevColumnPin.dataIndex !== targetColumn.dataIndex
+            );
+            prevColumnPins.push(targetColumn);
+            return prevColumnPins;
+        });
     };
 
-    const getColumnClasses = (column: TableColumnType, isPinned: boolean): string[] => {
-        let columnClasses: string[] = [];
-        columnClasses = columnClasses.concat(getColumnSortClass(column));
+    const updateTableColumnPin = (targetColumn: TableColumnPin) => {
+        stateContext.setTableColumnPins((prevColumnPins) => {
+            prevColumnPins = prevColumnPins.filter(
+                (prevColumnPin) => prevColumnPin.dataIndex !== targetColumn.dataIndex
+            );
+            prevColumnPins.push(targetColumn);
 
-        if (isPinned) {
-            columnClasses.push(style.pin);
-        }
+            Object.values(Z_TablePinOptions.enum).forEach((pinOption) => {
+                let index = 0;
+                prevColumnPins.map((column) => {
+                    if (column.pin === pinOption) {
+                        return { ...column, order: index++ };
+                    }
+                    return column;
+                });
+            });
 
-        return columnClasses;
+            return prevColumnPins;
+        });
     };
 
-    const updateTableColumnWidth = (tableColumnWidth: TableColumnWidth) => {
-        let prevWidths = [...tableColumnWidths.current];
-        if (prevWidths.some((prevWidth) => prevWidth.dataIndex === tableColumnWidth.dataIndex)) {
-            prevWidths = prevWidths.filter((prevWidth) => prevWidth.dataIndex !== tableColumnWidth.dataIndex);
-        }
-        prevWidths.push(tableColumnWidth);
-
-        tableColumnWidths.current = prevWidths;
-    };
-
-    const getPinSide = (pin: TablePinOptions): string => {
-        if (pin === Z_TablePinOptions.enum.LEFT) return "left";
-        return "right";
-    };
-
-    const getPinOffset = (pin: TablePinOptions, order: number): number => {
-        return (
-            tableColumnWidths.current
-                .filter(
-                    (tableColumnWidth) =>
-                        tableColumnWidth.pin === pin &&
-                        (pin === Z_TablePinOptions.enum.LEFT
-                            ? tableColumnWidth.order < order
-                            : tableColumnWidth.order > order)
-                )
-                .reduce((widthSum, columnWidth) => widthSum + columnWidth.width, 0) || 0
-        );
-    };
-
-    const hasLeftPin = tableConfig?.table.some((column) => column.pin === Z_TablePinOptions.enum.LEFT) || false;
+    const actionCellClasses = [style.actionCell];
+    if (hasLeftPin) actionCellClasses.push(style.withLeftPin);
 
     return (
         <TableHeadContext.Provider
             value={{
-                updateTableColumnWidth: updateTableColumnWidth,
-                getPinSide: getPinSide,
-                getPinOffset: getPinOffset,
-                getColumnClasses: getColumnClasses,
+                updateTableColumnPin: updateTableColumnPin,
                 handleClick: handleClick,
             }}
         >
             <th
-                className={style.actionCell}
-                style={hasLeftPin ? { position: "sticky", left: 0, zIndex: 100 } : {}}
+                className={actionCellClasses.join(" ")}
                 ref={actionCellRef}
             ></th>
-            <SideColumns pinOption={Z_TablePinOptions.enum.LEFT} />
-            <SideColumns />
-            <SideColumns pinOption={Z_TablePinOptions.enum.RIGHT} />
+            <SideColumns pinOption={Z_TablePinOptions.enum.LEFT} isHead />
+            <SideColumns isHead />
+            <SideColumns pinOption={Z_TablePinOptions.enum.RIGHT} isHead />
         </TableHeadContext.Provider>
     );
 };

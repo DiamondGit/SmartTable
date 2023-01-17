@@ -4,7 +4,7 @@ import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { getTableData } from "../../controllers/controllers";
 import { useScrollWithShadow } from "../../functions/useScrollWithShadow";
-import { Z_TableCellSizes } from "../../types/general";
+import { Z_TableCellSizes, Z_TablePinOptions } from "../../types/general";
 import Aligner from "../Aligner";
 import FilterModal from "../Modal/FilterModal";
 import SettingsModal from "../Modal/SettingsModal";
@@ -12,8 +12,9 @@ import PaginationWrapper from "../PaginationWrapper";
 import Head from "./Head";
 import SkeletonFiller from "./SkeletonFiller";
 import style from "./Table.module.scss";
-import TableBody from "./TableBody";
+import Body from "./Body";
 import TopBar from "./TopBar";
+import ShadowWrapper from "../ShadowWrapper";
 
 const MainContent = () => {
     const stateContext = useContext(StateContext);
@@ -21,8 +22,6 @@ const MainContent = () => {
     const propsContext = useContext(PropsContext);
     const isConfigLoaded = !stateContext.isConfigLoading && !stateContext.isConfigLoadingError && configContext.tableConfig;
     const defaultColumnCount = propsContext.loadingConfig?.columnCount || 4;
-
-    const { scrollContainer, boxShadowClasses, onScrollHandler, doShadow } = useScrollWithShadow();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(0);
@@ -40,7 +39,6 @@ const MainContent = () => {
         noFuncBtnsLeft: propsContext.loadingConfig?.noFuncBtnsLeft || false,
         noFuncBtnsRight: propsContext.loadingConfig?.noFuncBtnsRight || false,
     };
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
     const fetchData = () => {
         stateContext.setDataLoading(true);
@@ -93,10 +91,11 @@ const MainContent = () => {
 
     const tableClasses = [style.table];
     if (stateContext.isLoading) tableClasses.push(style.loading);
-
-    useEffect(() => {
-        doShadow();
-    }, [configContext.tableConfig, stateContext.data]);
+    if (
+        stateContext.tableColumnPins.some((tableColumnPin) => tableColumnPin.pin === Z_TablePinOptions.enum.LEFT && tableColumnPin.order !== -1) &&
+        stateContext.tableHasLeftShadow
+    )
+        tableClasses.push(style.withLeftShadow);
 
     const slicedDataStartIndex = (currentPage - 1) * pageSize;
 
@@ -142,64 +141,60 @@ const MainContent = () => {
                     setPageSize={setPageSize}
                     openFilterModal={openFilterModal}
                 >
-                    <div className={boxShadowClasses.map((boxShadowClass) => style[boxShadowClass]).join(" ")}>
-                        <div ref={scrollContainer} style={{ overflowX: "auto" }} onScroll={onScrollHandler}>
-                            <table className={tableClasses.join(" ")}>
-                                {(!stateContext.isError || stateContext.isConfigLoading) && (
-                                    <thead ref={headingRef}>
-                                        <tr ref={headingRowRef}>
-                                            {!stateContext.isConfigLoading ? (
-                                                <Head />
-                                            ) : (
-                                                <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
-                                            )}
-                                        </tr>
-                                    </thead>
-                                )}
-                                {!stateContext.isError || stateContext.isConfigLoading ? (
-                                    <tbody>
-                                        {!stateContext.isLoading ? (
-                                            <TableBody
-                                                data={
-                                                    propsContext.paginationConfig?.perPageFetch
-                                                        ? stateContext.data
-                                                        : stateContext.data.slice(
-                                                              slicedDataStartIndex,
-                                                              slicedDataStartIndex + pageSize
-                                                          )
-                                                }
-                                                selectedRows={selectedRows}
-                                                setSelectedRows={setSelectedRows}
-                                            />
+                    <ShadowWrapper>
+                        <table className={tableClasses.join(" ")}>
+                            {(!stateContext.isError || stateContext.isConfigLoading) && (
+                                <thead ref={headingRef}>
+                                    <tr ref={headingRowRef}>
+                                        {!stateContext.isConfigLoading ? (
+                                            <Head />
                                         ) : (
-                                            <SkeletonFiller
-                                                columnCount={computedLoadingConfig.columnCount}
-                                                rowCount={computedLoadingConfig.rowCount}
-                                            />
+                                            <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
                                         )}
-                                    </tbody>
-                                ) : (
-                                    <tbody>
-                                        <tr>
-                                            <td
-                                                style={{
-                                                    padding: 0,
-                                                }}
-                                            >
-                                                <Aligner className={style.loadingError}>
-                                                    {stateContext.isConfigLoadingError
-                                                        ? stateContext.isDataLoadingError
-                                                            ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
-                                                            : "ОШИБКА ТАБЛИЦЫ"
-                                                        : stateContext.isDataLoadingError && "ОШИБКА ДАННЫХ"}
-                                                </Aligner>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                )}
-                            </table>
-                        </div>
-                    </div>
+                                    </tr>
+                                </thead>
+                            )}
+                            {!stateContext.isError || stateContext.isConfigLoading ? (
+                                <tbody>
+                                    {!stateContext.isLoading ? (
+                                        <Body
+                                            data={
+                                                propsContext.paginationConfig?.perPageFetch
+                                                    ? stateContext.data
+                                                    : stateContext.data.slice(
+                                                          slicedDataStartIndex,
+                                                          slicedDataStartIndex + pageSize
+                                                      )
+                                            }
+                                        />
+                                    ) : (
+                                        <SkeletonFiller
+                                            columnCount={computedLoadingConfig.columnCount}
+                                            rowCount={computedLoadingConfig.rowCount}
+                                        />
+                                    )}
+                                </tbody>
+                            ) : (
+                                <tbody>
+                                    <tr>
+                                        <td
+                                            style={{
+                                                padding: 0,
+                                            }}
+                                        >
+                                            <Aligner className={style.loadingError}>
+                                                {stateContext.isConfigLoadingError
+                                                    ? stateContext.isDataLoadingError
+                                                        ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
+                                                        : "ОШИБКА ТАБЛИЦЫ"
+                                                    : stateContext.isDataLoadingError && "ОШИБКА ДАННЫХ"}
+                                            </Aligner>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            )}
+                        </table>
+                    </ShadowWrapper>
                 </PaginationWrapper>
             </div>
         </div>

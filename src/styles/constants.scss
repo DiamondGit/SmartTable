@@ -29,4 +29,16 @@ $red-500: #A03123;
 $red-400: #FA6855;
 $red-200: #ffbfb7;
 
+$zIndex_modal: 10000;
+
 $zIndex_fullscreen_table_container: 1000;
+
+$zIndex_mui_popover: $zIndex_modal + $zIndex_fullscreen_table_container + 500;
+
+$zIndex_loading_cover: 2000;
+
+$zIndex_table_thead: 1000;
+$zIndex_table_thead_pinned: 1100;
+
+$zIndex_table_tbody: 500;
+$zIndex_table_tbody_pinned: 600;

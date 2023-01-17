@@ -9,6 +9,8 @@ interface ConfigContextType {
     tableConfig: TableConfigType;
     setModalTableConfig: (newTableConfig: TableConfigType, isResetHard?: boolean) => void;
     modalTableConfig: TableConfigType;
+    hasLeftPin: boolean;
+    hasRightPin: boolean;
 }
 
 const ConfigContext = createContext<ConfigContextType>({} as ConfigContextType);

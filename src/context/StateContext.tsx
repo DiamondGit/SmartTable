@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { TableSortOptions } from "../types/general";
+import { TableColumnPin, TableSortOptions } from "../types/general";
 
 interface StateContextType {
     data: any[];
@@ -30,14 +30,20 @@ interface StateContextType {
     sortingDirection: TableSortOptions;
     setSortingDirection: React.Dispatch<React.SetStateAction<TableSortOptions>>;
 
-    actionCellWidth: number;
-    setActionCellWidth: React.Dispatch<React.SetStateAction<number>>;
-
     searchValue: string;
     setSearchValue: React.Dispatch<React.SetStateAction<string>>;
 
     isFiltersFilled: boolean;
     setFiltersFilled: React.Dispatch<React.SetStateAction<boolean>>;
+
+    selectedRows: number[];
+    setSelectedRows: React.Dispatch<React.SetStateAction<number[]>>;
+
+    tableColumnPins: TableColumnPin[];
+    setTableColumnPins: React.Dispatch<React.SetStateAction<TableColumnPin[]>>;
+
+    tableHasLeftShadow: boolean;
+    setTableHasLeftShadow: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const StateContext = createContext<StateContextType>({} as StateContextType);

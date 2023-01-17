@@ -3,6 +3,14 @@ import MyTable from "./MyTable";
 import "./styles/resetStyles.css";
 
 const App = () => {
+    const contentModifier = {
+        segment: (record: { [key: string]: any }) => (
+            <div style={record.equipment ? {} : { color: "red" }}>
+                {record.segment}
+            </div>
+        ),
+    };
+
     return (
         <Aligner>
             <div style={{ padding: "100px 200px", width: "100%" }}>
@@ -18,6 +26,7 @@ const App = () => {
                             showSizeChanger: true,
                             showTotal: true,
                         },
+                        contentModifier: contentModifier,
                     }}
                 />
             </div>

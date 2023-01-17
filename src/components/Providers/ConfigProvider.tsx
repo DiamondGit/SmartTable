@@ -3,13 +3,19 @@ import ConfigContext from "../../context/ConfigContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { getTableConfig } from "../../controllers/controllers";
-import { SavedTableConfigType, TableConfigSchema, TableConfigType } from "../../types/general";
+import {
+    SavedTableConfigType,
+    TableConfigSchema,
+    TableConfigType,
+    TablePinOptions,
+    Z_TablePinOptions,
+} from "../../types/general";
 
-interface ConfigWrapperType {
+interface ConfigProviderType {
     children: React.ReactNode;
 }
 
-const ConfigWrapper = ({ children }: ConfigWrapperType) => {
+const ConfigProvider = ({ children }: ConfigProviderType) => {
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
     const [defaultTableConfig, setDefaultTableConfig] = useState<TableConfigType>();
@@ -50,12 +56,16 @@ const ConfigWrapper = ({ children }: ConfigWrapperType) => {
             });
     };
 
-    const setAndCompareTempTableConfig = (newTableConfig: TableConfigType, isResetHard = false) => {
+    const setAndCompareTempTableConfig = (newTableConfig: TableConfigType) => {
         setModalTableConfig(newTableConfig);
     };
 
     const setAndCompareTableConfig = (newTableConfig: TableConfigType) => {
         setTableConfig(newTableConfig);
+    };
+
+    const checkHasPin = (pinOption: TablePinOptions) => {
+        return tableConfig?.table?.some((column) => column.pin === pinOption) || false;
     };
 
     return (
@@ -70,6 +80,9 @@ const ConfigWrapper = ({ children }: ConfigWrapperType) => {
 
                 modalTableConfig: modalTableConfig,
                 setModalTableConfig: setAndCompareTempTableConfig,
+
+                hasLeftPin: checkHasPin(Z_TablePinOptions.enum.LEFT),
+                hasRightPin: checkHasPin(Z_TablePinOptions.enum.RIGHT),
             }}
         >
             {children}
@@ -77,4 +90,4 @@ const ConfigWrapper = ({ children }: ConfigWrapperType) => {
     );
 };
 
-export default ConfigWrapper;
+export default ConfigProvider;

@@ -1,12 +1,12 @@
 import PropsContext from "../../context/PropsContext";
 import { TableInitializationType } from "../../types/general";
 
-interface PropsWrapperType {
+interface PropsProviderType {
     children: React.ReactNode;
     props: TableInitializationType;
 }
 
-const PropsWrapper = ({children, props}: PropsWrapperType) => {
+const PropsProvider = ({children, props}: PropsProviderType) => {
     return (
         <PropsContext.Provider value={props}>
             {children}
@@ -14,4 +14,4 @@ const PropsWrapper = ({children, props}: PropsWrapperType) => {
     )
 }
 
-export default PropsWrapper;
+export default PropsProvider;

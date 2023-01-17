@@ -35,7 +35,7 @@
         },
         {
             "title": "Размер",
-            "dataIndex": "size",
+            "dataIndex": "size.subsize.value",
             "dataType": "NUMBER",
             "sortable": true,
             "filterType": "CONDITION",
@@ -67,7 +67,7 @@
         },
         {
             "title": "Сегмент",
-            "dataIndex": "segment",
+            "dataIndex": "_$render$_segment",
             "dataType": "OTHER",
             "sortable": false,
             "filterType": "TEXT",

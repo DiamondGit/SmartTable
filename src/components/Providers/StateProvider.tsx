@@ -1,12 +1,12 @@
 import { useState } from "react";
 import StateContext from "../../context/StateContext";
-import { TableSortOptions, Z_TableSortOptions } from "../../types/general";
+import { TableColumnPin, TableSortOptions, Z_TableSortOptions } from "../../types/general";
 
-interface StateWrapperType {
+interface StateProviderType {
     children: React.ReactNode;
 }
 
-const StateWrapper = ({ children }: StateWrapperType) => {
+const StateProvider = ({ children }: StateProviderType) => {
     const [isSavedSettings, setSavedSettings] = useState(false);
 
     const [isConfigLoading, setConfigLoading] = useState(false);
@@ -20,11 +20,15 @@ const StateWrapper = ({ children }: StateWrapperType) => {
     const [sortingColumn, setSortingColumn] = useState("id");
     const [sortingDirection, setSortingDirection] = useState<TableSortOptions>(Z_TableSortOptions.enum.ASC);
 
-    const [actionCellWidth, setActionCellWidth] = useState<number>(0);
-
     const [searchValue, setSearchValue] = useState("");
 
     const [isFiltersFilled, setFiltersFilled] = useState(false);
+
+    const [selectedRows, setSelectedRows] = useState<number[]>([]);
+
+    const [tableColumnPins, setTableColumnPins] = useState<TableColumnPin[]>([]);
+
+    const [tableHasLeftShadow, setTableHasLeftShadow] = useState(false);
 
     return (
         <StateContext.Provider
@@ -57,14 +61,20 @@ const StateWrapper = ({ children }: StateWrapperType) => {
                 sortingDirection: sortingDirection,
                 setSortingDirection: setSortingDirection,
 
-                actionCellWidth: actionCellWidth,
-                setActionCellWidth: setActionCellWidth,
-
                 searchValue: searchValue,
                 setSearchValue: setSearchValue,
 
                 isFiltersFilled: isFiltersFilled,
                 setFiltersFilled: setFiltersFilled,
+
+                selectedRows: selectedRows,
+                setSelectedRows: setSelectedRows,
+
+                tableColumnPins: tableColumnPins,
+                setTableColumnPins: setTableColumnPins,
+
+                tableHasLeftShadow: tableHasLeftShadow,
+                setTableHasLeftShadow: setTableHasLeftShadow,
             }}
         >
             {children}
@@ -72,4 +82,4 @@ const StateWrapper = ({ children }: StateWrapperType) => {
     );
 };
 
-export default StateWrapper;
+export default StateProvider;

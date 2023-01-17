@@ -2,11 +2,11 @@ import { useState } from "react";
 import FilterContext from "../../context/FilterContext";
 import { SavedTableFilterItemType, TableFilterHighlightType, TableFilterItemType, Z_FilterHighlights } from "../../types/general";
 
-interface FilterWrapperType {
+interface FilterProviderType {
     children: React.ReactNode;
 }
 
-const FilterWrapper = ({ children }: FilterWrapperType) => {
+const FilterProvider = ({ children }: FilterProviderType) => {
     const [filterHighlight, setFilterHighlight] = useState<TableFilterHighlightType>({
         type: Z_FilterHighlights.enum.HIGHLIGHT,
         filterIds: [],
@@ -37,4 +37,4 @@ const FilterWrapper = ({ children }: FilterWrapperType) => {
     );
 };
 
-export default FilterWrapper;
+export default FilterProvider;

@@ -21,13 +21,13 @@ $hover_transition: .3s;
     &-root {
         .ant-modal-wrap,
         .ant-modal-mask {
-            z-index: 1500;
+            z-index: $zIndex_modal;
         }
     }
 }
 
 .MuiModal-root.MuiPopover-root.MuiMenu-root {
-    z-index: $zIndex_fullscreen_table_container + 1000;
+    z-index: $zIndex_mui_popover;
 }
 
 body {
