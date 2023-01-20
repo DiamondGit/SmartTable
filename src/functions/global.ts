@@ -1,4 +1,6 @@
-import { TableConfigType, TableColumnPin, TablePinOptions, Z_TablePinOptions } from "../types/general";
+import { INDEX_JOINER } from "../constants/general";
+import { TablePinOptions, Z_TablePinOptions } from "../types/enums";
+import { BodyColumnPin, ColumnType } from "../types/general";
 
 export const formatDate = (date: string) =>
     new Date(date).toLocaleString("ru", { year: "numeric", month: "numeric", day: "numeric" }).split("г.")[0];
@@ -19,23 +21,48 @@ export const getPinSide = (pin: TablePinOptions): string => {
     return "right";
 };
 
-export const getPinOffset = (tableColumnPins: TableColumnPin[], pin: TablePinOptions, order: number): number => {
-    const prevColumnPins = tableColumnPins.filter(
-        (tableColumnPin) => tableColumnPin.pin === pin && (tableColumnPin.order || 0) < order
-    );
-
+export const getPinOffset = (columnPins: BodyColumnPin[], pin: TablePinOptions, order: number): number => {
+    const prevColumnPins = columnPins.filter((columnPin) => columnPin.pin === pin && columnPin.order < order);
     return prevColumnPins.reduce((widthSum, columnWidth) => widthSum + columnWidth.width, 0) || 0;
 };
 
 export const getColumnStyle = (
     isPinned: boolean,
     pin: TablePinOptions,
-    tableColumnPins: TableColumnPin[],
+    columnPins: BodyColumnPin[],
     order: number
 ) => ({
     ...(isPinned
         ? {
-              [getPinSide(pin)]: getPinOffset(tableColumnPins, pin, order) + order,
+              [getPinSide(pin)]: getPinOffset(columnPins, pin, order) + order,
           }
         : {}),
 });
+
+export const getMaxHeadingDepth = (table: ColumnType[]) => {
+    let maxDepth = 0;
+    const computeDepth = (column: ColumnType, depth = 1) => {
+        if (!column.subcolumns) return depth;
+        let currentMaxDepth = depth + 1;
+        column.subcolumns.forEach((subcolumn) => {
+            const tempDepth = computeDepth(subcolumn, currentMaxDepth);
+            if (tempDepth > currentMaxDepth) currentMaxDepth = tempDepth;
+        });
+        return currentMaxDepth;
+    };
+
+    table.forEach((column) => {
+        const tempDepth = computeDepth(column);
+        if (tempDepth > maxDepth) maxDepth = tempDepth;
+    });
+
+    return maxDepth;
+};
+
+export const joinIndexes = (...indexes: number[]) => {
+    return indexes.join(INDEX_JOINER);
+};
+
+export const splitIndexes = (indexes: string) => {
+    return indexes.split(INDEX_JOINER).map((index) => parseInt(index));
+};

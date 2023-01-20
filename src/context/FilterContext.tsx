@@ -1,5 +1,6 @@
 import { createContext } from "react";
-import { TableFilterHighlightType, TableFilterItemType } from "../types/general";
+import { TableFilterHighlightType } from "../types/enums";
+import { TableFilterItemType } from "../types/general";
 
 interface FilterContextType {
     filtersList: TableFilterItemType[];

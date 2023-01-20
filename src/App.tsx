@@ -5,9 +5,10 @@ import "./styles/resetStyles.css";
 const App = () => {
     const contentModifier = {
         segment: (record: { [key: string]: any }) => (
-            <div style={record.equipment ? {} : { color: "red" }}>
-                {record.segment}
-            </div>
+            <div style={record.equipment ? {} : { color: "red" }}>{record.segment}</div>
+        ),
+        "size.width.inch": (record: { [key: string]: any }) => (
+            <div>{(parseFloat(record.size.width.meter) * 39.36).toFixed(2)}</div>
         ),
     };
 

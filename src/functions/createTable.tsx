@@ -3,7 +3,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Checkbox from "@mui/material/Checkbox/Checkbox";
 import Button from "../components/Button";
 import Table from "../components/Table";
-import { TableInitializationType, TableUIStartingType, TableUIType } from "../types/general";
+import { TableInitializationType } from "../types/general";
+import { TableUIStartingType, TableUIType } from "../types/UI";
 
 const defaultUI: TableUIType = {
     PrimaryBtn: ({ onClick, loading, disabled, children, className }) => (

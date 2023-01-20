@@ -1,14 +1,19 @@
 import { createContext } from "react";
-import { SavedTableConfigType, TableConfigType } from "../types/general";
+import { SavedTableConfigListType, TableConfigType } from "../types/general";
 
 interface ConfigContextType {
-    readonly defaultTableConfig: TableConfigType;
-    savedTableConfigs: SavedTableConfigType[];
-    selectedSavedTableConfigId: number | null;
+    readonly defaultTableConfig: TableConfigType | undefined;
+    
+    tableConfig: TableConfigType | undefined;
     setTableConfig: (newTableConfig: TableConfigType) => void;
-    tableConfig: TableConfigType;
-    setModalTableConfig: (newTableConfig: TableConfigType, isResetHard?: boolean) => void;
-    modalTableConfig: TableConfigType;
+
+    modalTableConfig: TableConfigType | undefined;
+    setModalTableConfig: (newTableConfig: TableConfigType) => void;
+    
+    savedTableConfigList: SavedTableConfigListType;
+
+    selectedSavedTableConfigId: number | null;
+    
     hasLeftPin: boolean;
     hasRightPin: boolean;
 }

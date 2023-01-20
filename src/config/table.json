@@ -4,75 +4,100 @@
             "title": "Наименование",
             "dataIndex": "name",
             "dataType": "STRING",
-            "sortable": true,
             "filterType": "NONE",
-            "visible": true,
             "hidable": false
         },
         {
             "title": "Регион",
             "dataIndex": "region",
             "dataType": "STRING",
-            "sortable": true,
-            "filterType": "SELECT",
-            "visible": true
+            "filterType": "SELECT"
         },
         {
             "title": "Подрегион",
             "dataIndex": "subregion",
             "dataType": "STRING",
-            "sortable": true,
-            "filterType": "SELECT",
-            "visible": true
+            "filterType": "SELECT"
         },
         {
             "title": "Скорость",
             "dataIndex": "speed",
             "dataType": "NUMBER",
-            "sortable": true,
-            "filterType": "CONDITION",
-            "visible": true
+            "filterType": "CONDITION"
         },
         {
             "title": "Размер",
-            "dataIndex": "size.subsize.value",
-            "dataType": "NUMBER",
-            "sortable": true,
-            "filterType": "CONDITION",
-            "visible": true
+            "subcolumns": [
+                {
+                    "title": "Ширина",
+                    "dataIndex": "size.width",
+                    "dataType": "NUMBER",
+                    "filterType": "CONDITION",
+                    "subcolumns": [
+                        {
+                            "title": "Метры",
+                            "dataIndex": "meter",
+                            "dataType": "NUMBER",
+                            "filterType": "CONDITION"
+                        },
+                        {
+                            "title": "Дюймы",
+                            "dataIndex": "inch",
+                            "dataType": "NUMBER",
+                            "filterType": "CONDITION",
+                            "modifiableContent": true
+                        }
+                    ]
+                },
+                {
+                    "title": "Высота",
+                    "dataIndex": "size.height",
+                    "dataType": "NUMBER",
+                    "filterType": "CONDITION"
+                }
+            ]
         },
         {
             "title": "Дата",
             "dataIndex": "date",
-            "dataType": "DATE",
-            "sortable": true,
-            "filterType": "DATE",
-            "visible": true
+            "subcolumns": [
+                {
+                    "title": "Старт",
+                    "dataIndex": "startDate",
+                    "dataType": "DATE",
+                    "filterType": "DATE",
+                    "subcolumns": [
+                        {
+                            "title": "Not valid column"
+                        }
+                    ]
+                },
+                {
+                    "title": "Финиш",
+                    "dataIndex": "finishDate",
+                    "dataType": "DATE",
+                    "filterType": "DATE"
+                }
+            ]
         },
         {
             "title": "Оборудование",
             "dataIndex": "equipment",
             "dataType": "STRING",
             "sortable": false,
-            "filterType": "SELECT",
-            "visible": true
+            "filterType": "SELECT"
         },
         {
             "title": "Статус",
             "dataIndex": "status",
-            "dataType": "OTHER",
-            "sortable": true,
-            "filterType": "BOOLEAN",
-            "visible": true
+            "filterType": "BOOLEAN"
         },
         {
             "title": "Сегмент",
-            "dataIndex": "_$render$_segment",
-            "dataType": "OTHER",
+            "dataIndex": "segment",
             "sortable": false,
-            "filterType": "TEXT",
-            "visible": true
+            "modifiableContent": true,
+            "filterType": "TEXT"
         }
-    ],
-    "cellSize": "MEDIUM"
+    ]
 }

@@ -18,7 +18,7 @@ export function useScrollWithShadow() {
         const lastPosition = scrollWidth - clientWidth;
 
         const hasRightPart = scrollLeft === 0;
-        const isBetween = 1 <= scrollLeft && scrollLeft <= lastPosition - 1;
+        const isBetween = 1 <= scrollLeft && scrollLeft < lastPosition - 1;
 
         let tempboxShadowClasses = ["scrollShadowContainer"];
 

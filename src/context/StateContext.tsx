@@ -1,5 +1,6 @@
 import { createContext } from "react";
-import { TableColumnPin, TableSortOptions } from "../types/general";
+import { SortOptions } from "../types/enums";
+import { BodyColumnPin } from "../types/general";
 
 interface StateContextType {
     data: any[];
@@ -27,8 +28,8 @@ interface StateContextType {
     sortingColumn: string;
     setSortingColumn: React.Dispatch<React.SetStateAction<string>>;
 
-    sortingDirection: TableSortOptions;
-    setSortingDirection: React.Dispatch<React.SetStateAction<TableSortOptions>>;
+    sortingDirection: SortOptions;
+    setSortingDirection: React.Dispatch<React.SetStateAction<SortOptions>>;
 
     searchValue: string;
     setSearchValue: React.Dispatch<React.SetStateAction<string>>;
@@ -39,11 +40,14 @@ interface StateContextType {
     selectedRows: number[];
     setSelectedRows: React.Dispatch<React.SetStateAction<number[]>>;
 
-    tableColumnPins: TableColumnPin[];
-    setTableColumnPins: React.Dispatch<React.SetStateAction<TableColumnPin[]>>;
+    columnPins: BodyColumnPin[];
+    setColumnPins: React.Dispatch<React.SetStateAction<BodyColumnPin[]>>;
 
     tableHasLeftShadow: boolean;
     setTableHasLeftShadow: React.Dispatch<React.SetStateAction<boolean>>;
+
+    maxHeadingDepth: number;
+    setMaxHeadingDepth: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const StateContext = createContext<StateContextType>({} as StateContextType);

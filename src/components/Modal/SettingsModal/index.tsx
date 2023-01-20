@@ -6,7 +6,7 @@ import ConfigContext from "../../../context/ConfigContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import UIContext from "../../../context/UIContext";
-import { Z_ModalTypes } from "../../../types/general";
+import { Z_ModalTypes } from "../../../types/enums";
 import Aligner from "../../Aligner";
 import DraggableList from "../../DraggableList";
 import SettingsResetter from "./SettingsResetter";
@@ -31,15 +31,18 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     };
 
     const applySettings = () => {
-        configContext.setTableConfig(configContext.modalTableConfig);
+        if (configContext.modalTableConfig)
+            configContext.setTableConfig(configContext.modalTableConfig);
     };
 
     const resetSettings = () => {
-        configContext.setModalTableConfig(configContext.tableConfig);
+        if (configContext.tableConfig)
+            configContext.setModalTableConfig(configContext.tableConfig);
     };
 
     const resetHardSettings = () => {
-        configContext.setModalTableConfig(configContext.defaultTableConfig, true);
+        if (configContext.defaultTableConfig)
+            configContext.setModalTableConfig(configContext.defaultTableConfig);
     };
 
     const handleConfirmSettings = () => {
@@ -77,7 +80,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         type: Z_ModalTypes.enum.SETTINGS,
         isSavingSettings: isSavingSettings,
         leftFooter:
-            configContext.savedTableConfigs.length < 3 ? (
+            configContext.savedTableConfigList.length < 3 ? (
                 !isSavingSettings ? (
                     <UI.OutlinedBtn onClick={startSaveSettings}>Сохранить настройку</UI.OutlinedBtn>
                 ) : (

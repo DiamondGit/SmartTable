@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FilterContext from "../../context/FilterContext";
-import { SavedTableFilterItemType, TableFilterHighlightType, TableFilterItemType, Z_FilterHighlights } from "../../types/general";
+import { TableFilterHighlightType, Z_FilterHighlights } from "../../types/enums";
+import { SavedTableFilterItemType, TableFilterItemType } from "../../types/general";
 
 interface FilterProviderType {
     children: React.ReactNode;
@@ -19,17 +20,17 @@ const FilterProvider = ({ children }: FilterProviderType) => {
     return (
         <FilterContext.Provider
             value={{
-                filtersList: filtersList,
-                setFiltersList: setFiltersList,
+                filtersList,
+                setFiltersList,
 
-                modalFiltersList: modalFiltersList,
-                setModalFiltersList: setModalFiltersList,
+                modalFiltersList,
+                setModalFiltersList,
 
-                modalFiltersChangesList: modalFiltersChangesList,
-                setModalFiltersChangesList: setModalFiltersChangesList,
+                modalFiltersChangesList,
+                setModalFiltersChangesList,
 
-                filterHighlight: filterHighlight,
-                setFilterHighlight: setFilterHighlight,
+                filterHighlight,
+                setFilterHighlight,
             }}
         >
             {children}

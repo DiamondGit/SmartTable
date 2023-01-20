@@ -1,9 +1,9 @@
 import { createContext, MouseEventHandler } from "react";
-import { TableColumnType, TableColumnPin } from "../types/general";
+import { BodyColumnPin } from "../types/general";
 
 interface TableHeadContextType {
-    updateTableColumnPin: (tableColumnWidth: TableColumnPin) => void;
-    handleClick: (dataIndex: string) => MouseEventHandler | undefined;
+    updateColumnPin: (columnPin: BodyColumnPin) => void;
+    handleClick: (dataIndex: string) => MouseEventHandler;
 }
 
 const TableHeadContext = createContext<TableHeadContextType>({} as TableHeadContextType);

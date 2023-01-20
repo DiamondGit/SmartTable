@@ -1,30 +1,35 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, MouseEventHandler } from "react";
+import { FLAG } from "../../../constants/general";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import { getColumnStyle, getPinSide } from "../../../functions/global";
-import { TableColumnType, Z_TablePinOptions, Z_TableSortOptions } from "../../../types/general";
-import Aligner from "../../Aligner";
+import { Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
+import { ColumnType } from "../../../types/general";
 import style from "../Table.module.scss";
 
-const Cell = ({ column, order }: { column: TableColumnType; order: number }) => {
+type HeadCellType = { column: ColumnType; order: number };
+
+const Cell = ({ column, order }: HeadCellType) => {
     const headContext = useContext(TableHeadContext);
     const stateContext = useContext(StateContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
     const updateCurrentColumnPin = () => {
-        headContext.updateTableColumnPin({
-            dataIndex: column.dataIndex,
-            pin: column.pin,
+        headContext.updateColumnPin({
+            name: column[FLAG.namedDataIndex],
             order: order,
+            pin: column.pin,
             width: headingRef.current?.clientWidth || 0,
         });
-    }
+    };
 
     useEffect(() => {
-        updateCurrentColumnPin();
+        if (column[FLAG.rowLevel] === 1) {
+            updateCurrentColumnPin();
+        }
     }, [headingRef.current?.clientWidth, order]);
 
     useEffect(() => {
@@ -39,21 +44,21 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
             className: style.activeIcon,
             style: { fontSize: "20px" },
         };
-        return stateContext.sortingDirection === Z_TableSortOptions.enum.ASC ? (
+        return stateContext.sortingDirection === Z_SortOptions.enum.ASC ? (
             <ArrowDownwardIcon {...props} />
         ) : (
             <ArrowUpwardIcon {...props} />
         );
     };
 
-    const getColumnSortClass = (column: TableColumnType): string[] => {
+    const getColumnSortClass = (targetColumn: ColumnType): string[] => {
         const defaultSortClass = [style.sortColumn];
-        if (stateContext.sortingColumn !== column.dataIndex) return [];
+        if (stateContext.sortingColumn !== targetColumn[FLAG.path] || targetColumn.subcolumns) return [];
         switch (stateContext.sortingDirection) {
-            case Z_TableSortOptions.enum.ASC:
+            case Z_SortOptions.enum.ASC:
                 defaultSortClass.push(style.asc);
                 break;
-            case Z_TableSortOptions.enum.DESC:
+            case Z_SortOptions.enum.DESC:
                 defaultSortClass.push(style.desc);
                 break;
             default:
@@ -62,18 +67,20 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
         return defaultSortClass;
     };
 
-    const getColumnClasses = (column: TableColumnType, isPinned: boolean): string[] => {
+    const getColumnClasses = (targetColumn: ColumnType, isPinned: boolean): string[] => {
         let columnClasses: string[] = [];
-        columnClasses = columnClasses.concat(getColumnSortClass(column));
+        columnClasses = columnClasses.concat(getColumnSortClass(targetColumn));
 
+        if (targetColumn.sortable) columnClasses.push(style.sortable);
+        if (targetColumn.subcolumns) columnClasses.push(style.withSubcolumn);
         if (isPinned) {
             columnClasses.push(style.pin);
-            columnClasses.push(style[getPinSide(column.pin)]);
+            columnClasses.push(style[getPinSide(targetColumn.pin)]);
             if (
-                column.pin === Z_TablePinOptions.enum.LEFT &&
+                targetColumn.pin === Z_TablePinOptions.enum.LEFT &&
                 Math.max(
-                    ...stateContext.tableColumnPins
-                        .filter((tableColumnPin) => tableColumnPin.pin === column.pin)
+                    ...stateContext.columnPins
+                        .filter((tableColumnPin) => tableColumnPin.pin === targetColumn.pin)
                         .map((tableColumnPin) => tableColumnPin.order)
                 ) === order
             ) {
@@ -86,20 +93,30 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
         return columnClasses;
     };
 
+    const computedSpan: { [key: string]: any } = {};
+    if (column[FLAG.colSpan] !== 1) computedSpan.colSpan = column[FLAG.colSpan];
+    if (column[FLAG.rowSpan] !== 1) computedSpan.rowSpan = column[FLAG.rowSpan];
+
+    const handleClick: MouseEventHandler | undefined = (event: React.MouseEvent) => {
+        if (column.subcolumns || !column.dataIndex) return;
+        headContext.handleClick(column[FLAG.path])(event);
+    };
+
     return (
         <th
-            key={column.dataIndex}
+            key={column[FLAG.namedDataIndex]}
             className={getColumnClasses(column, isPinned).join(" ")}
-            onClick={headContext.handleClick(column.dataIndex)}
+            onClick={handleClick}
             ref={headingRef}
-            style={getColumnStyle(isPinned, column.pin, stateContext.tableColumnPins, order)}
+            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, order)}
+            {...computedSpan}
         >
-            <Aligner style={{ justifyContent: "flex-start" }} gutter={8}>
+            <div>
                 {column.title}
                 <div className={style.sortingArrow}>
-                    {stateContext.sortingColumn === column.dataIndex && <SortingIcon />}
+                    {stateContext.sortingColumn === column[FLAG.path] && <SortingIcon />}
                 </div>
-            </Aligner>
+            </div>
         </th>
     );
 };

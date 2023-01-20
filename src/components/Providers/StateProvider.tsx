@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StateContext from "../../context/StateContext";
-import { TableColumnPin, TableSortOptions, Z_TableSortOptions } from "../../types/general";
+import { SortOptions, Z_SortOptions } from "../../types/enums";
+import { BodyColumnPin } from "../../types/general";
 
 interface StateProviderType {
     children: React.ReactNode;
@@ -18,7 +19,7 @@ const StateProvider = ({ children }: StateProviderType) => {
     const [data, setData] = useState<any[]>([]);
 
     const [sortingColumn, setSortingColumn] = useState("id");
-    const [sortingDirection, setSortingDirection] = useState<TableSortOptions>(Z_TableSortOptions.enum.ASC);
+    const [sortingDirection, setSortingDirection] = useState<SortOptions>(Z_SortOptions.enum.ASC);
 
     const [searchValue, setSearchValue] = useState("");
 
@@ -26,55 +27,60 @@ const StateProvider = ({ children }: StateProviderType) => {
 
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
-    const [tableColumnPins, setTableColumnPins] = useState<TableColumnPin[]>([]);
+    const [columnPins, setColumnPins] = useState<BodyColumnPin[]>([]);
 
     const [tableHasLeftShadow, setTableHasLeftShadow] = useState(false);
+
+    const [maxHeadingDepth, setMaxHeadingDepth] = useState(0);
 
     return (
         <StateContext.Provider
             value={{
-                data: data,
-                setData: setData,
+                data,
+                setData,
 
-                isSavedSettings: isSavedSettings,
-                setSavedSettings: setSavedSettings,
+                isSavedSettings,
+                setSavedSettings,
 
-                isConfigLoadingError: isConfigLoadingError,
-                setConfigLoadingError: setConfigLoadingError,
+                isConfigLoadingError,
+                setConfigLoadingError,
 
-                isDataLoadingError: isDataLoadingError,
-                setDataLoadingError: setDataLoadingError,
+                isDataLoadingError,
+                setDataLoadingError,
 
                 isError: isConfigLoadingError || isDataLoadingError,
 
-                isConfigLoading: isConfigLoading,
-                setConfigLoading: setConfigLoading,
+                isConfigLoading,
+                setConfigLoading,
 
-                isDataLoading: isDataLoading,
-                setDataLoading: setDataLoading,
+                isDataLoading,
+                setDataLoading,
 
                 isLoading: isConfigLoading || isDataLoading,
 
-                sortingColumn: sortingColumn,
-                setSortingColumn: setSortingColumn,
+                sortingColumn,
+                setSortingColumn,
 
-                sortingDirection: sortingDirection,
-                setSortingDirection: setSortingDirection,
+                sortingDirection,
+                setSortingDirection,
 
-                searchValue: searchValue,
-                setSearchValue: setSearchValue,
+                searchValue,
+                setSearchValue,
 
-                isFiltersFilled: isFiltersFilled,
-                setFiltersFilled: setFiltersFilled,
+                isFiltersFilled,
+                setFiltersFilled,
 
-                selectedRows: selectedRows,
-                setSelectedRows: setSelectedRows,
+                selectedRows,
+                setSelectedRows,
 
-                tableColumnPins: tableColumnPins,
-                setTableColumnPins: setTableColumnPins,
+                columnPins,
+                setColumnPins,
 
-                tableHasLeftShadow: tableHasLeftShadow,
-                setTableHasLeftShadow: setTableHasLeftShadow,
+                tableHasLeftShadow,
+                setTableHasLeftShadow,
+
+                maxHeadingDepth,
+                setMaxHeadingDepth,
             }}
         >
             {children}

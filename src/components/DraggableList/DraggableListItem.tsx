@@ -7,15 +7,17 @@ import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import PushPinIcon from "@mui/icons-material/PushPin";
 import { useContext, useState } from "react";
 import { Draggable } from "react-beautiful-dnd";
+import { FLAG } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
 import StateContext from "../../context/StateContext";
 import UIContext from "../../context/UIContext";
-import { TableColumnType, TablePinOptions, Z_TablePinOptions, Z_TableSortOptions } from "../../types/general";
+import { TablePinOptions, Z_SortOptions, Z_TablePinOptions } from "../../types/enums";
+import { ColumnType } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./DraggableList.module.scss";
 
 type DraggableListItemProps = {
-    column: TableColumnType;
+    column: ColumnType;
     index: number;
 };
 
@@ -25,12 +27,18 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const configContext = useContext(ConfigContext);
     const stateContext = useContext(StateContext);
 
+    const getComputedDataIndex = (targetColumn: ColumnType) => {
+        return targetColumn.dataIndex || targetColumn[FLAG.namedDataIndex];
+    };
+
+    const computedDataIndex = getComputedDataIndex(column);
+
     const setVisibleTableColumn = (event: React.ChangeEvent<HTMLInputElement>) => {
         if (configContext.modalTableConfig) {
             configContext.setModalTableConfig({
                 ...configContext.modalTableConfig,
                 table: [...configContext.modalTableConfig.table].map((targetColumn) =>
-                    targetColumn.dataIndex === column.dataIndex
+                    getComputedDataIndex(targetColumn) === computedDataIndex
                         ? { ...targetColumn, visible: event.target.checked }
                         : targetColumn
                 ),
@@ -38,23 +46,23 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
         }
     };
 
-    const toggleColumnPin = () => {
-        const switchPin = (currentPin: TablePinOptions): TablePinOptions => {
-            switch (currentPin) {
-                case Z_TablePinOptions.enum.NONE:
-                    return Z_TablePinOptions.enum.LEFT;
-                case Z_TablePinOptions.enum.LEFT:
-                    return Z_TablePinOptions.enum.RIGHT;
-                default:
-                    return Z_TablePinOptions.enum.NONE;
-            }
-        };
+    const switchPin = (currentPin: TablePinOptions): TablePinOptions => {
+        switch (currentPin) {
+            case Z_TablePinOptions.enum.NONE:
+                return Z_TablePinOptions.enum.LEFT;
+            case Z_TablePinOptions.enum.LEFT:
+                return Z_TablePinOptions.enum.RIGHT;
+            default:
+                return Z_TablePinOptions.enum.NONE;
+        }
+    };
 
+    const toggleColumnPin = () => {
         if (configContext.modalTableConfig) {
             configContext.setModalTableConfig({
                 ...configContext.modalTableConfig,
                 table: [...configContext.modalTableConfig.table].map((targetColumn) =>
-                    targetColumn.dataIndex === column.dataIndex
+                    getComputedDataIndex(targetColumn) === computedDataIndex
                         ? { ...targetColumn, pin: switchPin(targetColumn.pin) }
                         : targetColumn
                 ),
@@ -67,7 +75,7 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
             configContext.setModalTableConfig({
                 ...configContext.modalTableConfig,
                 table: [...configContext.modalTableConfig.table].map((targetColumn) =>
-                    targetColumn.dataIndex === column.dataIndex
+                    getComputedDataIndex(targetColumn) === computedDataIndex
                         ? { ...targetColumn, highlighted: !targetColumn.highlighted }
                         : targetColumn
                 ),
@@ -103,9 +111,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const dragItemClasses = [style.listItem];
     if (!column.visible) dragItemClasses.push(style.hiddenItem);
 
+    if (!computedDataIndex) return null;
     return (
         <div className={style.draggableContainer}>
-            <Draggable draggableId={column.dataIndex} index={index} isDragDisabled={isDragDisabled}>
+            <Draggable draggableId={computedDataIndex} index={index} isDragDisabled={isDragDisabled}>
                 {(provided, snapshot) => {
                     if (snapshot.isDragging && !snapshot.isDropAnimating) dragItemClasses.push(style.dragging);
                     return (
@@ -120,13 +129,13 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                                     <UI.Checkbox
                                         checked={column.visible}
                                         onChange={setVisibleTableColumn}
-                                        disabled={!column.hidable || stateContext.sortingColumn === column.dataIndex}
+                                        disabled={!column.hidable || stateContext.sortingColumn === computedDataIndex}
                                     />
                                     <span className={style.title}>{column.title}</span>
                                     <Aligner className={style.sortingArrow}>
-                                        {stateContext.sortingColumn === column.dataIndex && (
+                                        {stateContext.sortingColumn === computedDataIndex && (
                                             <>
-                                                {stateContext.sortingDirection === Z_TableSortOptions.enum.ASC ? (
+                                                {stateContext.sortingDirection === Z_SortOptions.enum.ASC ? (
                                                     <ArrowDownwardIcon
                                                         className={style.activeIcon}
                                                         style={{ fontSize: "20px" }}

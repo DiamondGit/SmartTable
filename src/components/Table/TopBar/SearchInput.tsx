@@ -6,6 +6,7 @@ import { IconButton, Menu, MenuItem, TextField } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import StateContext from "../../../context/StateContext";
+import { ColumnType, WithRequired } from "../../../types/general";
 import Aligner from "../../Aligner";
 import style from "../Table.module.scss";
 
@@ -28,8 +29,12 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     const [isOpen, setOpen] = useState(false);
     const searchBarClasses = [style.searchBar];
 
+    const computedColumns = (configContext.defaultTableConfig?.table.filter(
+        (column) => column.dataIndex !== undefined
+    ) || []) as WithRequired<ColumnType, "dataIndex">[];
+
     const searchOptions: OptionType[] =
-        configContext.defaultTableConfig?.table.map((column) => ({
+        computedColumns.map((column) => ({
             label: column.title,
             searchValue: column.dataIndex,
         })) || [];
@@ -53,7 +58,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
             let timeout = setTimeout(() => {
                 console.log("--- Request ---", stateContext.searchValue);
             }, 400);
-    
+
             return () => {
                 if (timeout) {
                     clearTimeout(timeout);
@@ -93,7 +98,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     return (
         <div className={searchBarClasses.join(" ")}>
             <Aligner className={style.searchBtn} onClick={toggleOpen}>
-                <SearchIcon sx={iconStyle} className={(!isOpen && stateContext.searchValue !== "") ? style.activeIcon : ""} />
+                <SearchIcon sx={iconStyle} className={!isOpen && stateContext.searchValue !== "" ? style.activeIcon : ""} />
             </Aligner>
             <div className={style.slider}>
                 <div className={style.inputContainer}>

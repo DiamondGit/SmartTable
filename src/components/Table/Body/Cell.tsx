@@ -1,12 +1,16 @@
 import { useContext, useRef } from "react";
+import { FLAG } from "../../../constants/general";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableBodyContext from "../../../context/TableBodyContext";
 import { formatDate, getColumnStyle, getDeepValue, getPinSide } from "../../../functions/global";
-import { TableColumnType, Z_TableDataTypes, Z_TablePinOptions } from "../../../types/general";
+import { Z_TableDataTypes, Z_TablePinOptions } from "../../../types/enums";
+import { BodyColumnPin, ColumnType } from "../../../types/general";
 import style from "../Table.module.scss";
 
-const Cell = ({ column, order }: { column: TableColumnType; order: number }) => {
+type BodyCellType = { column: ColumnType; order: number };
+
+const Cell = ({ column, order }: BodyCellType) => {
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
     const bodyContext = useContext(TableBodyContext);
@@ -15,31 +19,27 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
     const contentModifier = propsContext.contentModifier || {};
-    const RENDER_PREFIX = "_$render$_";
-    const isColumnModified = column.dataIndex.startsWith(RENDER_PREFIX);
-    const ordinaryDataIndex = column.dataIndex.replace(RENDER_PREFIX, "");
-    const modifiedContent = contentModifier[ordinaryDataIndex];
 
-    let field = isColumnModified
-        ? modifiedContent
-        : ordinaryDataIndex.includes(".")
-        ? getDeepValue(bodyContext.dataRow, ordinaryDataIndex)
-        : bodyContext.dataRow[ordinaryDataIndex];
+    let field = column[FLAG.path]
+        ? column.modifiableContent
+            ? contentModifier[column[FLAG.path]]
+            : getDeepValue(bodyContext.dataRow, column[FLAG.path])
+        : null;
 
     if (column.dataType === Z_TableDataTypes.enum.DATE) field = formatDate(field);
 
-    const getColumnClasses = (column: TableColumnType): string[] => {
+    const getColumnClasses = (targetColumn: ColumnType): string[] => {
         let columnClasses: string[] = [];
 
-        if (stateContext.sortingColumn === column.dataIndex) columnClasses.push(style.sortColumn);
+        if (stateContext.sortingColumn === targetColumn[FLAG.path]) columnClasses.push(style.sortColumn);
         if (isPinned) {
             columnClasses.push(style.pin);
-            columnClasses.push(style[getPinSide(column.pin)]);
+            columnClasses.push(style[getPinSide(targetColumn.pin)]);
             if (
-                column.pin === Z_TablePinOptions.enum.LEFT &&
+                targetColumn.pin === Z_TablePinOptions.enum.LEFT &&
                 Math.max(
-                    ...stateContext.tableColumnPins
-                        .filter((tableColumnPin) => tableColumnPin.pin === column.pin)
+                    ...stateContext.columnPins
+                        .filter((tableColumnPin) => tableColumnPin.pin === targetColumn.pin)
                         .map((tableColumnPin) => tableColumnPin.order)
                 ) === order
             ) {
@@ -49,8 +49,8 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
             columnClasses.push(style.firstColumn);
         }
 
-        if (column.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField);
-        if (column.dataType !== Z_TableDataTypes.enum.STRING && column.dataType !== Z_TableDataTypes.enum.NUMBER)
+        if (targetColumn.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField);
+        if (targetColumn.dataType !== Z_TableDataTypes.enum.STRING && targetColumn.dataType !== Z_TableDataTypes.enum.NUMBER)
             columnClasses.push(style.centeredField);
 
         return columnClasses;
@@ -59,15 +59,14 @@ const Cell = ({ column, order }: { column: TableColumnType; order: number }) => 
     return (
         <td
             ref={cellRef}
-            key={`tableBody_${bodyContext.index}_${column.dataIndex}`}
             className={getColumnClasses(column).join(" ")}
-            style={getColumnStyle(isPinned, column.pin, stateContext.tableColumnPins, order)}
+            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, order)}
         >
-            {isColumnModified ? (
+            {column.modifiableContent ? (
                 field !== undefined ? (
                     field(bodyContext.dataRow)
                 ) : (
-                    <strong style={{ color: "red" }}>{`MODIFIER "${ordinaryDataIndex}" NOT PROVIDED`}</strong>
+                    <strong style={{ color: "red" }}>{`MODIFIER "${column[FLAG.path]}" NOT PROVIDED`}</strong>
                 )
             ) : (
                 field

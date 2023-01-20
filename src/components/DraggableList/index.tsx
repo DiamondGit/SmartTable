@@ -1,14 +1,15 @@
 import { useContext } from "react";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
+import { FLAG } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
-import { TableColumnType } from "../../types/general";
+import { ColumnType } from "../../types/general";
 import style from "./DraggableList.module.scss";
 import DraggableListItem from "./DraggableListItem";
 
 const DraggableList = () => {
     const configContext = useContext(ConfigContext);
 
-    const reorder = (list: TableColumnType[], startIndex: number, endIndex: number): TableColumnType[] => {
+    const reorder = (list: ColumnType[], startIndex: number, endIndex: number): ColumnType[] => {
         const result = Array.from(list);
         const [removed] = result.splice(startIndex, 1);
         result.splice(endIndex, 0, removed);
@@ -37,7 +38,7 @@ const DraggableList = () => {
                     return (
                         <div ref={provided.innerRef} {...provided.droppableProps} className={style.draggableList}>
                             {columns.map((column, index) => (
-                                <DraggableListItem column={column} index={index} key={column.dataIndex} />
+                                <DraggableListItem column={column} index={index} key={column[FLAG.namedDataIndex]} />
                             ))}
                             {provided.placeholder}
                         </div>

@@ -4,7 +4,7 @@ import { Modal as AntdModal } from "antd";
 import { useContext, useRef, useState } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import UIContext from "../../context/UIContext";
-import { ModalTypes, Z_ModalTypes } from "../../types/general";
+import { ModalTypes, Z_ModalTypes } from "../../types/enums";
 import style from "./Modal.module.scss";
 
 export interface ModalType {

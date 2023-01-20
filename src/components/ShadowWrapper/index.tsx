@@ -2,7 +2,7 @@ import { useState, useContext, useEffect } from "react";
 import ConfigContext from "../../context/ConfigContext";
 import StateContext from "../../context/StateContext";
 import { useScrollWithShadow } from "../../functions/useScrollWithShadow";
-import { TablePinOptions, Z_TablePinOptions } from "../../types/general";
+import { TablePinOptions, Z_TablePinOptions } from "../../types/enums";
 import style from "./ShadowWrapper.module.scss";
 
 const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
@@ -22,7 +22,7 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
     const computedBoxShadowClasses = boxShadowClasses.map((boxShadowClass) => style[boxShadowClass]);
 
     const getSideOffset = (pinSide: TablePinOptions) => {
-        const sidePins = stateContext.tableColumnPins.filter((tableColumnPin) => tableColumnPin.pin === pinSide);
+        const sidePins = stateContext.columnPins.filter((tableColumnPin) => tableColumnPin.pin === pinSide);
         const offset =
             sidePins?.reduce((offsetSum, columnPin) => offsetSum + columnPin.width, 0) + sidePins?.length - 1 || 0;
         return pinSide === Z_TablePinOptions.enum.LEFT && sidePins.length === 1 && sidePins[0].order === -1 ? 0 : offset;
@@ -44,7 +44,7 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
 
     useEffect(() => {
         updateShadowVisibility();
-    }, [stateContext.tableColumnPins]);
+    }, [stateContext.columnPins]);
 
     return (
         <div className={computedBoxShadowClasses.join(" ")}>

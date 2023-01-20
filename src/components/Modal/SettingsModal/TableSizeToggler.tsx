@@ -1,7 +1,7 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
-import { TableCellSizes, Z_TableCellSizes } from "../../../types/general";
+import { TableCellSizes, Z_TableCellSizes } from "../../../types/enums";
 import Aligner from "../../Aligner";
 
 const TableSizeToggler = () => {

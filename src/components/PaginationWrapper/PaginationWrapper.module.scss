@@ -6,6 +6,8 @@
     align-items: flex-end;
     gap: 8px;
     .paginationContainer {
+        position: relative;
+        z-index: 10;
         &.position_LEFT {
             align-self: flex-start;
         }
@@ -17,6 +19,8 @@
         }
     }
     .content {
+        position: relative;
+        z-index: 5;
         align-self: stretch;
     }
 }

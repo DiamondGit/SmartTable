@@ -3,7 +3,8 @@ import { Checkbox, IconButton, MenuItem, Select as MuiSelect, SelectChangeEvent,
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import FilterContext from "../../../context/FilterContext";
-import { TableColumnType, TableFilterItemType, Z_FilterHighlights, Z_TableFilterType } from "../../../types/general";
+import { Z_FilterHighlights, Z_TableFilterTypes } from "../../../types/enums";
+import { ColumnType, TableFilterItemType } from "../../../types/general";
 import Aligner from "../../Aligner";
 import style from "./FilterModal.module.scss";
 import FilterValueChanger from "./FilterValueChanger";
@@ -26,8 +27,8 @@ const FilterItem = ({ filter, order, deleteItem }: FilterItemType) => {
 
     filter = filterContext.modalFiltersChangesList.find((modalFilter) => modalFilter.id === filter.id) || filter;
 
-    const filterableColumns: TableColumnType[] =
-        tableConfig?.filter((column) => column.filterType !== Z_TableFilterType.enum.NONE) || [];
+    const filterableColumns: ColumnType[] =
+        tableConfig?.filter((column) => column.filterType !== Z_TableFilterTypes.enum.NONE) || [];
 
     const handleFilterColumnChange = (event: SelectChangeEvent) => {
         const newFilterColumn = event.target.value;
@@ -65,7 +66,7 @@ const FilterItem = ({ filter, order, deleteItem }: FilterItemType) => {
         );
 
         return (
-            defaultColumn?.filterType !== Z_TableFilterType.enum.BOOLEAN ||
+            defaultColumn?.filterType !== Z_TableFilterTypes.enum.BOOLEAN ||
             !filterContext.modalFiltersChangesList.some(
                 (modalFilter) => modalFilter.field === defaultColumn.dataIndex && modalFilter.id !== filter.id
             )

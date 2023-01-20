@@ -5,7 +5,8 @@ import { useContext, useEffect } from "react";
 import FilterContext from "../../context/FilterContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
-import { PaginationConfigType, PaginationPositionParser, PaginationPositionType } from "../../types/general";
+import { PaginationPositionType } from "../../types/enums";
+import { PaginationConfigType, PaginationPositionSchema } from "../../types/general";
 import Aligner from "../Aligner";
 import FilterChips from "../FilterChips";
 import style from "./PaginationWrapper.module.scss";
@@ -41,7 +42,7 @@ const PaginationWrapper = ({
             : undefined,
         showSizeChanger: paginationConfig.showSizeChanger || false,
         pageSizeOptions: paginationConfig.pageSizeOptions || defaultPageSizeOptions,
-        bottomPosition: PaginationPositionParser.parse(paginationConfig.bottomPosition),
+        bottomPosition: PaginationPositionSchema.parse(paginationConfig.bottomPosition),
         hideTop: paginationConfig.hideTop || false,
         hideBottom: paginationConfig.hideBottom || false,
     };
@@ -55,7 +56,7 @@ const PaginationWrapper = ({
     };
 
     const Pagination = ({ position }: { position?: PaginationPositionType }) => (
-        <div className={`${style.paginationContainer} ${style[`position_${PaginationPositionParser.parse(position)}`]}`}>
+        <div className={`${style.paginationContainer} ${style[`position_${PaginationPositionSchema.parse(position)}`]}`}>
             <AntdPagination
                 total={total}
                 current={current}

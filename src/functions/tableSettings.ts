@@ -1,8 +1,8 @@
-import { TableColumnType } from "../types/general";
+import { ColumnType } from "../types/general";
 
 interface SettingType {
     name: string;
-    setting: TableColumnType[];
+    setting: ColumnType[];
 }
 
 const getStorageAddress = (tableIndex: string): string => {
@@ -25,7 +25,7 @@ export const getAllSettings = (tableIndex: string): SettingType[] => {
     }
 };
 
-export const saveSetting = (tableIndex: string, settingName: string, setting: TableColumnType[]) => {
+export const saveSetting = (tableIndex: string, settingName: string, setting: ColumnType[]) => {
     const currentTableSettings = getAllSettings(tableIndex);
     if (getSettingAmount(tableIndex) < 5) {
         currentTableSettings.push({

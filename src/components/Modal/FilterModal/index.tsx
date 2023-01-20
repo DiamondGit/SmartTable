@@ -4,7 +4,7 @@ import { useContext, useEffect, useState } from "react";
 import Modal, { ModalType } from "..";
 import FilterContext from "../../../context/FilterContext";
 import UIContext from "../../../context/UIContext";
-import { Z_FilterHighlights, Z_ModalTypes } from "../../../types/general";
+import { Z_FilterHighlights, Z_ModalTypes } from "../../../types/enums";
 import Aligner from "../../Aligner";
 import FilterItem from "./FilterItem";
 import style from "./FilterModal.module.scss";

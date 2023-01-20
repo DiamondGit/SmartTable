@@ -3,8 +3,9 @@ import ruRU from "antd/locale/ru_RU";
 import UIContext from "../../context/UIContext";
 import "../../styles/global.scss";
 import {
-    TableInitializationType, TableUIType
+    TableInitializationType
 } from "../../types/general";
+import { TableUIType } from "../../types/UI";
 import ConfigProvider from "../Providers/ConfigProvider";
 import FilterProvider from "../Providers/FilterProvider";
 import PropsProvider from "../Providers/PropsProvider";

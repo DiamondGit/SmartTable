@@ -1,93 +1,86 @@
 import z from "zod";
+import { FLAG } from "../constants/general";
+import {
+    PaginationPositionType,
+    TablePinOptions,
+    Z_PaginationPositions,
+    Z_TableCellSizes,
+    Z_TableDataTypes,
+    Z_TableFilterTypes,
+    Z_TablePinOptions,
+} from "./enums";
 
-interface UIBtnProps {
-    loading?: boolean;
-    disabled?: boolean;
-    children?: React.ReactNode;
-    className?: string;
-    onClick?: () => void;
-}
+export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
-interface UICheckboxProps {
-    checked?: boolean;
-    disabled?: boolean;
-    className?: string;
-    onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
-}
-
-type UIBtnType = (props: UIBtnProps) => JSX.Element;
-type UICheckBoxType = (props: UICheckboxProps) => JSX.Element;
-
-export type TableUIStartingType = {
-    PrimaryBtn?: UIBtnType;
-    SecondaryBtn?: UIBtnType;
-    OutlinedBtn?: UIBtnType;
-    Checkbox?: UICheckBoxType;
-};
-
-export type TableUIType = {
-    [Property in keyof TableUIStartingType]-?: TableUIStartingType[Property];
-};
-
-export interface TableInitializationType {
-    tableTitle: string;
-    tableName: string;
-    userId: number;
-    saveLocally?: boolean;
-    loadingConfig?: {
-        columnCount: number;
-        rowCount?: number;
-        noFuncBtnsLeft?: boolean;
-        noFuncBtnsRight?: boolean;
-    };
-    paginationConfig?: PaginationConfigType;
-    contentModifier?: { [key: string]: any };
-}
-
-export const Z_ModalTypes = z.enum(["ADD", "EDIT", "FILTER", "SETTINGS"]);
-export type ModalTypes = z.infer<typeof Z_ModalTypes>;
-
-export const Z_TableCellSizes = z.enum(["SMALL", "MEDIUM", "LARGE"]);
-export type TableCellSizes = z.infer<typeof Z_TableCellSizes>;
-
-export const Z_TableDataTypes = z.enum(["STRING", "NUMBER", "DATE", "BOOLEAN", "OTHER"]);
-export type TableDataTypes = z.infer<typeof Z_TableDataTypes>;
-
-export const Z_TablePinOptions = z.enum(["LEFT", "NONE", "RIGHT"]);
-export type TablePinOptions = z.infer<typeof Z_TablePinOptions>;
-
-export const Z_TableSortOptions = z.enum(["ASC", "DESC"]);
-export type TableSortOptions = z.infer<typeof Z_TableSortOptions>;
-
-export const Z_TableFilterType = z.enum(["SELECT", "TEXT", "DATE", "CONDITION", "BOOLEAN", "NONE"]);
-export type TableFilterType = z.infer<typeof Z_TableFilterType>;
-
-const TableColumnDefaults = {
-    dataType: Z_TableDataTypes.enum.OTHER,
-    sortable: false,
-    filterType: Z_TableFilterType.enum.NONE,
-    hidable: {
+const columnBooleanDefaults = {
+    enabled: {
         default: true,
         catch: false,
     },
+    disabled: {
+        default: false,
+        catch: true,
+    },
+};
+const columnDefaults = {
+    dataType: Z_TableDataTypes.enum.OTHER,
+    sortable: columnBooleanDefaults.enabled,
+    filterType: Z_TableFilterTypes.enum.NONE,
+    visible: columnBooleanDefaults.enabled,
+    hidable: columnBooleanDefaults.enabled,
     pin: Z_TablePinOptions.enum.NONE,
-    highlighted: false,
+    highlighted: columnBooleanDefaults.disabled,
+    modifiableContent: columnBooleanDefaults.disabled,
 };
 
-export const TableColumnSchema = z.object({
+export const ColumnBaseSchema = z.object({
     title: z.string(),
-    dataIndex: z.string(),
-    dataType: Z_TableDataTypes.default(TableColumnDefaults.dataType).catch(TableColumnDefaults.dataType),
-    sortable: z.boolean().default(TableColumnDefaults.sortable).catch(TableColumnDefaults.sortable),
-    filterType: Z_TableFilterType.default(TableColumnDefaults.filterType).catch(TableColumnDefaults.filterType),
-    visible: z.boolean(),
-    hidable: z.boolean().default(TableColumnDefaults.hidable.default).catch(TableColumnDefaults.hidable.catch),
-    pin: Z_TablePinOptions.default(TableColumnDefaults.pin).catch(TableColumnDefaults.pin),
-    highlighted: z.boolean().default(TableColumnDefaults.highlighted).catch(TableColumnDefaults.highlighted),
+    dataIndex: z.string().optional(),
+    dataType: Z_TableDataTypes.default(columnDefaults.dataType).catch(columnDefaults.dataType),
+    sortable: z.boolean().default(columnDefaults.sortable.default).catch(columnDefaults.sortable.catch),
+    filterType: Z_TableFilterTypes.default(columnDefaults.filterType).catch(columnDefaults.filterType),
+    visible: z.boolean().default(columnDefaults.visible.default).catch(columnDefaults.visible.catch),
+    hidable: z.boolean().default(columnDefaults.hidable.default).catch(columnDefaults.hidable.catch),
+    pin: Z_TablePinOptions.default(columnDefaults.pin).catch(columnDefaults.pin),
+    highlighted: z.boolean().default(columnDefaults.highlighted.default).catch(columnDefaults.highlighted.catch),
+    modifiableContent: z
+        .boolean()
+        .default(columnDefaults.modifiableContent.default)
+        .catch(columnDefaults.modifiableContent.catch),
 });
-export type TableColumnType = z.infer<typeof TableColumnSchema>;
+type ColumnBaseType = z.infer<typeof ColumnBaseSchema>;
 
-const TableConfigDefaults = {
+const ColumnInitialBaseSchema = ColumnBaseSchema.partial();
+type ColumnInitialBaseType = z.infer<typeof ColumnInitialBaseSchema>;
+
+type ColumnFlagExtension = {
+    [FLAG.colSpan]: number;
+    [FLAG.rowSpan]: number;
+    [FLAG.rowLevel]: number;
+    [FLAG.path]: string;
+    [FLAG.namedDataIndex]: string;
+};
+
+export type ColumnType = ColumnBaseType &
+    ColumnFlagExtension & {
+        subcolumns?: ColumnType[];
+    };
+
+export type ColumnInitialType = ColumnInitialBaseType &
+    Partial<ColumnFlagExtension> & {
+        subcolumns?: ColumnInitialType[];
+    };
+export const ColumnInitialSchema: z.ZodType<ColumnInitialType> = z.lazy(() =>
+    ColumnInitialBaseSchema.merge(
+        z.object({
+            subcolumns: z.array(ColumnInitialSchema).optional(),
+            [FLAG.colSpan]: z.number().default(1),
+            [FLAG.rowSpan]: z.number().default(1),
+        })
+    )
+);
+
+const tableConfigDefaults = {
     cellSize: Z_TableCellSizes.enum.MEDIUM,
     editable: true,
     deletable: true,
@@ -97,25 +90,48 @@ const TableConfigDefaults = {
     warningText: null,
 };
 
-export const TableConfigSchema = z.object({
-    table: z.array(TableColumnSchema),
-    cellSize: Z_TableCellSizes.default(TableConfigDefaults.cellSize).catch(TableConfigDefaults.cellSize),
-    editable: z.boolean().default(TableConfigDefaults.editable).catch(TableConfigDefaults.editable),
-    deletable: z.boolean().default(TableConfigDefaults.deletable).catch(TableConfigDefaults.deletable),
-    isDashboard: z.boolean().default(TableConfigDefaults.isDashboard).catch(TableConfigDefaults.isDashboard),
-    loadable: z.boolean().default(TableConfigDefaults.loadable).catch(TableConfigDefaults.loadable),
-    highlightable: z.boolean().default(TableConfigDefaults.highlightable).catch(TableConfigDefaults.highlightable),
-    warningText: z.string().nullable().default(TableConfigDefaults.warningText).catch(TableConfigDefaults.warningText),
+const TableConfigBaseSchema = z.object({
+    cellSize: Z_TableCellSizes.default(tableConfigDefaults.cellSize).catch(tableConfigDefaults.cellSize),
+    editable: z.boolean().default(tableConfigDefaults.editable).catch(tableConfigDefaults.editable),
+    deletable: z.boolean().default(tableConfigDefaults.deletable).catch(tableConfigDefaults.deletable),
+    isDashboard: z.boolean().default(tableConfigDefaults.isDashboard).catch(tableConfigDefaults.isDashboard),
+    loadable: z.boolean().default(tableConfigDefaults.loadable).catch(tableConfigDefaults.loadable),
+    highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
+    warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
 });
-export type TableConfigType = z.infer<typeof TableConfigSchema> | undefined;
+type TableConfigBaseType = z.infer<typeof TableConfigBaseSchema>;
 
-export type SavedTableConfigType = TableConfigType & { id: number; name: string; isRecent: boolean };
+export const TableConfigInitialSchema = TableConfigBaseSchema.merge(
+    z.object({
+        table: z.array(ColumnInitialSchema),
+    })
+);
+export type TableConfigInitialType = z.infer<typeof TableConfigInitialSchema>;
 
-export const Z_PaginationPositions = z.enum(["LEFT", "CENTER", "RIGHT"]);
+export type TableConfigType = TableConfigBaseType & {
+    table: ColumnType[];
+};
+
+const LiteralSchema = z.union([z.string(), z.number(), z.boolean(), z.null()]);
+type LiteralType = z.infer<typeof LiteralSchema>;
+type JsonType = LiteralType | { [key: string]: JsonType } | JsonType[];
+export const JsonSchema: z.ZodType<JsonType> = z.lazy(() =>
+    z.union([LiteralSchema, z.array(JsonSchema), z.record(JsonSchema)])
+);
+
+export const SavedTableConfigListSchema = z.array(
+    z.object({
+        id: z.number(),
+        name: z.string(),
+        isRecent: z.boolean().default(false),
+        tableConfig: JsonSchema,
+    })
+);
+export type SavedTableConfigListType = z.infer<typeof SavedTableConfigListSchema>;
+
 const defaultPaginationPosition = Z_PaginationPositions.enum.RIGHT;
-export const PaginationPositionParser =
+export const PaginationPositionSchema =
     Z_PaginationPositions.default(defaultPaginationPosition).catch(defaultPaginationPosition);
-export type PaginationPositionType = z.infer<typeof Z_PaginationPositions>;
 
 export type PaginationConfigType = {
     perPageFetch?: boolean;
@@ -137,15 +153,32 @@ export type TableFilterItemType = {
 
 export type SavedTableFilterItemType = TableFilterItemType & { name: string; isRecent: boolean };
 
-export const Z_FilterHighlights = z.enum(["WARNING", "HIGHLIGHT"]);
-export type TableFilterHighlightType = {
-    type: z.infer<typeof Z_FilterHighlights>;
-    filterIds: number[];
+type ColumnPinBase = {
+    name: string;
+    pin: TablePinOptions;
+    width: number;
 };
 
-export type TableColumnPin = {
-    dataIndex: string;
-    pin: TablePinOptions;
+export type BodyColumnPin = ColumnPinBase & {
     order: number;
-    width: number;
+};
+
+export type HeadColumnPin = ColumnPinBase & {
+    orderX: number;
+    orderY: number;
+};
+
+export type TableInitializationType = {
+    tableTitle: string;
+    tableName: string;
+    userId: number;
+    saveLocally?: boolean;
+    loadingConfig?: {
+        columnCount: number;
+        rowCount?: number;
+        noFuncBtnsLeft?: boolean;
+        noFuncBtnsRight?: boolean;
+    };
+    paginationConfig?: PaginationConfigType;
+    contentModifier?: { [key: string]: (record: { [key: string]: any }) => JSX.Element | string | number };
 };

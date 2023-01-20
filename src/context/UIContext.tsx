@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { TableUIType } from "../types/general";
+import { TableUIType } from "../types/UI";
 
 const UIContext = createContext<TableUIType>({} as TableUIType);
 

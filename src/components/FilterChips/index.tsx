@@ -2,7 +2,8 @@ import { Chip } from "@mui/material";
 import { useContext } from "react";
 import ConfigContext from "../../context/ConfigContext";
 import FilterContext from "../../context/FilterContext";
-import { TableFilterItemType, Z_FilterHighlights } from "../../types/general";
+import { Z_FilterHighlights } from "../../types/enums";
+import { TableFilterItemType } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./FilterChips.module.scss";
 

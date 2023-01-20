@@ -2,11 +2,11 @@ import { useContext, useRef, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import StateContext from "../../../context/StateContext";
 import TableBodyContext from "../../../context/TableBodyContext";
-import { Z_TablePinOptions } from "../../../types/general";
+import { Z_TablePinOptions } from "../../../types/enums";
 import ActionMenu from "../../ActionMenu";
 import Aligner from "../../Aligner";
-import SideColumns from "../SideColumns";
 import style from "../Table.module.scss";
+import Side from "./Side";
 
 const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
     const stateContext = useContext(StateContext);
@@ -27,8 +27,8 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
     return (
         <TableBodyContext.Provider
             value={{
-                dataRow: dataRow,
-                index: index,
+                dataRow,
+                index,
             }}
         >
             <tr className={`${isClicked ? style.selected : ""}`} onClick={toggleRowClick}>
@@ -41,9 +41,9 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
                         <ActionMenu dataRow={dataRow} />
                     </Aligner>
                 </td>
-                <SideColumns pinOption={Z_TablePinOptions.enum.LEFT} />
-                <SideColumns />
-                <SideColumns pinOption={Z_TablePinOptions.enum.RIGHT} />
+                <Side side={Z_TablePinOptions.enum.LEFT} />
+                <Side />
+                <Side side={Z_TablePinOptions.enum.RIGHT} />
             </tr>
         </TableBodyContext.Provider>
     );

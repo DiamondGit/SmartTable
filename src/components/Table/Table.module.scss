@@ -140,7 +140,8 @@
                         color: $white-400;
                         line-height: 18px;
                         user-select: none;
-                        background-color: $blue-400;
+                        // background-color: $blue-400;
+                        background: linear-gradient(to left bottom, $blue-300, $blue-500);
                         &:not(.actionCell):hover {
                             background-color: $blue-500;
                             &:not(:first-child) {
@@ -150,10 +151,12 @@
                         &:not(:first-child) {
                             border-left: 1px solid $blue-400;
                         }
-                        &:not(.actionCell) {
+                        &:not(.actionCell):not(.withSubcolumn) {
                             cursor: pointer;
-                            position: relative;
                             padding-right: 48px;
+                        }
+                        &:not(.actionCell) {
+                            position: relative;
                             &.sortColumn {
                                 color: $orange-400;
                             }
@@ -163,6 +166,9 @@
                                 right: 24px;
                                 transform: translate(50%, -50%);
                             }
+                        }
+                        &.withSubcolumn {
+                            text-align: center;
                         }
                         &.pin, &.actionCell.withLeftPin {
                             position: sticky;
@@ -209,7 +215,7 @@
                 &:nth-child(even) td.sortColumn {
                     background-color: $gray-250;
                 }
-                &:hover td {
+                &:hover td:not(.errorContent) {
                     background-color: $blue-150;
                     &.sortColumn {
                         background-color: $gray-300;
@@ -258,6 +264,7 @@
             }
             .loadingError {
                 height: 165px;
+                user-select: none;
             }
             th.actionCell,
             td.actionCell {

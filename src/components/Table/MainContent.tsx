@@ -4,7 +4,7 @@ import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { getTableData } from "../../controllers/controllers";
 import { useScrollWithShadow } from "../../functions/useScrollWithShadow";
-import { Z_TableCellSizes, Z_TablePinOptions } from "../../types/general";
+import { Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
 import Aligner from "../Aligner";
 import FilterModal from "../Modal/FilterModal";
 import SettingsModal from "../Modal/SettingsModal";
@@ -66,8 +66,10 @@ const MainContent = () => {
     };
 
     const openSettingsModal = () => {
-        setSettingsModalOpen(true);
-        configContext.setModalTableConfig(configContext.tableConfig);
+        if (configContext.tableConfig) {
+            setSettingsModalOpen(true);
+            configContext.setModalTableConfig(configContext.tableConfig);
+        }
     };
 
     const openFilterModal = () => {
@@ -90,9 +92,9 @@ const MainContent = () => {
     ];
 
     const tableClasses = [style.table];
-    if (stateContext.isLoading) tableClasses.push(style.loading);
+    if (stateContext.isLoading && !stateContext.isError) tableClasses.push(style.loading);
     if (
-        stateContext.tableColumnPins.some((tableColumnPin) => tableColumnPin.pin === Z_TablePinOptions.enum.LEFT && tableColumnPin.order !== -1) &&
+        stateContext.columnPins.some((tableColumnPin) => tableColumnPin.pin === Z_TablePinOptions.enum.LEFT && tableColumnPin.order !== -1) &&
         stateContext.tableHasLeftShadow
     )
         tableClasses.push(style.withLeftShadow);
@@ -145,13 +147,13 @@ const MainContent = () => {
                         <table className={tableClasses.join(" ")}>
                             {(!stateContext.isError || stateContext.isConfigLoading) && (
                                 <thead ref={headingRef}>
-                                    <tr ref={headingRowRef}>
                                         {!stateContext.isConfigLoading ? (
                                             <Head />
                                         ) : (
-                                            <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
+                                            <tr ref={headingRowRef}>
+                                                <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
+                                            </tr>
                                         )}
-                                    </tr>
                                 </thead>
                             )}
                             {!stateContext.isError || stateContext.isConfigLoading ? (
@@ -178,6 +180,7 @@ const MainContent = () => {
                                 <tbody>
                                     <tr>
                                         <td
+                                            className={style.errorContent}
                                             style={{
                                                 padding: 0,
                                             }}
