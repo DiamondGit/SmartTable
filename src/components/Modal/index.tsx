@@ -15,7 +15,8 @@ export interface ModalType {
     leftFooter?: React.ReactNode;
     rightFooter?: React.ReactNode;
     type: ModalTypes;
-    isSavingSettings?: boolean;
+    isTransparentModal?: boolean;
+    hideRightFooter?: boolean;
     children?: React.ReactNode;
     width?: number;
     style?: React.CSSProperties;
@@ -29,7 +30,8 @@ const Modal = ({
     leftFooter = null,
     rightFooter = null,
     type,
-    isSavingSettings = false,
+    isTransparentModal = false,
+    hideRightFooter = false,
     width = 520,
     children,
     ...props
@@ -75,7 +77,7 @@ const Modal = ({
             <div className={style.footer}>
                 {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
                 {
-                    !isSavingSettings &&
+                    !hideRightFooter &&
                     <div className={`${style.btnContainer} ${style.right}`}>
                         {!!rightFooter ? (
                             <>{rightFooter}</>
@@ -118,7 +120,7 @@ const Modal = ({
     };
 
     return (
-        <AntdModal {...modalProps} style={{ top: 150, ...props.style }} className={style.modal}>
+        <AntdModal {...modalProps} style={{ top: 150, ...props.style, opacity: isTransparentModal ? .1 : 1 }} className={style.modal}>
             {children}
         </AntdModal>
     );

@@ -1,7 +1,7 @@
 @import "../../styles/constants.scss";
 
 .scrollShadowContainer {
-    overflow: hidden;
+    height: 100%;
     position: relative;
     $shadowSize: 16px;
     $shadowOffset: 24px;

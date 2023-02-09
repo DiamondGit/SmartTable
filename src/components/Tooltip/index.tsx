@@ -11,6 +11,7 @@ const Tooltip = styled(({ className, ...props }: TooltipProps) => (
         children={<div>{props.children}</div>}
     />
 ))(() => ({
+    zIndex: 9999999,
     [`& .${tooltipClasses.arrow}`]: {
         color: "#2d2e30",
     },

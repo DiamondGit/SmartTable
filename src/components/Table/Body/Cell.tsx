@@ -5,7 +5,7 @@ import StateContext from "../../../context/StateContext";
 import TableBodyContext from "../../../context/TableBodyContext";
 import { formatDate, getColumnStyle, getDeepValue, getPinSide } from "../../../functions/global";
 import { Z_TableDataTypes, Z_TablePinOptions } from "../../../types/enums";
-import { BodyColumnPin, ColumnType } from "../../../types/general";
+import { ColumnPinType, ColumnType } from "../../../types/general";
 import style from "../Table.module.scss";
 
 type BodyCellType = { column: ColumnType; order: number };
@@ -36,14 +36,17 @@ const Cell = ({ column, order }: BodyCellType) => {
             columnClasses.push(style.pin);
             columnClasses.push(style[getPinSide(targetColumn.pin)]);
             if (
-                targetColumn.pin === Z_TablePinOptions.enum.LEFT &&
                 Math.max(
                     ...stateContext.columnPins
                         .filter((tableColumnPin) => tableColumnPin.pin === targetColumn.pin)
                         .map((tableColumnPin) => tableColumnPin.order)
                 ) === order
             ) {
-                columnClasses.push(style.lastColumn);
+                if (targetColumn.pin === Z_TablePinOptions.enum.LEFT) {
+                    columnClasses.push(style.lastPinnedLeftColumn);
+                } else if (targetColumn.pin === Z_TablePinOptions.enum.RIGHT) {
+                    columnClasses.push(style.lastPinnedRightColumn);
+                }
             }
         } else if (order === 0) {
             columnClasses.push(style.firstColumn);
@@ -60,7 +63,7 @@ const Cell = ({ column, order }: BodyCellType) => {
         <td
             ref={cellRef}
             className={getColumnClasses(column).join(" ")}
-            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, order)}
+            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, column[FLAG.namedDataIndex])}
         >
             {column.modifiableContent ? (
                 field !== undefined ? (

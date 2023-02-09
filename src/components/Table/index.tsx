@@ -2,9 +2,7 @@ import { ConfigProvider as AntdConfigProvider } from "antd";
 import ruRU from "antd/locale/ru_RU";
 import UIContext from "../../context/UIContext";
 import "../../styles/global.scss";
-import {
-    TableInitializationType
-} from "../../types/general";
+import { TableCreateType, TableInitializationType } from "../../types/general";
 import { TableUIType } from "../../types/UI";
 import ConfigProvider from "../Providers/ConfigProvider";
 import FilterProvider from "../Providers/FilterProvider";
@@ -12,17 +10,20 @@ import PropsProvider from "../Providers/PropsProvider";
 import StateProvider from "../Providers/StateProvider";
 import MainContent from "./MainContent";
 
-interface TableStartingType extends TableInitializationType {
-    UI: TableUIType;
-}
+type TableStartingType = TableInitializationType &
+    TableCreateType & {
+        customUI: TableUIType;
+    };
 
-const Table = ({ UI, ...props }: TableStartingType) => {
+const Table = ({ customUI, ...props }: TableStartingType) => {
+    const defaultConfigPath = `${props.configsStoragePath}/${props.tableConfigPath}.json`;
+
     return (
-        <PropsProvider props={props}>
+        <PropsProvider {...{ props }}>
             <StateProvider>
-                <ConfigProvider>
+                <ConfigProvider {...{ defaultConfigPath }}>
                     <FilterProvider>
-                        <UIContext.Provider value={UI}>
+                        <UIContext.Provider value={customUI}>
                             <AntdConfigProvider
                                 theme={{
                                     token: {

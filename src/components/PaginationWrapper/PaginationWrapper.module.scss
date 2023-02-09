@@ -1,26 +1,27 @@
 .wrapper {
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-end;
+    overflow: auto;
+    display: grid;
+    grid-template-columns: 100%;
+    grid-template-rows: auto 1fr auto;
     gap: 8px;
     .paginationContainer {
         position: relative;
         z-index: 10;
         &.position_LEFT {
-            align-self: flex-start;
+            justify-self: start;
         }
         &.position_CENTER {
-            align-self: center;
+            justify-self: center;
         }
         &.position_RIGHT {
-            align-self: flex-end;
+            justify-self: end;
         }
     }
     .content {
         position: relative;
         z-index: 5;
         align-self: stretch;
+        overflow: auto;
     }
 }

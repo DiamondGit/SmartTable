@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { SavedTableConfigListType, TableConfigType } from "../types/general";
+import { SavedTableConfigType, TableConfigType } from "../types/general";
 
 interface ConfigContextType {
     readonly defaultTableConfig: TableConfigType | undefined;
@@ -10,9 +10,19 @@ interface ConfigContextType {
     modalTableConfig: TableConfigType | undefined;
     setModalTableConfig: (newTableConfig: TableConfigType) => void;
     
-    savedTableConfigList: SavedTableConfigListType;
+    savedTableConfigs: SavedTableConfigType[];
+
+    selectedSavedConfigId: number | undefined;
+    setSelectedSavedConfigId: React.Dispatch<React.SetStateAction<number | undefined>>;
+
+    modalSelectedSavedConfigId: number | undefined;
+    setModalSelectedSavedConfigId: React.Dispatch<React.SetStateAction<number | undefined>>;
 
     selectedSavedTableConfigId: number | null;
+
+    requestSavedConfigs: (defaultConfig?: TableConfigType | undefined) => void;
+
+    getSavedConfigById: (configId: number | undefined) => SavedTableConfigType | undefined;
     
     hasLeftPin: boolean;
     hasRightPin: boolean;

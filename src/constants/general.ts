@@ -4,6 +4,7 @@ export enum FLAG {
     rowLevel = "_$rowLevel$_",
     path = "_$path$_",
     namedDataIndex = "_$namedDataIndex$_",
+    mainOrder = "_$mainOrder$_",
 };
 
 export const ACTION_COLUMN_NAME = "_$actionColumn$_";

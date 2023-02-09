@@ -37,7 +37,6 @@ const FilterChip = ({ filter, openFilterModal }: FilterChipType) => {
     };
 
     const handleDelete = () => {
-        console.log("--- Here ---");
         filterContext.setFiltersList((prevFilterList) =>
             [...prevFilterList].filter((tableFilter) => tableFilter.id !== filter.id)
         );

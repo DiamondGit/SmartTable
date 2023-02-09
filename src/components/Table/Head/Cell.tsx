@@ -2,11 +2,13 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import { useContext, useEffect, useRef, MouseEventHandler } from "react";
 import { FLAG } from "../../../constants/general";
+import PaginationContext from "../../../context/PaginationContext";
+import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import { getColumnStyle, getPinSide } from "../../../functions/global";
 import { Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
-import { ColumnType } from "../../../types/general";
+import { ColumnPinType, ColumnType } from "../../../types/general";
 import style from "../Table.module.scss";
 
 type HeadCellType = { column: ColumnType; order: number };
@@ -14,30 +16,42 @@ type HeadCellType = { column: ColumnType; order: number };
 const Cell = ({ column, order }: HeadCellType) => {
     const headContext = useContext(TableHeadContext);
     const stateContext = useContext(StateContext);
+    const propsContext = useContext(PropsContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
-    const updateCurrentColumnPin = () => {
-        headContext.updateColumnPin({
-            name: column[FLAG.namedDataIndex],
-            order: order,
-            pin: column.pin,
-            width: headingRef.current?.clientWidth || 0,
-        });
-    };
+    if (column.title === "Модель") {
+        console.log(headingRef.current?.getClientRects()[0].width);
+    }
 
     useEffect(() => {
-        if (column[FLAG.rowLevel] === 1) {
+        const computedData = {
+            namedDataIndex: column[FLAG.namedDataIndex],
+            order: order,
+            mainOrder: column[FLAG.mainOrder],
+            pin: column.pin,
+            level: column[FLAG.rowLevel],
+            width: headingRef.current?.getClientRects()[0].width || 0,
+        };
+
+        const updateCurrentColumnPin = () => {
+            console.log(`--- cell ---`);
+            headContext.updateColumnPin(computedData);
+        };
+
+        if (
+            !stateContext.columnPins.some((columnPin) => columnPin.namedDataIndex === column[FLAG.namedDataIndex]) &&
+            !!headingRef.current?.getClientRects()[0].width
+        ) {
+            headContext.addOrReplaceColumnPin(computedData);
+        } else {
             updateCurrentColumnPin();
         }
-    }, [headingRef.current?.clientWidth, order]);
-
-    useEffect(() => {
-        window.addEventListener("resize", updateCurrentColumnPin);
-        return () => {
-            window.removeEventListener("resize", updateCurrentColumnPin);
-        };
-    }, []);
+        // window.addEventListener("resize", updateCurrentColumnPin);
+        // return () => {
+        //     window.removeEventListener("resize", updateCurrentColumnPin);
+        // };
+    }, [headingRef.current?.getClientRects()[0].width, order, propsContext.data]);
 
     const SortingIcon = () => {
         const props = {
@@ -77,14 +91,17 @@ const Cell = ({ column, order }: HeadCellType) => {
             columnClasses.push(style.pin);
             columnClasses.push(style[getPinSide(targetColumn.pin)]);
             if (
-                targetColumn.pin === Z_TablePinOptions.enum.LEFT &&
                 Math.max(
                     ...stateContext.columnPins
                         .filter((tableColumnPin) => tableColumnPin.pin === targetColumn.pin)
                         .map((tableColumnPin) => tableColumnPin.order)
                 ) === order
             ) {
-                columnClasses.push(style.lastColumn);
+                if (targetColumn.pin === Z_TablePinOptions.enum.LEFT) {
+                    columnClasses.push(style.lastPinnedLeftColumn);
+                } else if (targetColumn.pin === Z_TablePinOptions.enum.RIGHT) {
+                    columnClasses.push(style.lastPinnedRightColumn);
+                }
             }
         } else if (order === 0) {
             columnClasses.push(style.firstColumn);
@@ -108,7 +125,7 @@ const Cell = ({ column, order }: HeadCellType) => {
             className={getColumnClasses(column, isPinned).join(" ")}
             onClick={handleClick}
             ref={headingRef}
-            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, order)}
+            style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, column[FLAG.namedDataIndex])}
             {...computedSpan}
         >
             <div>

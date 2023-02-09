@@ -1,5 +1,6 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, useRef } from "react";
 import ConfigContext from "../../context/ConfigContext";
+import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { useScrollWithShadow } from "../../functions/useScrollWithShadow";
 import { TablePinOptions, Z_TablePinOptions } from "../../types/enums";
@@ -9,11 +10,12 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
     const { scrollContainer, boxShadowClasses, onScrollHandler, doShadow } = useScrollWithShadow();
     const configContext = useContext(ConfigContext);
     const stateContext = useContext(StateContext);
+    const propsContext = useContext(PropsContext);
     const [isLeftPinsVisible, setLeftPinsVisible] = useState(true);
 
     useEffect(() => {
         doShadow();
-    }, [configContext.tableConfig, stateContext.data]);
+    }, [configContext.tableConfig, propsContext.data]);
 
     useEffect(() => {
         stateContext.setTableHasLeftShadow(boxShadowClasses.includes("left"));
@@ -23,8 +25,9 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
 
     const getSideOffset = (pinSide: TablePinOptions) => {
         const sidePins = stateContext.columnPins.filter((tableColumnPin) => tableColumnPin.pin === pinSide);
+        console.log(sidePins);
         const offset =
-            sidePins?.reduce((offsetSum, columnPin) => offsetSum + columnPin.width, 0) + sidePins?.length - 1 || 0;
+            sidePins?.reduce((offsetSum, columnPin) => offsetSum + columnPin.width, 0) || 0;
         return pinSide === Z_TablePinOptions.enum.LEFT && sidePins.length === 1 && sidePins[0].order === -1 ? 0 : offset;
     };
 
@@ -32,7 +35,10 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
     const rightOffset = getSideOffset(Z_TablePinOptions.enum.RIGHT);
 
     const updateShadowVisibility = () => {
-        setLeftPinsVisible((scrollContainer.current?.clientWidth || 0) > leftOffset + rightOffset);
+        const newValue = (scrollContainer.current?.clientWidth || 0) > leftOffset + rightOffset;
+        if (newValue !== isLeftPinsVisible) {
+            setLeftPinsVisible(() => newValue);
+        }
     };
 
     useEffect(() => {
@@ -40,7 +46,7 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
         return () => {
             window.removeEventListener("resize", updateShadowVisibility);
         };
-    }, []);
+    });
 
     useEffect(() => {
         updateShadowVisibility();
@@ -53,7 +59,7 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
                 style={{ left: leftOffset, display: isLeftPinsVisible ? "block" : "none" }}
             />
             <div className={`${style.shadow} ${style.right}`} style={{ right: rightOffset }} />
-            <div ref={scrollContainer} style={{ overflowX: "auto" }} onScroll={onScrollHandler}>
+            <div ref={scrollContainer} onScroll={onScrollHandler}>
                 {children}
             </div>
         </div>

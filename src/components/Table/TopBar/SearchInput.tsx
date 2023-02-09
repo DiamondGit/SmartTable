@@ -5,6 +5,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, Menu, MenuItem, TextField } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
+import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import { ColumnType, WithRequired } from "../../../types/general";
 import Aligner from "../../Aligner";
@@ -25,6 +26,7 @@ interface OptionType {
 
 const SearchInput = ({ loading = false }: SearchInputType) => {
     const stateContext = useContext(StateContext);
+    const propsContext = useContext(PropsContext);
     const configContext = useContext(ConfigContext);
     const [isOpen, setOpen] = useState(false);
     const searchBarClasses = [style.searchBar];
@@ -54,7 +56,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     };
 
     useEffect(() => {
-        if (!stateContext.isDataLoading) {
+        if (!propsContext.isDataLoading) {
             let timeout = setTimeout(() => {
                 console.log("--- Request ---", stateContext.searchValue);
             }, 400);

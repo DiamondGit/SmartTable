@@ -15,17 +15,48 @@ import { TablePinOptions, Z_SortOptions, Z_TablePinOptions } from "../../types/e
 import { ColumnType } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./DraggableList.module.scss";
+import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
+import MuiAccordionDetails, { AccordionDetailsProps } from "@mui/material/AccordionDetails";
+import { styled } from "@mui/material/styles";
+import MuiAccordionSummary, { AccordionSummaryProps } from "@mui/material/AccordionSummary";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type DraggableListItemProps = {
     column: ColumnType;
     index: number;
 };
 
+const Accordion = styled((props: AccordionProps) => <MuiAccordion disableGutters elevation={0} square {...props} />)(
+    ({ theme }) => ({
+        width: "100%",
+        border: "none",
+        backgroundColor: "unset",
+        "&:before": {
+            display: "none",
+        },
+    })
+);
+
+const AccordionDetails = styled((props: AccordionDetailsProps) => <MuiAccordionDetails {...props} />)(({ theme }) => ({
+    cursor: "default",
+}));
+
+const AccordionSummary = styled((props: AccordionSummaryProps) => <MuiAccordionSummary {...props} />)(({ theme }) => ({
+    padding: 0,
+    cursor: "grab",
+    minHeight: "unset",
+    flexDirection: "row-reverse",
+    "& .MuiAccordionSummary-content": {
+        margin: 0,
+    },
+}));
+
 const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
-    const [isDragDisabled, setDragDisabled] = useState(false);
     const UI = useContext(UIContext);
     const configContext = useContext(ConfigContext);
     const stateContext = useContext(StateContext);
+    const [accordionOpen, setAccordionOpen] = useState(false);
 
     const getComputedDataIndex = (targetColumn: ColumnType) => {
         return targetColumn.dataIndex || targetColumn[FLAG.namedDataIndex];
@@ -57,15 +88,26 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
         }
     };
 
+    const pinWithSubcolumns = (targetColumn: ColumnType, pinOption: TablePinOptions) => {
+        const result = { ...targetColumn, pin: pinOption };
+        if (targetColumn.subcolumns) {
+            let tempResult: ColumnType[] = [];
+            targetColumn.subcolumns.forEach((subcolumn) => {
+                tempResult = tempResult.concat(pinWithSubcolumns(subcolumn, pinOption));
+            });
+
+            return { ...result, subcolumns: tempResult };
+        } else return result;
+    };
+
     const toggleColumnPin = () => {
         if (configContext.modalTableConfig) {
             configContext.setModalTableConfig({
                 ...configContext.modalTableConfig,
-                table: [...configContext.modalTableConfig.table].map((targetColumn) =>
-                    getComputedDataIndex(targetColumn) === computedDataIndex
-                        ? { ...targetColumn, pin: switchPin(targetColumn.pin) }
-                        : targetColumn
-                ),
+                table: [...configContext.modalTableConfig.table].map((targetColumn) => {
+                    if (getComputedDataIndex(targetColumn) !== computedDataIndex) return targetColumn;
+                    return pinWithSubcolumns(targetColumn, switchPin(targetColumn.pin));
+                }),
             });
         }
     };
@@ -81,6 +123,10 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                 ),
             });
         }
+    };
+
+    const toggleAccordion = () => {
+        setAccordionOpen((prev) => !prev);
     };
 
     //BUTTON CLASSES
@@ -112,9 +158,55 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     if (!column.visible) dragItemClasses.push(style.hiddenItem);
 
     if (!computedDataIndex) return null;
+
+    const Content = ({ expandable = false }: { expandable?: boolean }) => (
+        <Aligner style={{ width: "100%", justifyContent: "space-between" }}>
+            <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
+                <UI.Checkbox
+                    checked={column.visible}
+                    onChange={setVisibleTableColumn}
+                    disabled={!column.hidable || stateContext.sortingColumn === computedDataIndex}
+                />
+                <span className={style.title}>{column.title}</span>
+                <Aligner className={style.sortingArrow}>
+                    {stateContext.sortingColumn === computedDataIndex && (
+                        <>
+                            {stateContext.sortingDirection === Z_SortOptions.enum.ASC ? (
+                                <ArrowDownwardIcon className={style.activeIcon} style={{ fontSize: "20px" }} />
+                            ) : (
+                                <ArrowUpwardIcon className={style.activeIcon} style={{ fontSize: "20px" }} />
+                            )}
+                        </>
+                    )}
+                </Aligner>
+            </Aligner>
+            <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
+                <Aligner
+                    style={{ justifyContent: "flex-end" }}
+                    gutter={16}
+                >
+                    {expandable && (
+                        <UI.SecondaryBtn onClick={toggleAccordion}>
+                            {accordionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </UI.SecondaryBtn>
+                    )}
+                    <UI.SecondaryBtn onClick={toggleColumnPin} className={pinBtnClasses.join(" ")}>
+                        {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
+                        <PushPinIcon className={pinClasses.join(" ")} />
+                        {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
+                    </UI.SecondaryBtn>
+                    <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
+                        <LightbulbIcon className={highlightClasses.join(" ")} />
+                    </UI.SecondaryBtn>
+                </Aligner>
+                <DragHandleIcon className={style.dragIcon} />
+            </Aligner>
+        </Aligner>
+    );
+
     return (
         <div className={style.draggableContainer}>
-            <Draggable draggableId={computedDataIndex} index={index} isDragDisabled={isDragDisabled}>
+            <Draggable draggableId={computedDataIndex} index={index}>
                 {(provided, snapshot) => {
                     if (snapshot.isDragging && !snapshot.isDropAnimating) dragItemClasses.push(style.dragging);
                     return (
@@ -124,55 +216,20 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                             {...provided.dragHandleProps}
                             className={dragItemClasses.join(" ")}
                         >
-                            <Aligner style={{ width: "100%", justifyContent: "space-between" }}>
-                                <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
-                                    <UI.Checkbox
-                                        checked={column.visible}
-                                        onChange={setVisibleTableColumn}
-                                        disabled={!column.hidable || stateContext.sortingColumn === computedDataIndex}
-                                    />
-                                    <span className={style.title}>{column.title}</span>
-                                    <Aligner className={style.sortingArrow}>
-                                        {stateContext.sortingColumn === computedDataIndex && (
-                                            <>
-                                                {stateContext.sortingDirection === Z_SortOptions.enum.ASC ? (
-                                                    <ArrowDownwardIcon
-                                                        className={style.activeIcon}
-                                                        style={{ fontSize: "20px" }}
-                                                    />
-                                                ) : (
-                                                    <ArrowUpwardIcon
-                                                        className={style.activeIcon}
-                                                        style={{ fontSize: "20px" }}
-                                                    />
-                                                )}
-                                            </>
-                                        )}
-                                    </Aligner>
-                                </Aligner>
-                                <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
-                                    <Aligner
-                                        style={{ justifyContent: "flex-end" }}
-                                        gutter={16}
-                                        onMouseEnter={() => {
-                                            setDragDisabled(true);
-                                        }}
-                                        onMouseLeave={() => {
-                                            setDragDisabled(false);
-                                        }}
-                                    >
-                                        <UI.SecondaryBtn onClick={toggleColumnPin} className={pinBtnClasses.join(" ")}>
-                                            {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
-                                            <PushPinIcon className={pinClasses.join(" ")} />
-                                            {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
-                                        </UI.SecondaryBtn>
-                                        <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
-                                            <LightbulbIcon className={highlightClasses.join(" ")} />
-                                        </UI.SecondaryBtn>
-                                    </Aligner>
-                                    <DragHandleIcon className={style.dragIcon} />
-                                </Aligner>
-                            </Aligner>
+                            {column.subcolumns ? (
+                                <Accordion expanded={accordionOpen}>
+                                    <AccordionSummary>
+                                        <Content expandable />
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        {column.subcolumns.map((subcolumn) => (
+                                            <p key={subcolumn.title}>{subcolumn.title}</p>
+                                        ))}
+                                    </AccordionDetails>
+                                </Accordion>
+                            ) : (
+                                <Content />
+                            )}
                         </div>
                     );
                 }}

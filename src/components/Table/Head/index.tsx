@@ -2,40 +2,36 @@ import { useContext, useEffect, useRef, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
-import { BodyColumnPin, ColumnType } from "../../../types/general";
+import { ColumnPinType, ColumnType, ComputedRowLevelsType, ComputedRowLevelType } from "../../../types/general";
 import { SortOptions, Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
 import style from "../Table.module.scss";
 import Side from "./Side";
 import { ACTION_COLUMN_NAME, FLAG } from "../../../constants/general";
 import { joinIndexes } from "../../../functions/global";
-
-type ComputedColumnLevelsType = {
-    [Z_TablePinOptions.enum.LEFT]: ColumnType[][];
-    [Z_TablePinOptions.enum.NONE]: ColumnType[][];
-    [Z_TablePinOptions.enum.RIGHT]: ColumnType[][];
-};
+import Row from "./Row";
+import PaginationContext from "../../../context/PaginationContext";
+import PropsContext from "../../../context/PropsContext";
 
 const Head = () => {
     const { tableConfig, hasLeftPin } = useContext(ConfigContext);
     const actionCellRef = useRef<HTMLTableCellElement>(null);
     const stateContext = useContext(StateContext);
+    const paginationContext = useContext(PaginationContext);
+    const propsContext = useContext(PropsContext);
 
-    const defaultColumnLevels: ComputedColumnLevelsType = {
-        [Z_TablePinOptions.enum.LEFT]: [],
-        [Z_TablePinOptions.enum.NONE]: [],
-        [Z_TablePinOptions.enum.RIGHT]: [],
-    };
-
-    const [computedColumnLevels, setComputedColumnLevels] = useState<ComputedColumnLevelsType>(defaultColumnLevels);
+    const defaultRowLevels: ComputedRowLevelsType = [];
+    const [computedRowLevels, setComputedRowLevels] = useState<ComputedRowLevelsType>(defaultRowLevels);
 
     useEffect(() => {
         addOrReplaceColumnPin({
-            name: ACTION_COLUMN_NAME,
+            namedDataIndex: ACTION_COLUMN_NAME,
             order: -1,
+            mainOrder: -1,
             pin: Z_TablePinOptions.enum.LEFT,
-            width: actionCellRef.current?.clientWidth || 0,
+            level: 0,
+            width: actionCellRef.current?.getClientRects()[0].width || 0,
         });
-    }, [actionCellRef.current?.clientWidth]);
+    }, [actionCellRef.current?.getClientRects()[0].width]);
 
     const getHeadingByLevel = (column: ColumnType, level: number): ColumnType | ColumnType[] => {
         if (column[FLAG.rowLevel] === level) return column;
@@ -54,103 +50,96 @@ const Head = () => {
 
     useEffect(() => {
         if (!tableConfig?.table) return;
-        setComputedColumnLevels(() => {
-            const result = { ...defaultColumnLevels };
-            const defaultLevelResult: ColumnType[][] = [...Array(stateContext.maxHeadingDepth)].map(() => []);
+        setComputedRowLevels(() => {
+            const result: ComputedRowLevelsType = [...defaultRowLevels];
+
             Object.values(Z_TablePinOptions.enum).forEach((pinOption) => {
-                const resultColumns = tableConfig.table.filter(
+                const resultRowColumns = tableConfig.table.filter(
                     (column) => (!column.hidable || column.visible) && column.pin === pinOption
                 );
 
-                const levelResult = [...defaultLevelResult];
-                for (let i = 0; i < levelResult.length; i++) {
-                    let tempLevel: ColumnType[] = [];
-                    resultColumns.forEach((column) => {
-                        tempLevel = tempLevel.concat(getHeadingByLevel(column, i + 1));
+                [...Array(stateContext.maxHeadingDepth)].forEach((_, rowLevel) => {
+                    let rowSideColumns: ColumnType[] = [];
+                    resultRowColumns.forEach((column) => {
+                        rowSideColumns = rowSideColumns.concat(getHeadingByLevel(column, rowLevel));
                     });
-                    levelResult[i] = tempLevel;
-                }
-                result[pinOption] = levelResult;
+                    result[rowLevel] = {
+                        ...(result[rowLevel] || {}),
+                        [pinOption]: rowSideColumns,
+                    };
+                });
             });
+
             return result;
         });
-    }, [tableConfig]);
+    }, [tableConfig?.table]);
+
+    const updateSort = (sortingColumn: string, sortingDirection: SortOptions = Z_SortOptions.enum.ASC) => {
+        stateContext.setSortingColumn(sortingColumn);
+        stateContext.setSortingDirection(sortingDirection);
+        propsContext.paginationConfig?.getData?.(
+            paginationContext.currentPage,
+            paginationContext.pageSize,
+            sortingColumn,
+            sortingDirection
+        );
+    };
 
     const handleClick = (dataIndex: string | undefined) => () => {
         if (!dataIndex) return;
-        const switchDirection = (sortingDirection: SortOptions): SortOptions => {
+        const switchDirection = (sortingDirection: SortOptions): void => {
             switch (sortingDirection) {
                 case Z_SortOptions.enum.ASC:
-                    return Z_SortOptions.enum.DESC;
+                    updateSort(stateContext.sortingColumn, Z_SortOptions.enum.DESC);
+                    break;
                 case Z_SortOptions.enum.DESC:
-                    stateContext.setSortingColumn("id");
-                    return Z_SortOptions.enum.ASC;
+                    updateSort("id");
+
+                    // stateContext.setSortingColumn("id");
+                    break;
             }
         };
 
         if (stateContext.sortingColumn !== dataIndex) {
-            stateContext.setSortingColumn(dataIndex);
-            stateContext.setSortingDirection(Z_SortOptions.enum.ASC);
+            updateSort(dataIndex);
         } else {
-            stateContext.setSortingDirection(switchDirection(stateContext.sortingDirection));
+            switchDirection(stateContext.sortingDirection);
         }
     };
 
-    const addOrReplaceColumnPin = (targetColumn: BodyColumnPin) => {
+    const addOrReplaceColumnPin = (targetColumn: ColumnPinType) => {
         stateContext.setColumnPins((prevColumnPins) => {
-            prevColumnPins = prevColumnPins.filter((prevColumnPin) => prevColumnPin.name !== targetColumn.name);
+            prevColumnPins = prevColumnPins.filter(
+                (prevColumnPin) => prevColumnPin.namedDataIndex !== targetColumn.namedDataIndex
+            );
             prevColumnPins.push(targetColumn);
             return prevColumnPins;
         });
     };
 
-    const updateColumnPin = (targetColumn: BodyColumnPin) => {
+    const updateColumnPin = (targetColumn: ColumnPinType) => {
         stateContext.setColumnPins((prevColumnPins) => {
-            prevColumnPins = prevColumnPins.filter((prevColumnPin) => prevColumnPin.name !== targetColumn.name);
-            prevColumnPins.push(targetColumn);
+            let newColumnPins = [...prevColumnPins];
+            newColumnPins = newColumnPins.map((columnPin) =>
+                columnPin.namedDataIndex === targetColumn.namedDataIndex ? targetColumn : columnPin
+            );
 
-            Object.values(Z_TablePinOptions.enum).forEach((pinOption) => {
-                let index = 0;
-                prevColumnPins.map((column) => {
-                    if (column.pin === pinOption) {
-                        return { ...column, order: index++ };
-                    }
-                    return column;
-                });
-            });
-
-            return prevColumnPins;
+            return newColumnPins;
         });
     };
 
     const actionCellClasses = [style.actionCell];
     if (hasLeftPin) actionCellClasses.push(style.withLeftPin);
-
     return (
         <TableHeadContext.Provider
             value={{
                 updateColumnPin,
+                addOrReplaceColumnPin,
                 handleClick,
             }}
         >
-            {[...Array(stateContext.maxHeadingDepth)].map((_, index) => (
-                <tr key={index} style={{ position: "relative", zIndex: stateContext.maxHeadingDepth - index }}>
-                    {index === 0 && (
-                        <th
-                            className={actionCellClasses.join(" ")}
-                            ref={actionCellRef}
-                            rowSpan={stateContext.maxHeadingDepth}
-                        ></th>
-                    )}
-                    {Object.values(Z_TablePinOptions.enum).map((pinOption) => (
-                        <Side
-                            side={pinOption}
-                            sideLevel={index}
-                            columns={computedColumnLevels[pinOption][index]}
-                            key={`${pinOption}_head_${index}`}
-                        />
-                    ))}
-                </tr>
+            {computedRowLevels.map((rowLevel, level) => (
+                <Row level={level} rowLevel={rowLevel} key={level} actionCellRef={actionCellRef} />
             ))}
         </TableHeadContext.Provider>
     );

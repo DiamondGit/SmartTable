@@ -1,22 +1,23 @@
-import { useState, useEffect } from "react";
+import { useState, useContext } from "react";
+import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { SortOptions, Z_SortOptions } from "../../types/enums";
-import { BodyColumnPin } from "../../types/general";
+import { ColumnPinType } from "../../types/general";
 
 interface StateProviderType {
     children: React.ReactNode;
 }
 
 const StateProvider = ({ children }: StateProviderType) => {
+    const propsContext = useContext(PropsContext);
+
     const [isSavedSettings, setSavedSettings] = useState(false);
 
-    const [isConfigLoading, setConfigLoading] = useState(false);
-    const [isDataLoading, setDataLoading] = useState(false);
+    const [isDefaultConfigLoading, setDefaultConfigLoading] = useState(false);
+    const [isSavedConfigsLoading, setSavedConfigsLoading] = useState(false);
 
-    const [isConfigLoadingError, setConfigLoadingError] = useState(false);
-    const [isDataLoadingError, setDataLoadingError] = useState(false);
-
-    const [data, setData] = useState<any[]>([]);
+    const [isDefaultConfigLoadingError, setDefaultConfigLoadingError] = useState(false);
+    const [isSavedConfigsLoadingError, setSavedConfigsLoadingError] = useState(false);
 
     const [sortingColumn, setSortingColumn] = useState("id");
     const [sortingDirection, setSortingDirection] = useState<SortOptions>(Z_SortOptions.enum.ASC);
@@ -27,7 +28,7 @@ const StateProvider = ({ children }: StateProviderType) => {
 
     const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
-    const [columnPins, setColumnPins] = useState<BodyColumnPin[]>([]);
+    const [columnPins, setColumnPins] = useState<ColumnPinType[]>([]);
 
     const [tableHasLeftShadow, setTableHasLeftShadow] = useState(false);
 
@@ -36,27 +37,24 @@ const StateProvider = ({ children }: StateProviderType) => {
     return (
         <StateContext.Provider
             value={{
-                data,
-                setData,
-
                 isSavedSettings,
                 setSavedSettings,
 
-                isConfigLoadingError,
-                setConfigLoadingError,
+                isDefaultConfigLoadingError,
+                setDefaultConfigLoadingError,
 
-                isDataLoadingError,
-                setDataLoadingError,
+                isSavedConfigsLoadingError,
+                setSavedConfigsLoadingError,
 
-                isError: isConfigLoadingError || isDataLoadingError,
+                isSavedConfigsLoading,
+                setSavedConfigsLoading,
 
-                isConfigLoading,
-                setConfigLoading,
+                isError: isDefaultConfigLoadingError || isSavedConfigsLoadingError || propsContext.isDataError || false,
 
-                isDataLoading,
-                setDataLoading,
+                isDefaultConfigLoading,
+                setDefaultConfigLoading,
 
-                isLoading: isConfigLoading || isDataLoading,
+                isLoading: isDefaultConfigLoading || isSavedConfigsLoading || propsContext.isDataLoading || false,
 
                 sortingColumn,
                 setSortingColumn,

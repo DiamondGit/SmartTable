@@ -1,27 +1,24 @@
 import { createContext } from "react";
 import { SortOptions } from "../types/enums";
-import { BodyColumnPin } from "../types/general";
+import { ColumnPinType } from "../types/general";
 
 interface StateContextType {
-    data: any[];
-    setData: React.Dispatch<React.SetStateAction<any[]>>;
-
     isSavedSettings: boolean;
     setSavedSettings: React.Dispatch<React.SetStateAction<boolean>>;
 
-    isConfigLoadingError: boolean;
-    setConfigLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
-
-    isDataLoadingError: boolean;
-    setDataLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
+    isDefaultConfigLoadingError: boolean;
+    setDefaultConfigLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
+    
+    isSavedConfigsLoadingError: boolean;
+    setSavedConfigsLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
 
     isError: boolean;
 
-    isConfigLoading: boolean;
-    setConfigLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    isDefaultConfigLoading: boolean;
+    setDefaultConfigLoading: React.Dispatch<React.SetStateAction<boolean>>;
 
-    isDataLoading: boolean;
-    setDataLoading: React.Dispatch<React.SetStateAction<boolean>>;
+    isSavedConfigsLoading: boolean;
+    setSavedConfigsLoading: React.Dispatch<React.SetStateAction<boolean>>;
 
     isLoading: boolean;
 
@@ -40,8 +37,8 @@ interface StateContextType {
     selectedRows: number[];
     setSelectedRows: React.Dispatch<React.SetStateAction<number[]>>;
 
-    columnPins: BodyColumnPin[];
-    setColumnPins: React.Dispatch<React.SetStateAction<BodyColumnPin[]>>;
+    columnPins: ColumnPinType[];
+    setColumnPins: React.Dispatch<React.SetStateAction<ColumnPinType[]>>;
 
     tableHasLeftShadow: boolean;
     setTableHasLeftShadow: React.Dispatch<React.SetStateAction<boolean>>;

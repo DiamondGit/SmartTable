@@ -1,0 +1,17 @@
+{
+    "table": [
+        {
+            "title": "Наименование",
+            "dataIndex": "name",
+            "dataType": "STRING",
+            "filterType": "NONE",
+            "hidable": false
+        },
+        {
+            "title": "Сегменты",
+            "dataIndex": "segments",
+            "dataType": "STRING",
+            "filterType": "SELECT"
+        }
+    ]
+}

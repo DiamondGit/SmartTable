@@ -35,12 +35,14 @@ const TopBar = ({
     openSettingsModal,
     openFilterModal,
 }: TopBarType) => {
-    const { isConfigLoading, isDataLoading, isConfigLoadingError, isDataLoadingError } = useContext(StateContext);
+    const { isDefaultConfigLoading, isDefaultConfigLoadingError } = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const filterContext = useContext(FilterContext);
     const propsContext = useContext(PropsContext);
     const UI = useContext(UIContext);
-    const isError = isConfigLoadingError || isDataLoadingError;
+    const { isDataLoading, isDataError } = propsContext;
+
+    const isError = isDefaultConfigLoadingError || isDataError;
     const iconStyle = {
         fontSize: 22,
     };
@@ -54,7 +56,7 @@ const TopBar = ({
         <Aligner style={{ justifyContent: "space-between" }} className={style.topBar}>
             <Aligner className={`${style.bar} ${style.left}`} gutter={12}>
                 <h3 className={style.title}>{propsContext.tableTitle}</h3>
-                {!isConfigLoading
+                {!isDefaultConfigLoading
                     ? !isError && (
                           <>
                               <Tooltip title={"Добавить"} placement={"top"} disableHoverListener={isDataLoading}>
@@ -73,7 +75,7 @@ const TopBar = ({
                       )}
             </Aligner>
             <Aligner className={`${style.bar} ${style.right}`} gutter={6}>
-                {!isConfigLoading
+                {!isDefaultConfigLoading
                     ? !isError && (
                           <>
                               <Tooltip title={"Полноэкранный режим"} placement={"top"} disableHoverListener={isDataLoading}>

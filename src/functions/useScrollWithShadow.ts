@@ -3,9 +3,17 @@ import { useEffect, useRef, useState } from "react";
 const leftShadow = "left";
 const rightShadow = "right";
 
+const isShadowEnabled = false;
+const isDynamicShadow = false;
+
+const defaultShadowClass = ["scrollShadowContainer"];
+const defaultShadowClasses = isShadowEnabled
+    ? defaultShadowClass.concat(isDynamicShadow ? [] : [leftShadow, rightShadow])
+    : [];
+
 export function useScrollWithShadow() {
     const scrollContainer = useRef<HTMLDivElement>(null);
-    const [boxShadowClasses, setBoxShadowClasses] = useState(["scrollShadowContainer"]);
+    const [boxShadowClasses, setBoxShadowClasses] = useState([...defaultShadowClasses]);
     const prevBoxShadow = useRef(boxShadowClasses);
 
     const doShadow = () => {
@@ -20,7 +28,7 @@ export function useScrollWithShadow() {
         const hasRightPart = scrollLeft === 0;
         const isBetween = 1 <= scrollLeft && scrollLeft < lastPosition - 1;
 
-        let tempboxShadowClasses = ["scrollShadowContainer"];
+        let tempboxShadowClasses = [...defaultShadowClasses];
 
         if (hasScroll) {
             if (hasRightPart) {

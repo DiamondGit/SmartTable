@@ -16,7 +16,7 @@ const Body = ({ data }: { data: any[] }) => {
                 <tr>
                     <td
                         className={style.errorContent}
-                        colSpan={tableConfig.table.length}
+                        colSpan={tableConfig.table.length + 1}
                         style={{
                             padding: 0,
                         }}

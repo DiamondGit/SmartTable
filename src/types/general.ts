@@ -9,6 +9,7 @@ import {
     Z_TableFilterTypes,
     Z_TablePinOptions,
 } from "./enums";
+import { TableUIStartingType } from "./UI";
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
@@ -39,6 +40,7 @@ export const ColumnBaseSchema = z.object({
     dataType: Z_TableDataTypes.default(columnDefaults.dataType).catch(columnDefaults.dataType),
     sortable: z.boolean().default(columnDefaults.sortable.default).catch(columnDefaults.sortable.catch),
     filterType: Z_TableFilterTypes.default(columnDefaults.filterType).catch(columnDefaults.filterType),
+    filterDependency: z.string().optional(),
     visible: z.boolean().default(columnDefaults.visible.default).catch(columnDefaults.visible.catch),
     hidable: z.boolean().default(columnDefaults.hidable.default).catch(columnDefaults.hidable.catch),
     pin: Z_TablePinOptions.default(columnDefaults.pin).catch(columnDefaults.pin),
@@ -59,6 +61,7 @@ type ColumnFlagExtension = {
     [FLAG.rowLevel]: number;
     [FLAG.path]: string;
     [FLAG.namedDataIndex]: string;
+    [FLAG.mainOrder]: number;
 };
 
 export type ColumnType = ColumnBaseType &
@@ -119,29 +122,49 @@ export const JsonSchema: z.ZodType<JsonType> = z.lazy(() =>
     z.union([LiteralSchema, z.array(JsonSchema), z.record(JsonSchema)])
 );
 
-export const SavedTableConfigListSchema = z.array(
+const SavedTableConfigBaseSchema = z.object({
+    id: z.number(),
+    configName: z.string(),
+    recent: z.boolean().default(false),
+    createdAt: z.string().datetime({ offset: true }),
+});
+type SavedTableConfigBaseType = z.infer<typeof SavedTableConfigBaseSchema>;
+
+export const SavedTableConfigInitialSchema = SavedTableConfigBaseSchema.merge(
     z.object({
-        id: z.number(),
-        name: z.string(),
-        isRecent: z.boolean().default(false),
-        tableConfig: JsonSchema,
+        configParams: JsonSchema,
     })
 );
-export type SavedTableConfigListType = z.infer<typeof SavedTableConfigListSchema>;
+export type SavedTableConfigInitialType = z.infer<typeof SavedTableConfigInitialSchema>;
+
+export type SavedTableConfigType = SavedTableConfigBaseType & {
+    configParams: TableConfigType;
+};
 
 const defaultPaginationPosition = Z_PaginationPositions.enum.RIGHT;
 export const PaginationPositionSchema =
     Z_PaginationPositions.default(defaultPaginationPosition).catch(defaultPaginationPosition);
 
+type DataComputedCountType = {
+    totalItems: number;
+    totalPages: number;
+};
+
 export type PaginationConfigType = {
-    perPageFetch?: boolean;
-    showTotal?: boolean;
-    showSizeChanger?: boolean;
+    hideTotal?: boolean;
+    hideSizeChanger?: boolean;
     pageSizeOptions?: number[];
     hideTop?: boolean;
     hideBottom?: boolean;
     bottomPosition?: PaginationPositionType;
-};
+} & (
+    | { singleData: true; dataComputedCount?: never; getData?: never }
+    | {
+          singleData?: false;
+          dataComputedCount: DataComputedCountType;
+          getData: (currentPage: number, pageSize: number, sortField?: string, sortDir?: string) => void;
+      }
+);
 
 export type TableFilterItemType = {
     id: number;
@@ -153,26 +176,23 @@ export type TableFilterItemType = {
 
 export type SavedTableFilterItemType = TableFilterItemType & { name: string; isRecent: boolean };
 
-type ColumnPinBase = {
-    name: string;
+export type ColumnPinType = {
+    namedDataIndex: string;
     pin: TablePinOptions;
     width: number;
-};
-
-export type BodyColumnPin = ColumnPinBase & {
     order: number;
+    level: number;
+    mainOrder: number;
 };
 
-export type HeadColumnPin = ColumnPinBase & {
-    orderX: number;
-    orderY: number;
+export type TableCreateType = {
+    configsStoragePath: string;
+    customUI?: TableUIStartingType;
 };
 
 export type TableInitializationType = {
     tableTitle: string;
-    tableName: string;
-    userId: number;
-    saveLocally?: boolean;
+    tableConfigPath: string;
     loadingConfig?: {
         columnCount: number;
         rowCount?: number;
@@ -181,4 +201,32 @@ export type TableInitializationType = {
     };
     paginationConfig?: PaginationConfigType;
     contentModifier?: { [key: string]: (record: { [key: string]: any }) => JSX.Element | string | number };
+    filterApiProvider?: { [key: string]: string };
+    data: any[];
+    isDataError?: boolean;
+    isDataLoading?: boolean;
+};
+
+export type ComputedRowType = ColumnType[];
+
+export type ComputedRowLevelType = {
+    [Z_TablePinOptions.enum.LEFT]: ComputedRowType;
+    [Z_TablePinOptions.enum.NONE]: ComputedRowType;
+    [Z_TablePinOptions.enum.RIGHT]: ComputedRowType;
+};
+
+export type ComputedRowLevelsType = ComputedRowLevelType[];
+
+export type ConfigBaseType = {
+    configName: string;
+    configParams: { [key: string]: any };
+};
+
+export type CreateConfigType = ConfigBaseType & {
+    tableName: string;
+};
+
+export type UpdateConfigType = ConfigBaseType & {
+    id: number;
+    tableName: string;
 };

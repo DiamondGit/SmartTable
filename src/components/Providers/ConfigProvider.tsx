@@ -1,168 +1,115 @@
 import { useContext, useEffect, useState } from "react";
-import { FLAG } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
-import { getTableConfig } from "../../controllers/controllers";
-import { getMaxHeadingDepth } from "../../functions/global";
+import { deleteConfig, getUserConfigs } from "../../controllers/controllers";
+import { getMaxHeadingDepth, parseConfig } from "../../functions/global";
 import { TablePinOptions, Z_TablePinOptions } from "../../types/enums";
 import {
-    ColumnBaseSchema,
-    ColumnInitialType,
-    ColumnType,
-    SavedTableConfigListSchema,
-    SavedTableConfigListType,
-    TableConfigInitialSchema,
+    SavedTableConfigInitialSchema,
+    SavedTableConfigInitialType,
+    SavedTableConfigType,
     TableConfigType,
 } from "../../types/general";
 
 interface ConfigProviderType {
+    defaultConfigPath: string;
     children: React.ReactNode;
 }
 
-const ConfigProvider = ({ children }: ConfigProviderType) => {
+const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => {
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
+
     const [defaultTableConfig, setDefaultTableConfig] = useState<TableConfigType>();
     const [tableConfig, setTableConfig] = useState<TableConfigType>();
-    const [modalTableConfig, setModalTableConfig] = useState<TableConfigType>();
-    const [savedTableConfigList, setSavedTableConfigList] = useState<SavedTableConfigListType>([]);
+    const [modalTableConfig, setModalTableConfig] = useState(tableConfig);
+
+    const [savedTableConfigs, setSavedTableConfigs] = useState<SavedTableConfigType[]>([]);
+
+    const [selectedSavedConfigId, setSelectedSavedConfigId] = useState<number>();
+    const [modalSelectedSavedConfigId, setModalSelectedSavedConfigId] = useState(selectedSavedConfigId);
 
     useEffect(() => {
-        fetchConfig();
-    }, []);
+        stateContext.setDefaultConfigLoading(true);
+        stateContext.setDefaultConfigLoadingError(false);
 
-    const defineDefaultsTableSchema = (initialColumn: ColumnInitialType) => {
-        return ColumnBaseSchema.passthrough().parse(initialColumn);
-    };
+        fetch(defaultConfigPath, {
+            headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+            },
+        })
+            .then((response) => response.json())
+            .then((json) => parseConfig(json, false))
+            .then((defaultConfig) => {
+                if (!defaultConfig) throw new Error("parse Error");
+                console.log("--- Success DEFAULT CONFIG ---");
+                console.log("Computed Default Table:", defaultConfig);
+                setDefaultTableConfig(defaultConfig);
 
-    const filterDuplicateColumns = (
-        targetColumn: ColumnInitialType,
-        targetIndex: number,
-        initialColumns: ColumnInitialType[]
-    ) => {
-        //  Keeps only first met column duplicated title or dataIndex
-        const duplicateColumns: (ColumnInitialType & { order: number })[] = initialColumns
-            .map((column, index) => ({ ...column, order: index }))
-            .filter(
-                (column: ColumnInitialType, index: number, columns: ColumnInitialType[]) =>
-                    index ===
-                    columns.findIndex(
-                        (tempColumn) =>
-                            tempColumn.title === column.title ||
-                            (!!column.dataIndex && tempColumn.dataIndex === column.dataIndex)
-                    )
-            );
+                //Get saved configs
+                stateContext.setSavedConfigsLoading(true);
+                stateContext.setSavedConfigsLoadingError(false);
 
-        return duplicateColumns.some(
-            (column) => JSON.stringify(column) === JSON.stringify({ ...targetColumn, order: targetIndex })
-        );
-    };
+                stateContext.setMaxHeadingDepth(getMaxHeadingDepth(defaultConfig.table));
 
-    const filterAvailableColumns = (column: ColumnInitialType) =>
-        !!column.title && (!!column.dataIndex || !!column.subcolumns);
-
-    const getFullyComputedColumns = (columns: ColumnInitialType[]) => {
-        return columns.filter(filterAvailableColumns).filter(filterDuplicateColumns);
-    };
-
-    const computeColumnSchema = (
-        initialColumn: ColumnInitialType,
-        maxHeadingDepth: number,
-        prevPath = "",
-        rowLevel = 1,
-        prevNamedDataIndex = ""
-    ) => {
-        const currentPath = prevPath + (initialColumn.dataIndex ? `${prevPath ? "." : ""}${initialColumn.dataIndex}` : "");
-
-        const generalDeployer = {
-            [FLAG.path]: currentPath,
-            [FLAG.rowLevel]: rowLevel,
-            [FLAG.namedDataIndex]: `${prevNamedDataIndex ? `${prevNamedDataIndex}_` : ""}${initialColumn.title}`,
-        };
-
-        if (initialColumn.subcolumns) {
-            const computedSubcolumns: ColumnInitialType[] = getFullyComputedColumns(
-                [...initialColumn.subcolumns].map((subcolumn) =>
-                    computeColumnSchema(subcolumn, maxHeadingDepth, currentPath, rowLevel + 1, initialColumn.title)
-                )
-            );
-
-            const totalColSpan =
-                computedSubcolumns.reduce(
-                    (colSpanSum, computedSubcolumn) => colSpanSum + (computedSubcolumn[FLAG.colSpan] || 0),
-                    0
-                ) || 1;
-
-            const resultColumn: Partial<ColumnInitialType> = {
-                ...initialColumn,
-                ...generalDeployer,
-                sortable: false,
-                subcolumns: computedSubcolumns,
-                [FLAG.colSpan]: totalColSpan,
-            };
-
-            if (computedSubcolumns.length === 0) {
-                delete resultColumn.subcolumns;
-                resultColumn[FLAG.rowSpan] = maxHeadingDepth - rowLevel + 1;
-            }
-
-            return defineDefaultsTableSchema(resultColumn as ColumnInitialType);
-        } else
-            return defineDefaultsTableSchema({
-                ...initialColumn,
-                ...generalDeployer,
-                [FLAG.rowSpan]: maxHeadingDepth - rowLevel + 1,
-            });
-    };
-
-    const computeTableSchema = (intialTable: ColumnInitialType[], maxHeadingDepth = 1): ColumnType[] => {
-        return getFullyComputedColumns(
-            [...intialTable].map((column) => computeColumnSchema(column, maxHeadingDepth))
-        ) as ColumnType[];
-    };
-
-    const fetchConfig = () => {
-        stateContext.setConfigLoading(true);
-        stateContext.setConfigLoadingError(false);
-        getTableConfig(propsContext.tableName, propsContext.userId)
-            .then((res) => {
-                const initialDefaultTableConfig = TableConfigInitialSchema.parse(res.defaultTableConfig);
-                let computedDefaultTable = computeTableSchema(initialDefaultTableConfig.table);
-                const maxHeadingDepth = getMaxHeadingDepth(computedDefaultTable);
-                computedDefaultTable = computeTableSchema(initialDefaultTableConfig.table, maxHeadingDepth);
-
-                const computedDefaultTableConfig: TableConfigType = {
-                    ...initialDefaultTableConfig,
-                    table: computedDefaultTable,
-                };
-
-                console.log("Computed Default Table:", computedDefaultTable);
-
-                setDefaultTableConfig(computedDefaultTableConfig);
-
-                const savedTableConfigList = SavedTableConfigListSchema.safeParse(res.savedTableConfigs);
-                const computedSavedTableConfigList = savedTableConfigList.success ? savedTableConfigList.data : [];
-                setSavedTableConfigList(computedSavedTableConfigList);
-
-                const recentSavedTableConfig = computedSavedTableConfigList.find(
-                    (savedTableConfig) => savedTableConfig.isRecent
-                );
-                const computedTableConfig = recentSavedTableConfig?.tableConfig
-                    ? (JSON.parse(recentSavedTableConfig.tableConfig?.toString()) as TableConfigType)
-                    : computedDefaultTableConfig;
-                setTableConfig(computedTableConfig);
-                setModalTableConfig(computedTableConfig);
-
-                stateContext.setMaxHeadingDepth(getMaxHeadingDepth(computedTableConfig.table));
-                console.log("--- Success CONFIG ---");
+                requestSavedConfigs(defaultConfig);
             })
             .catch((error) => {
-                console.log("--- Error CONFIG ---");
-                stateContext.setConfigLoadingError(true);
+                console.log("--- Error DEFAULT CONFIG ---");
+                stateContext.setDefaultConfigLoadingError(true);
             })
             .finally(() => {
-                stateContext.setConfigLoading(false);
+                stateContext.setDefaultConfigLoading(false);
+            });
+    }, [defaultConfigPath]);
+
+    const requestSavedConfigs = (defaultConfig: TableConfigType | undefined = defaultTableConfig) => {
+        if (!defaultConfig) return;
+        getUserConfigs(propsContext.tableConfigPath)
+            .then((res) => {
+                let filteredList = (Array.isArray(res.data) ? res.data : [])
+                    .filter((savedConfig) => SavedTableConfigInitialSchema.safeParse(savedConfig).success)
+                    .map((savedConfig) => SavedTableConfigInitialSchema.parse(savedConfig)) as SavedTableConfigInitialType[];
+
+                const computedList = filteredList
+                    .map((savedConfig) => ({
+                        ...savedConfig,
+                        configParams: parseConfig(JSON.parse(savedConfig.configParams as string)),
+                    }))
+                    .filter((parsedConfig) => parsedConfig.configParams !== null)
+                    .sort(
+                        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                    ) as SavedTableConfigType[];
+
+                console.log("--- Success SAVED CONFIGS ---");
+                console.log("Computed Saved Tables:", computedList);
+                setSavedTableConfigs(computedList);
+
+                const notValidSavedConfigs = filteredList.filter(
+                    (savedConfig) => !computedList.some((computedConfig) => computedConfig.id === savedConfig.id)
+                );
+                if (notValidSavedConfigs.length > 0) {
+                    console.log(`Not valid SAVED CONFIGS`, notValidSavedConfigs);
+                    notValidSavedConfigs.forEach((notValidSavedConfig) => {
+                        deleteConfig(notValidSavedConfig.id);
+                    });
+                }
+
+                const recentSavedConfig = computedList.find((savedConfig) => savedConfig.recent === true);
+                if (recentSavedConfig) setSelectedSavedConfigId(recentSavedConfig.id);
+
+                const configToSet = recentSavedConfig?.configParams || defaultConfig;
+                setTableConfig(configToSet);
+            })
+            .catch((error) => {
+                console.log("--- Error SAVED CONFIGS ---");
+                stateContext.setSavedConfigsLoadingError(true);
+                setTableConfig(defaultConfig);
+            })
+            .finally(() => {
+                stateContext.setSavedConfigsLoading(false);
             });
     };
 
@@ -178,6 +125,10 @@ const ConfigProvider = ({ children }: ConfigProviderType) => {
         return tableConfig?.table?.some((column) => column.pin === pinOption) || false;
     };
 
+    const getSavedConfigById = (configId: number | undefined) => {
+        return savedTableConfigs.find((savedConfig) => savedConfig.id === configId);
+    };
+
     return (
         <ConfigContext.Provider
             value={{
@@ -189,9 +140,19 @@ const ConfigProvider = ({ children }: ConfigProviderType) => {
                 modalTableConfig,
                 setModalTableConfig: setAndCompareTempTableConfig,
 
-                savedTableConfigList,
+                savedTableConfigs,
+
+                selectedSavedConfigId,
+                setSelectedSavedConfigId,
+
+                modalSelectedSavedConfigId,
+                setModalSelectedSavedConfigId,
 
                 selectedSavedTableConfigId: null,
+
+                getSavedConfigById,
+
+                requestSavedConfigs,
 
                 hasLeftPin: checkHasPin(Z_TablePinOptions.enum.LEFT),
                 hasRightPin: checkHasPin(Z_TablePinOptions.enum.RIGHT),

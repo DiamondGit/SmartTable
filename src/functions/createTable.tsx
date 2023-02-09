@@ -3,7 +3,7 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import Checkbox from "@mui/material/Checkbox/Checkbox";
 import Button from "../components/Button";
 import Table from "../components/Table";
-import { TableInitializationType } from "../types/general";
+import { TableCreateType, TableInitializationType } from "../types/general";
 import { TableUIStartingType, TableUIType } from "../types/UI";
 
 const defaultUI: TableUIType = {
@@ -41,9 +41,9 @@ const defaultUI: TableUIType = {
 };
 
 const createTable =
-    (useTableProps: TableUIStartingType = {} as TableUIStartingType) =>
+    ({ customUI = {} as TableUIStartingType, ...props }: TableCreateType) =>
     (tableInitializationProps: TableInitializationType) => {
-        return <Table {...tableInitializationProps} UI={{ ...defaultUI, ...useTableProps }} />;
+        return <Table {...props} {...tableInitializationProps} customUI={{ ...defaultUI, ...customUI }} />;
     };
 
 export default createTable;

@@ -2,9 +2,12 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { Alert } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import Modal, { ModalType } from "..";
+import { FLAG } from "../../../constants/general";
+import ConfigContext from "../../../context/ConfigContext";
 import FilterContext from "../../../context/FilterContext";
+import PropsContext from "../../../context/PropsContext";
 import UIContext from "../../../context/UIContext";
-import { Z_FilterHighlights, Z_ModalTypes } from "../../../types/enums";
+import { Z_FilterHighlights, Z_ModalTypes, Z_TableFilterTypes } from "../../../types/enums";
 import Aligner from "../../Aligner";
 import FilterItem from "./FilterItem";
 import style from "./FilterModal.module.scss";
@@ -18,6 +21,8 @@ interface FilterModalType {
 
 const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
     const filterContext = useContext(FilterContext);
+    const propsContext = useContext(PropsContext);
+    const configContext = useContext(ConfigContext);
     const UI = useContext(UIContext);
     const [isWarnVisible, setWarnVisible] = useState(false);
 
@@ -37,7 +42,6 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
     const handleConfirmFilter = () => {
         if (filterContext.modalFiltersChangesList.every((filter) => filter.value !== null)) {
             handleCancelFilter();
-            console.log("--- Here ---");
             filterContext.setFiltersList(filterContext.modalFiltersChangesList);
         } else {
             setWarnVisible(true);
@@ -113,9 +117,51 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
         filterContext.setModalFiltersList((prevFilters) => prevFilters.filter((prevFilter) => prevFilter.id !== id));
     };
 
+    const notFoundFilters =
+        configContext.tableConfig?.table
+            .filter((column) => column.filterType === Z_TableFilterTypes.enum.SELECT)
+            .filter(
+                (columnFilter) => !Object.keys(propsContext.filterApiProvider || {}).includes(columnFilter[FLAG.path])
+            ) || [] as any[];
+
     return (
         <Modal {...modalProps}>
             <div className={style.filterContainer}>
+                {notFoundFilters.length > 0 && (
+                    <div style={{ color: "red" }}>
+                        <span>Not provided API to next fields:</span>
+                        <ul>
+                            {notFoundFilters.map((columnFilter) => (
+                                <li style={{ listStyleType: "disc" }} key={columnFilter[FLAG.path]}>
+                                    {columnFilter.title} ({columnFilter[FLAG.path]})
+                                </li>
+                            ))}
+                        </ul>
+                        <br />
+                    </div>
+                )}
+                {configContext.tableConfig?.table.some((column) => !!column.filterDependency) && (
+                    <div style={{ color: "coral" }}>
+                        <ul>
+                            {configContext.tableConfig?.table
+                                .filter((column) => !!column.filterDependency)
+                                .map((columnFilter) => (
+                                    <li style={{ listStyleType: "disc" }} key={columnFilter[FLAG.path]}>
+                                        {`${columnFilter.title} depends on ${columnFilter.filterDependency}, which is ${
+                                            Object.keys(propsContext.filterApiProvider || {}).includes(
+                                                columnFilter.filterDependency || ""
+                                            )
+                                                ? `provided ( ${
+                                                      propsContext.filterApiProvider?.[columnFilter.filterDependency || ""]
+                                                  } )`
+                                                : "not provided"
+                                        }`}
+                                    </li>
+                                ))}
+                        </ul>
+                        <br />
+                    </div>
+                )}
                 {filterContext.modalFiltersList.length > 0 ? (
                     <table className={style.filterTable}>
                         <thead>

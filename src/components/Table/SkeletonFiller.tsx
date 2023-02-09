@@ -11,7 +11,7 @@ interface SkeletonFillerType {
 }
 
 const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: SkeletonFillerType) => {
-    const { isConfigLoading } = useContext(StateContext);
+    const { isDefaultConfigLoading } = useContext(StateContext);
     const [skeletonHeadingLengths, setSkeletonHeadingLengths] = useState<number[]>();
     const [skeletonLengths, setSkeletonLengths] = useState<number[][]>();
 
@@ -54,7 +54,7 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
                     return (
                         <tr key={`skeletonFiller_${rowIndex}`}>
                             {
-                                !isConfigLoading &&
+                                !isDefaultConfigLoading &&
                                 <td className={style.actionCell}>
                                     <Aligner style={{ width: "100%" }}>
                                         <Skeleton

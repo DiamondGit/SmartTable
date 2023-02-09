@@ -1,4 +1,5 @@
 .modal {
+    transition: opacity .15s;
     .title {
         user-select: none;
         .draggable {
