@@ -4,14 +4,14 @@
             "title": "Наименование",
             "dataIndex": "name",
             "dataType": "STRING",
-            "filterType": "NONE",
+            "fieldType": "NONE",
             "hidable": false
         },
         {
             "title": "Сегменты",
             "dataIndex": "segments",
             "dataType": "STRING",
-            "filterType": "SELECT"
+            "fieldType": "SELECT"
         }
     ]
 }

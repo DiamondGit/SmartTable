@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
+import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
@@ -20,9 +21,14 @@ const MainContent = () => {
     const stateContext = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const propsContext = useContext(PropsContext);
+    const paginationContext = useContext(PaginationContext);
+    const filterContext = useContext(FilterContext);
+
     const isConfigLoaded =
         !stateContext.isDefaultConfigLoading && !stateContext.isDefaultConfigLoadingError && configContext.tableConfig;
+
     const defaultColumnCount = propsContext.loadingConfig?.columnCount || 4;
+    const defaultRowCount = propsContext.loadingConfig?.rowCount || 5;
 
     const [isFullscreen, setFullscreen] = useState(false);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
@@ -33,7 +39,7 @@ const MainContent = () => {
             propsContext.isDataLoading && isConfigLoaded
                 ? configContext.tableConfig?.table.filter((column) => column.visible).length || defaultColumnCount
                 : defaultColumnCount,
-        rowCount: propsContext.loadingConfig?.rowCount || 5,
+        rowCount: defaultRowCount,
         noFuncBtnsLeft: propsContext.loadingConfig?.noFuncBtnsLeft || false,
         noFuncBtnsRight: propsContext.loadingConfig?.noFuncBtnsRight || false,
     };
@@ -54,6 +60,10 @@ const MainContent = () => {
         setFilterModalOpen(true);
     };
 
+    useEffect(() => {
+        propsContext.paginationConfig?.getData?.(filterContext.queryProps);
+    }, [propsContext.dataRefreshTrigger]);
+
     const fullscreenContainerClasses = [style.fullscreenContainer];
     if (isFullscreen) fullscreenContainerClasses.push(style.active);
 
@@ -72,24 +82,25 @@ const MainContent = () => {
     )
         tableClasses.push(style.withLeftShadow);
 
-    if (!configContext.tableConfig) return null;
     return (
         <div className={fullscreenContainerClasses.join(" ")}>
             <div className={tableContainerClasses.join(" ")}>
                 <SettingsModal open={isSettingsModalOpen} setOpen={setSettingsModalOpen} />
                 <FilterModal open={isFilterModalOpen} setOpen={setFilterModalOpen} tableTitle={propsContext.tableTitle} />
                 <TopBar
-                    isFullscreen={isFullscreen}
-                    computedLoadingConfig={computedLoadingConfig}
-                    toggleFullscreen={toggleFullscreen}
-                    openSettingsModal={openSettingsModal}
-                    openFilterModal={openFilterModal}
+                    {...{
+                        isFullscreen,
+                        computedLoadingConfig,
+                        toggleFullscreen,
+                        openSettingsModal,
+                        openFilterModal,
+                    }}
                 />
-                <PaginationWrapper openFilterModal={openFilterModal}>
+                <PaginationWrapper>
                     <ScrollWrapper isFullscreen={isFullscreen}>
                         <ShadowWrapper>
                             <table className={tableClasses.join(" ")}>
-                                {(!stateContext.isError || stateContext.isDefaultConfigLoading) && (
+                                {(!stateContext.isDefaultConfigLoadingError || stateContext.isDefaultConfigLoading) && (
                                     <thead style={{ position: "sticky", top: 0, zIndex: 1000 }}>
                                         {!stateContext.isDefaultConfigLoading ? (
                                             <Head />
@@ -100,7 +111,7 @@ const MainContent = () => {
                                         )}
                                     </thead>
                                 )}
-                                {!stateContext.isError || stateContext.isDefaultConfigLoading ? (
+                                {!stateContext.isError ? (
                                     <tbody>
                                         {!stateContext.isLoading ? (
                                             <Body
@@ -115,7 +126,11 @@ const MainContent = () => {
                                                 {(pagination) => (
                                                     <SkeletonFiller
                                                         columnCount={computedLoadingConfig.columnCount}
-                                                        rowCount={isFullscreen ? pagination.pageSize : computedLoadingConfig.rowCount}
+                                                        rowCount={
+                                                            isFullscreen
+                                                                ? pagination.pageSize
+                                                                : computedLoadingConfig.rowCount
+                                                        }
                                                     />
                                                 )}
                                             </PaginationContext.Consumer>
@@ -125,12 +140,21 @@ const MainContent = () => {
                                     <tbody>
                                         <tr>
                                             <td
+                                                colSpan={(configContext.tableConfig?.table.length || 0) + 1}
                                                 className={style.errorContent}
                                                 style={{
                                                     padding: 0,
                                                 }}
                                             >
-                                                <Aligner className={style.loadingError}>
+                                                <Aligner
+                                                    className={style.loadingError}
+                                                    style={{
+                                                        width: "max-content",
+                                                        position: "sticky",
+                                                        left: "50%",
+                                                        transform: "translateX(-50%)",
+                                                    }}
+                                                >
                                                     {stateContext.isDefaultConfigLoadingError
                                                         ? propsContext.isDataError
                                                             ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"

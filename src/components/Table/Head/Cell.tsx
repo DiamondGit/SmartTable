@@ -8,7 +8,7 @@ import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import { getColumnStyle, getPinSide } from "../../../functions/global";
 import { Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
-import { ColumnPinType, ColumnType } from "../../../types/general";
+import { ColumnPinType, ColumnType, GeneralObject } from "../../../types/general";
 import style from "../Table.module.scss";
 
 type HeadCellType = { column: ColumnType; order: number };
@@ -19,10 +19,6 @@ const Cell = ({ column, order }: HeadCellType) => {
     const propsContext = useContext(PropsContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
-
-    if (column.title === "Модель") {
-        console.log(headingRef.current?.getClientRects()[0].width);
-    }
 
     useEffect(() => {
         const computedData = {
@@ -35,7 +31,6 @@ const Cell = ({ column, order }: HeadCellType) => {
         };
 
         const updateCurrentColumnPin = () => {
-            console.log(`--- cell ---`);
             headContext.updateColumnPin(computedData);
         };
 
@@ -81,11 +76,11 @@ const Cell = ({ column, order }: HeadCellType) => {
         return defaultSortClass;
     };
 
-    const getColumnClasses = (targetColumn: ColumnType, isPinned: boolean): string[] => {
+    const getColumnClasses = (targetColumn: ColumnType, isPinned: boolean, isDataError: boolean): string[] => {
         let columnClasses: string[] = [];
         columnClasses = columnClasses.concat(getColumnSortClass(targetColumn));
 
-        if (targetColumn.sortable) columnClasses.push(style.sortable);
+        if (targetColumn.sortable && !isDataError) columnClasses.push(style.sortable);
         if (targetColumn.subcolumns) columnClasses.push(style.withSubcolumn);
         if (isPinned) {
             columnClasses.push(style.pin);
@@ -106,23 +101,22 @@ const Cell = ({ column, order }: HeadCellType) => {
         } else if (order === 0) {
             columnClasses.push(style.firstColumn);
         }
-
         return columnClasses;
     };
 
-    const computedSpan: { [key: string]: any } = {};
+    const computedSpan: GeneralObject = {};
     if (column[FLAG.colSpan] !== 1) computedSpan.colSpan = column[FLAG.colSpan];
     if (column[FLAG.rowSpan] !== 1) computedSpan.rowSpan = column[FLAG.rowSpan];
 
     const handleClick: MouseEventHandler | undefined = (event: React.MouseEvent) => {
-        if (column.subcolumns || !column.dataIndex) return;
+        if (column.subcolumns || !column.dataIndex || propsContext.isDataError) return;
         headContext.handleClick(column[FLAG.path])(event);
     };
 
     return (
         <th
             key={column[FLAG.namedDataIndex]}
-            className={getColumnClasses(column, isPinned).join(" ")}
+            className={getColumnClasses(column, isPinned, propsContext.isDataError || false).join(" ")}
             onClick={handleClick}
             ref={headingRef}
             style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, column[FLAG.namedDataIndex])}

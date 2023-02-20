@@ -3,10 +3,12 @@ import { FLAG } from "../constants/general";
 import {
     PaginationPositionType,
     TablePinOptions,
+    Z_DependencyActions,
+    Z_DependencyTypes,
     Z_PaginationPositions,
     Z_TableCellSizes,
     Z_TableDataTypes,
-    Z_TableFilterTypes,
+    Z_TableFieldTypes,
     Z_TablePinOptions,
 } from "./enums";
 import { TableUIStartingType } from "./UI";
@@ -23,27 +25,100 @@ const columnBooleanDefaults = {
         catch: true,
     },
 };
+const emptyString = "";
+
+export type GeneralObject = { [key: string]: any };
+
 const columnDefaults = {
     dataType: Z_TableDataTypes.enum.OTHER,
+
+    isRequired: columnBooleanDefaults.disabled,
+    isFilterable: columnBooleanDefaults.disabled,
+
+    globalDependField: emptyString,
+
+    dependField: emptyString,
+
+    displayOptionDataIndex: emptyString,
+    fieldGetApi: emptyString,
+
+    field: {
+        title: emptyString,
+        dataIndex: emptyString,
+        type: Z_TableFieldTypes.enum.NONE,
+        initValue: null,
+        dependType: Z_DependencyTypes.enum.INDEP,
+        defaultCatch: null,
+        switchValue: null,
+        conditionalDataIndex: emptyString,
+    },
+
+    pin: Z_TablePinOptions.enum.NONE,
     sortable: columnBooleanDefaults.enabled,
-    filterType: Z_TableFilterTypes.enum.NONE,
     visible: columnBooleanDefaults.enabled,
     hidable: columnBooleanDefaults.enabled,
-    pin: Z_TablePinOptions.enum.NONE,
     highlighted: columnBooleanDefaults.disabled,
     modifiableContent: columnBooleanDefaults.disabled,
 };
 
+const DependChangeActionSchema = Z_DependencyActions.or(z.array(Z_DependencyActions));
+
+const DependChangeSchema = DependChangeActionSchema.or(
+    z.object({
+        value: z.any(),
+        onTrue: DependChangeActionSchema.optional(),
+        onFalse: DependChangeActionSchema.optional(),
+    })
+);
+
+const ConditionalDataIndex = z.object({
+    from: z.string().default(columnDefaults.field.conditionalDataIndex).catch(columnDefaults.field.conditionalDataIndex),
+    to: z.string().default(columnDefaults.field.conditionalDataIndex).catch(columnDefaults.field.conditionalDataIndex),
+});
+
+const FieldBaseSchema = z.object({
+    title: z.string().catch(columnDefaults.field.title),
+    dataIndex: z.string().catch(columnDefaults.field.dataIndex),
+    conditionalDataIndex: ConditionalDataIndex.optional(),
+    type: Z_TableFieldTypes.default(columnDefaults.field.type).catch(columnDefaults.field.type),
+    initValue: z.any().default(columnDefaults.field.initValue).catch(columnDefaults.field.initValue),
+    dependType: Z_DependencyTypes.default(columnDefaults.field.dependType),
+});
+export type FilterItemType = z.infer<typeof FieldBaseSchema>;
+
+const FieldSchema = FieldBaseSchema.nullable()
+    .default(columnDefaults.field.defaultCatch)
+    .catch(columnDefaults.field.defaultCatch);
+
+const FieldPartialSchema = FieldBaseSchema.extend({ conditionalDataIndex: ConditionalDataIndex.partial() })
+    .partial()
+    .nullable()
+    .default(columnDefaults.field.defaultCatch)
+    .catch(columnDefaults.field.defaultCatch);
+
 export const ColumnBaseSchema = z.object({
-    title: z.string(),
+    title: z.string().optional(),
     dataIndex: z.string().optional(),
     dataType: Z_TableDataTypes.default(columnDefaults.dataType).catch(columnDefaults.dataType),
+
+    isRequired: z.boolean().default(columnDefaults.isRequired.default).catch(columnDefaults.isRequired.catch),
+    isFilterable: z.boolean().default(columnDefaults.isFilterable.default).catch(columnDefaults.isFilterable.catch),
+
+    globalDependField: z.string().optional().catch(columnDefaults.globalDependField),
+
+    dependField: z.string().optional().catch(columnDefaults.dependField),
+    onDependChange: DependChangeSchema.optional(),
+
+    displayOptionDataIndex: z.string().optional().catch(columnDefaults.displayOptionDataIndex),
+    fieldGetApi: z.string().optional().catch(columnDefaults.fieldGetApi),
+
+    field: FieldSchema,
+    filterField: FieldSchema,
+
+    pin: Z_TablePinOptions.default(columnDefaults.pin).catch(columnDefaults.pin),
     sortable: z.boolean().default(columnDefaults.sortable.default).catch(columnDefaults.sortable.catch),
-    filterType: Z_TableFilterTypes.default(columnDefaults.filterType).catch(columnDefaults.filterType),
-    filterDependency: z.string().optional(),
     visible: z.boolean().default(columnDefaults.visible.default).catch(columnDefaults.visible.catch),
     hidable: z.boolean().default(columnDefaults.hidable.default).catch(columnDefaults.hidable.catch),
-    pin: Z_TablePinOptions.default(columnDefaults.pin).catch(columnDefaults.pin),
     highlighted: z.boolean().default(columnDefaults.highlighted.default).catch(columnDefaults.highlighted.catch),
     modifiableContent: z
         .boolean()
@@ -52,7 +127,10 @@ export const ColumnBaseSchema = z.object({
 });
 type ColumnBaseType = z.infer<typeof ColumnBaseSchema>;
 
-const ColumnInitialBaseSchema = ColumnBaseSchema.partial();
+const ColumnInitialBaseSchema = ColumnBaseSchema.extend({
+    field: FieldPartialSchema,
+    filterField: FieldPartialSchema,
+}).partial();
 type ColumnInitialBaseType = z.infer<typeof ColumnInitialBaseSchema>;
 
 type ColumnFlagExtension = {
@@ -77,8 +155,8 @@ export const ColumnInitialSchema: z.ZodType<ColumnInitialType> = z.lazy(() =>
     ColumnInitialBaseSchema.merge(
         z.object({
             subcolumns: z.array(ColumnInitialSchema).optional(),
-            [FLAG.colSpan]: z.number().default(1),
-            [FLAG.rowSpan]: z.number().default(1),
+            [FLAG.colSpan]: z.number().optional(),
+            [FLAG.rowSpan]: z.number().optional(),
         })
     )
 );
@@ -150,6 +228,15 @@ type DataComputedCountType = {
     totalPages: number;
 };
 
+export type DataRequestParamsType = {
+    currentPage: number;
+    pageSize: number;
+    filters?: GeneralObject;
+    search?: string;
+    sortField?: string;
+    sortDir?: string;
+};
+
 export type PaginationConfigType = {
     hideTotal?: boolean;
     hideSizeChanger?: boolean;
@@ -162,15 +249,13 @@ export type PaginationConfigType = {
     | {
           singleData?: false;
           dataComputedCount: DataComputedCountType;
-          getData: (currentPage: number, pageSize: number, sortField?: string, sortDir?: string) => void;
+          getData: (dataRequestParams: DataRequestParamsType) => void;
       }
 );
 
 export type TableFilterItemType = {
-    id: number;
-    field: string | undefined;
-    isExclusion: boolean;
-    isActive: boolean;
+    title: string;
+    dataIndex: string;
     value: any;
 };
 
@@ -192,7 +277,7 @@ export type TableCreateType = {
 
 export type TableInitializationType = {
     tableTitle: string;
-    tableConfigPath: string;
+    configPath: string;
     loadingConfig?: {
         columnCount: number;
         rowCount?: number;
@@ -200,8 +285,8 @@ export type TableInitializationType = {
         noFuncBtnsRight?: boolean;
     };
     paginationConfig?: PaginationConfigType;
-    contentModifier?: { [key: string]: (record: { [key: string]: any }) => JSX.Element | string | number };
-    filterApiProvider?: { [key: string]: string };
+    dataRefreshTrigger?: number;
+    contentModifier?: { [key: string]: (record: GeneralObject) => JSX.Element | string | number };
     data: any[];
     isDataError?: boolean;
     isDataLoading?: boolean;
@@ -219,7 +304,7 @@ export type ComputedRowLevelsType = ComputedRowLevelType[];
 
 export type ConfigBaseType = {
     configName: string;
-    configParams: { [key: string]: any };
+    configParams: GeneralObject;
 };
 
 export type CreateConfigType = ConfigBaseType & {

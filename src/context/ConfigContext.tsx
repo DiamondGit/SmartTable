@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import { SavedTableConfigType, TableConfigType } from "../types/general";
+import { ColumnType, SavedTableConfigType, TableConfigType } from "../types/general";
 
 interface ConfigContextType {
     readonly defaultTableConfig: TableConfigType | undefined;
@@ -26,6 +26,9 @@ interface ConfigContextType {
     
     hasLeftPin: boolean;
     hasRightPin: boolean;
+
+    filterConfig: ColumnType[];
+    modalConfig: ColumnType[];
 }
 
 const ConfigContext = createContext<ConfigContextType>({} as ConfigContextType);

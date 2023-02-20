@@ -51,9 +51,9 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
 
             if (configContext.selectedSavedConfigId !== configContext.modalSelectedSavedConfigId) {
                 if (configContext.modalSelectedSavedConfigId) {
-                    chooseConfig(propsContext.tableConfigPath, configContext.modalSelectedSavedConfigId);
+                    chooseConfig(propsContext.configPath, configContext.modalSelectedSavedConfigId);
                 } else {
-                    setDefaultConfig(propsContext.tableConfigPath);
+                    setDefaultConfig(propsContext.configPath);
                 }
             }
         }
@@ -94,14 +94,14 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 id: configContext.modalSelectedSavedConfigId,
                 configName: settingsName,
                 configParams: configContext.modalTableConfig,
-                tableName: propsContext.tableConfigPath,
+                tableName: propsContext.configPath,
             });
             configContext.requestSavedConfigs();
         } else if (configContext.modalTableConfig) {
             createConfig({
                 configName: settingsName,
                 configParams: configContext.modalTableConfig,
-                tableName: propsContext.tableConfigPath,
+                tableName: propsContext.configPath,
             }).then(() => {
                 handleCancelSaveSettings();
                 handleConfirmSettings();
@@ -263,7 +263,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     if (stateContext.isDefaultConfigLoadingError || !configContext.modalTableConfig) return null;
     return (
         <Modal {...modalProps}>
-            <Aligner isVertical style={{ alignItems: "stretch", marginTop: "24px" }}>
+            <Aligner isVertical style={{ alignItems: "stretch" }}>
                 <Aligner style={{ justifyContent: "space-between" }}>
                     <TableSizeToggler />
                     <SettingsResetter

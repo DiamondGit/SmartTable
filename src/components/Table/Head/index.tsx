@@ -11,13 +11,14 @@ import { joinIndexes } from "../../../functions/global";
 import Row from "./Row";
 import PaginationContext from "../../../context/PaginationContext";
 import PropsContext from "../../../context/PropsContext";
+import FilterContext from "../../../context/FilterContext";
 
 const Head = () => {
     const { tableConfig, hasLeftPin } = useContext(ConfigContext);
     const actionCellRef = useRef<HTMLTableCellElement>(null);
     const stateContext = useContext(StateContext);
-    const paginationContext = useContext(PaginationContext);
     const propsContext = useContext(PropsContext);
+    const filterContext = useContext(FilterContext);
 
     const defaultRowLevels: ComputedRowLevelsType = [];
     const [computedRowLevels, setComputedRowLevels] = useState<ComputedRowLevelsType>(defaultRowLevels);
@@ -77,12 +78,11 @@ const Head = () => {
     const updateSort = (sortingColumn: string, sortingDirection: SortOptions = Z_SortOptions.enum.ASC) => {
         stateContext.setSortingColumn(sortingColumn);
         stateContext.setSortingDirection(sortingDirection);
-        propsContext.paginationConfig?.getData?.(
-            paginationContext.currentPage,
-            paginationContext.pageSize,
-            sortingColumn,
-            sortingDirection
-        );
+        propsContext.paginationConfig?.getData?.({
+            ...filterContext.queryProps,
+            sortField: sortingColumn,
+            sortDir: sortingDirection,
+        });
     };
 
     const handleClick = (dataIndex: string | undefined) => () => {

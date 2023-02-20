@@ -3,9 +3,6 @@ import { SortOptions } from "../types/enums";
 import { ColumnPinType } from "../types/general";
 
 interface StateContextType {
-    isSavedSettings: boolean;
-    setSavedSettings: React.Dispatch<React.SetStateAction<boolean>>;
-
     isDefaultConfigLoadingError: boolean;
     setDefaultConfigLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
     
@@ -27,9 +24,6 @@ interface StateContextType {
 
     sortingDirection: SortOptions;
     setSortingDirection: React.Dispatch<React.SetStateAction<SortOptions>>;
-
-    searchValue: string;
-    setSearchValue: React.Dispatch<React.SetStateAction<string>>;
 
     isFiltersFilled: boolean;
     setFiltersFilled: React.Dispatch<React.SetStateAction<boolean>>;

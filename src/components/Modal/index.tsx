@@ -121,7 +121,9 @@ const Modal = ({
 
     return (
         <AntdModal {...modalProps} style={{ top: 150, ...props.style, opacity: isTransparentModal ? .1 : 1 }} className={style.modal}>
-            {children}
+            <div className={style.content}>
+                {children}
+            </div>
         </AntdModal>
     );
 };

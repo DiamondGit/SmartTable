@@ -1,16 +1,36 @@
 import { createContext } from "react";
-import { TableFilterHighlightType } from "../types/enums";
-import { TableFilterItemType } from "../types/general";
+import { GeneralObject } from "../types/general";
 
 interface FilterContextType {
-    filtersList: TableFilterItemType[];
-    setFiltersList: React.Dispatch<React.SetStateAction<TableFilterItemType[]>>;
-    modalFiltersList: TableFilterItemType[];
-    setModalFiltersList: React.Dispatch<React.SetStateAction<TableFilterItemType[]>>;
-    modalFiltersChangesList: TableFilterItemType[];
-    setModalFiltersChangesList: React.Dispatch<React.SetStateAction<TableFilterItemType[]>>;
-    filterHighlight: TableFilterHighlightType;
-    setFilterHighlight: React.Dispatch<React.SetStateAction<TableFilterHighlightType>>;
+    filterValues: GeneralObject;
+    setFilterValues: React.Dispatch<React.SetStateAction<GeneralObject>>;
+    modalFilterValues: GeneralObject;
+    setModalFilterValues: React.Dispatch<React.SetStateAction<GeneralObject>>;
+    hasFilters: boolean;
+    filterFieldLists: {
+        [key: string]: any[];
+    };
+    setFilterFieldLists: React.Dispatch<
+        React.SetStateAction<{
+            [key: string]: any[];
+        }>
+    >;
+    filterFieldLoadings: {
+        [key: string]: boolean;
+    };
+    setFilterFieldLoadings: React.Dispatch<
+        React.SetStateAction<{
+            [key: string]: boolean;
+        }>
+    >;
+    queryProps: {
+        currentPage: number;
+        pageSize: number;
+        filters: GeneralObject;
+        search: string;
+        sortField: string;
+        sortDir: string;
+    };
 }
 
 const FilterContext = createContext<FilterContextType>({} as FilterContextType);

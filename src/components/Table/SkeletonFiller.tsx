@@ -75,7 +75,7 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
     return (
         <>
             {[...Array(columnCount)].map((_, index) => (
-                <th className={style.heading} key={"skeletonFiller_" + index}>
+                <th className={style.skeletonFiller} key={"skeletonFiller_" + index}>
                     <TableDataSkeleton isHeadingRow index={index} />
                 </th>
             ))}

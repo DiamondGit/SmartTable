@@ -1,15 +1,18 @@
 import Aligner from "./components/Aligner";
 import MyTable from "./MyTable";
 import "./styles/resetStyles.css";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import LoginForm from "./LoginForm";
+import { Button } from "antd";
 
 const storageUser = localStorage.getItem("user");
 const token = (storageUser && JSON.parse(storageUser)?.token) || "";
 
 const App = () => {
     const [isAuthorized] = useState(!!token);
+    const [companyId] = useState(null);
+    const [dataRefreshTrigger, setDataRefreshTrigger] = useState(Date.now());
 
     const [data, setData] = useState<any[]>([]);
     const [dataComputedCount, setDataComputedCount] = useState({
@@ -19,10 +22,13 @@ const App = () => {
     const [isDataLoading, setDataLoading] = useState(false);
     const [isDataError, setDataError] = useState(false);
 
-    const getData = (currentPage: number, pageSize: number, sortField = "id", sortDir = "DESC") => {
+    const getData = (params: { [key: string]: any }) => {
         if (isAuthorized) {
             setDataLoading(true);
             setDataError(false);
+
+            const { currentPage, pageSize, filters = {}, search = "", sortField = "id", sortDir = "DESC" } = params;
+
             axios
                 .get("/transports-dimensions//transport/all-enabled-only-transports/page", {
                     params: {
@@ -30,9 +36,8 @@ const App = () => {
                         sortField: sortField,
                         sortDir: sortDir,
                         pageNo: currentPage,
-                        search: "",
-                        modelName: "",
-                        garageNo: "",
+                        search: search,
+                        ...filters,
                     },
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -64,33 +69,35 @@ const App = () => {
         ),
     };
 
-    //provides list of APIs for filter fields
-    const filterApiProvider = {
-        region: "/region/get-all",
-        subregion: "/subregion/get-all",
+    const handleRefreshTable = () => {
+        setDataRefreshTrigger(() => Date.now());
     };
 
     return (
         <Aligner>
             <div style={{ padding: "100px 200px", width: "100%" }}>
+                <Button onClick={handleRefreshTable}>Обновить данные</Button>
                 <LoginForm />
                 {isAuthorized && (
                     <>
                         <br />
                         <MyTable
                             {...{
-                                tableTitle: "ПТО детали",
-                                tableConfigPath: "PTO/DETAILS",
-                                loadingConfig: { columnCount: 8 },
+                                tableTitle: "Транспорты",
+                                configPath: "TRANSPORT/TRANSPORTS",
+                                loadingConfig: { columnCount: 12 },
                                 paginationConfig: {
                                     dataComputedCount,
                                     getData,
                                 },
+                                dataRefreshTrigger,
                                 contentModifier,
-                                filterApiProvider,
                                 data,
                                 isDataLoading,
                                 isDataError,
+                                globalDependencies: {
+                                    companyId,
+                                },
                             }}
                         />
                     </>

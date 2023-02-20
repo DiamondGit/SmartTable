@@ -6,6 +6,7 @@ import { TableCreateType, TableInitializationType } from "../../types/general";
 import { TableUIType } from "../../types/UI";
 import ConfigProvider from "../Providers/ConfigProvider";
 import FilterProvider from "../Providers/FilterProvider";
+import PaginationProvider from "../Providers/PaginationProvider";
 import PropsProvider from "../Providers/PropsProvider";
 import StateProvider from "../Providers/StateProvider";
 import MainContent from "./MainContent";
@@ -16,26 +17,26 @@ type TableStartingType = TableInitializationType &
     };
 
 const Table = ({ customUI, ...props }: TableStartingType) => {
-    const defaultConfigPath = `${props.configsStoragePath}/${props.tableConfigPath}.json`;
-
     return (
         <PropsProvider {...{ props }}>
             <StateProvider>
-                <ConfigProvider {...{ defaultConfigPath }}>
-                    <FilterProvider>
-                        <UIContext.Provider value={customUI}>
-                            <AntdConfigProvider
-                                theme={{
-                                    token: {
-                                        colorPrimary: "#223c60",
-                                    },
-                                }}
-                                locale={ruRU}
-                            >
-                                <MainContent />
-                            </AntdConfigProvider>
-                        </UIContext.Provider>
-                    </FilterProvider>
+                <ConfigProvider {...{ defaultConfigPath: `${props.configsStoragePath}/${props.configPath}.json` }}>
+                    <PaginationProvider>
+                        <FilterProvider>
+                            <UIContext.Provider value={customUI}>
+                                <AntdConfigProvider
+                                    theme={{
+                                        token: {
+                                            colorPrimary: "#223c60",
+                                        },
+                                    }}
+                                    locale={ruRU}
+                                >
+                                    <MainContent />
+                                </AntdConfigProvider>
+                            </UIContext.Provider>
+                        </FilterProvider>
+                    </PaginationProvider>
                 </ConfigProvider>
             </StateProvider>
         </PropsProvider>

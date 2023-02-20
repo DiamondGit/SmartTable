@@ -1,36 +1,48 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import FilterContext from "../../context/FilterContext";
-import { TableFilterHighlightType, Z_FilterHighlights } from "../../types/enums";
-import { SavedTableFilterItemType, TableFilterItemType } from "../../types/general";
+import PaginationContext from "../../context/PaginationContext";
+import StateContext from "../../context/StateContext";
+import { GeneralObject } from "../../types/general";
 
 interface FilterProviderType {
     children: React.ReactNode;
 }
 
 const FilterProvider = ({ children }: FilterProviderType) => {
-    const [filterHighlight, setFilterHighlight] = useState<TableFilterHighlightType>({
-        type: Z_FilterHighlights.enum.HIGHLIGHT,
-        filterIds: [],
-    });
-    const [filtersList, setFiltersList] = useState<TableFilterItemType[]>([]);
-    const [modalFiltersList, setModalFiltersList] = useState<TableFilterItemType[]>(filtersList);
-    const [modalFiltersChangesList, setModalFiltersChangesList] = useState<TableFilterItemType[]>(filtersList);
-    const [savedTableFilters, setSavedTableFilters] = useState<SavedTableFilterItemType[]>([]);
+    const paginationContext = useContext(PaginationContext);
+    const stateContext = useContext(StateContext);
+
+    const [filterValues, setFilterValues] = useState<GeneralObject>({});
+    const [modalFilterValues, setModalFilterValues] = useState(filterValues);
+
+    const [filterFieldLists, setFilterFieldLists] = useState<{ [key: string]: any[] }>({});
+    const [filterFieldLoadings, setFilterFieldLoadings] = useState<{ [key: string]: boolean }>({});
 
     return (
         <FilterContext.Provider
             value={{
-                filtersList,
-                setFiltersList,
+                filterValues,
+                setFilterValues,
 
-                modalFiltersList,
-                setModalFiltersList,
+                modalFilterValues,
+                setModalFilterValues,
 
-                modalFiltersChangesList,
-                setModalFiltersChangesList,
+                hasFilters: JSON.stringify(filterValues) !== "{}",
 
-                filterHighlight,
-                setFilterHighlight,
+                filterFieldLists,
+                setFilterFieldLists,
+
+                filterFieldLoadings,
+                setFilterFieldLoadings,
+
+                queryProps: {
+                    currentPage: paginationContext.currentPage,
+                    pageSize: paginationContext.pageSize,
+                    filters: filterValues,
+                    search: paginationContext.searchValue,
+                    sortField: stateContext.sortingColumn,
+                    sortDir: stateContext.sortingDirection,
+                },
             }}
         >
             {children}

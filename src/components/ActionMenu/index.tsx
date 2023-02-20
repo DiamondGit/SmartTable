@@ -6,8 +6,9 @@ import EditIcon from "@mui/icons-material/Edit";
 import Aligner from "../Aligner";
 import style from "../Table/Table.module.scss";
 import { useState } from "react";
+import { GeneralObject } from "../../types/general";
 
-const ActionMenu = ({ dataRow }: { dataRow: { [key: string]: any } }) => {
+const ActionMenu = ({ dataRow }: { dataRow: GeneralObject }) => {
     const options = [
         {
             Icon: ControlPointDuplicateIcon,

@@ -26,6 +26,10 @@ $hover_transition: .3s;
     }
 }
 
+.ant-select-dropdown {
+    z-index: $zIndex_modal;
+}
+
 .MuiModal-root.MuiPopover-root.MuiMenu-root {
     z-index: $zIndex_mui_popover;
 }

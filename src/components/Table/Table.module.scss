@@ -33,13 +33,18 @@
             color: $orange-400;
         }
         .topBar {
+            display: grid;
+            grid-template-columns: 1fr max-content;
             margin-bottom: 12px;
             .bar {
+                display: grid;
+                align-items: center;
                 gap: 6px;
                 &.left {
-                    justify-content: flex-start;
+                    grid-template-columns: auto auto 1fr;
                     .searchBar {
-                        position: relative;
+                        display: flex;
+                        align-items: center;
                         &.loading {
                             cursor: wait;
                             opacity: 0.5;
@@ -51,20 +56,19 @@
                             overflow: hidden;
                             width: 0;
                             transition: width 0.3s linear;
-                            position: absolute;
-                            bottom: 0;
                             left: 100%;
                             transform: translateX(8px);
                             .inputContainer {
                                 display: flex;
                                 justify-content: flex-start;
                                 align-items: center;
-                                width: 300px;
+                                max-width: 300px;
                             }
                         }
                         &.open {
                             .slider {
-                                width: 300px;
+                                width: 100%;
+                                min-width: 100px;
                             }
                         }
                         .searchBtn {
@@ -84,7 +88,7 @@
                     }
                 }
                 &.right {
-                    justify-content: flex-end;
+                    grid-template-columns: 1fr 1fr 1fr;
                 }
                 .acitveIcon {
                     color: $orange-400;
@@ -164,8 +168,13 @@
                         &:not(:first-child) {
                             border-left: 1px solid $blue-400;
                         }
-                        &:not(.actionCell):not(.withSubcolumn) {
+                        &.skeletonFiller {
+                            min-width: 150px;
+                        }
+                        &.sortable {
                             cursor: pointer;
+                        }
+                        &:not(.actionCell):not(.withSubcolumn) {
                             padding-right: 48px;
                         }
                         &:not(.actionCell) {
@@ -179,6 +188,9 @@
                                 right: 24px;
                                 transform: translate(50%, -50%);
                             }
+                        }
+                        &:not(.withSubcolumn) {
+                            text-align: left;
                         }
                         &.withSubcolumn {
                             text-align: center;

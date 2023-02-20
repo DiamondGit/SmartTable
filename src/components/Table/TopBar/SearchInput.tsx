@@ -5,8 +5,9 @@ import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, Menu, MenuItem, TextField } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
+import FilterContext from "../../../context/FilterContext";
+import PaginationContext from "../../../context/PaginationContext";
 import PropsContext from "../../../context/PropsContext";
-import StateContext from "../../../context/StateContext";
 import { ColumnType, WithRequired } from "../../../types/general";
 import Aligner from "../../Aligner";
 import style from "../Table.module.scss";
@@ -25,21 +26,24 @@ interface OptionType {
 }
 
 const SearchInput = ({ loading = false }: SearchInputType) => {
-    const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
     const configContext = useContext(ConfigContext);
+    const paginationContext = useContext(PaginationContext);
+    const filterContext = useContext(FilterContext);
+
     const [isOpen, setOpen] = useState(false);
     const searchBarClasses = [style.searchBar];
 
-    const computedColumns = (configContext.defaultTableConfig?.table.filter(
-        (column) => column.dataIndex !== undefined
-    ) || []) as WithRequired<ColumnType, "dataIndex">[];
+    const computedColumns = (configContext.defaultTableConfig?.table.filter((column) => column.dataIndex !== undefined) ||
+        []) as WithRequired<ColumnType, "dataIndex">[];
 
     const searchOptions: OptionType[] =
-        computedColumns.map((column) => ({
-            label: column.title,
-            searchValue: column.dataIndex,
-        })) || [];
+        computedColumns
+            .filter((column) => !!column.title)
+            .map((column) => ({
+                label: column.title as string,
+                searchValue: column.dataIndex,
+            })) || [];
     searchOptions.unshift({
         label: "Все поля",
         searchValue: "",
@@ -50,15 +54,13 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     const toggleOpen = () => {
         if (!isOpen) {
             setOpen(true);
-        } else {
-            console.log("--- Search ---");
         }
     };
 
     useEffect(() => {
         if (!propsContext.isDataLoading) {
             let timeout = setTimeout(() => {
-                console.log("--- Request ---", stateContext.searchValue);
+                propsContext.paginationConfig?.getData?.(filterContext.queryProps);
             }, 400);
 
             return () => {
@@ -67,10 +69,10 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
                 }
             };
         }
-    }, [stateContext.searchValue]);
+    }, [paginationContext.searchValue]);
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        stateContext.setSearchValue(event.target.value);
+        paginationContext.setSearchValue(event.target.value);
     };
 
     if (loading) searchBarClasses.push(style.loading);
@@ -100,7 +102,10 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     return (
         <div className={searchBarClasses.join(" ")}>
             <Aligner className={style.searchBtn} onClick={toggleOpen}>
-                <SearchIcon sx={iconStyle} className={!isOpen && stateContext.searchValue !== "" ? style.activeIcon : ""} />
+                <SearchIcon
+                    sx={iconStyle}
+                    className={!isOpen && paginationContext.searchValue !== "" ? style.activeIcon : ""}
+                />
             </Aligner>
             <div className={style.slider}>
                 <div className={style.inputContainer}>
@@ -108,17 +113,18 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
                         style={{ width: "100%" }}
                         label={getLabel()}
                         variant="standard"
-                        value={stateContext.searchValue}
+                        value={paginationContext.searchValue}
                         onChange={handleChange}
                         size={"small"}
+                        focused
                     />
-                    <IconButton size={"small"} onClick={handleClick} disabled={loading}>
+                    {/* <IconButton size={"small"} onClick={handleClick} disabled={loading}>
                         {isOptionsOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
+                    </IconButton> */}
                     <IconButton size={"small"} onClick={closeSearch} disabled={loading}>
                         <CloseIcon />
                     </IconButton>
-                    <Menu
+                    {/* <Menu
                         anchorEl={anchorEl}
                         open={isOptionsOpen}
                         onClose={handleOptionChange()}
@@ -138,7 +144,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
                                 {option.label}
                             </MenuItem>
                         ))}
-                    </Menu>
+                    </Menu> */}
                 </div>
             </div>
         </div>

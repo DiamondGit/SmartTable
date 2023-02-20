@@ -53,7 +53,7 @@ const Cell = ({ column, order }: BodyCellType) => {
         }
 
         if (targetColumn.dataType === Z_TableDataTypes.enum.NUMBER) columnClasses.push(style.numericField);
-        if (targetColumn.dataType !== Z_TableDataTypes.enum.STRING && targetColumn.dataType !== Z_TableDataTypes.enum.NUMBER)
+        if (targetColumn.dataType !== Z_TableDataTypes.enum.TEXT && targetColumn.dataType !== Z_TableDataTypes.enum.NUMBER)
             columnClasses.push(style.centeredField);
 
         return columnClasses;

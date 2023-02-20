@@ -1,11 +1,13 @@
+import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { deleteConfig, getUserConfigs } from "../../controllers/controllers";
-import { getMaxHeadingDepth, parseConfig } from "../../functions/global";
+import { getFilterFields, getMaxHeadingDepth, getModalFields, parseConfig } from "../../functions/global";
 import { TablePinOptions, Z_TablePinOptions } from "../../types/enums";
 import {
+    ColumnType,
     SavedTableConfigInitialSchema,
     SavedTableConfigInitialType,
     SavedTableConfigType,
@@ -18,12 +20,15 @@ interface ConfigProviderType {
 }
 
 const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => {
-    const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
+    const stateContext = useContext(StateContext);
 
     const [defaultTableConfig, setDefaultTableConfig] = useState<TableConfigType>();
     const [tableConfig, setTableConfig] = useState<TableConfigType>();
     const [modalTableConfig, setModalTableConfig] = useState(tableConfig);
+
+    const [filterConfig, setFilterConfig] = useState<ColumnType[]>([]);
+    const [modalConfig, setModalConfig] = useState<ColumnType[]>([]);
 
     const [savedTableConfigs, setSavedTableConfigs] = useState<SavedTableConfigType[]>([]);
 
@@ -34,26 +39,19 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
         stateContext.setDefaultConfigLoading(true);
         stateContext.setDefaultConfigLoadingError(false);
 
-        fetch(defaultConfigPath, {
-            headers: {
-                "Content-Type": "application/json",
-                Accept: "application/json",
-            },
-        })
-            .then((response) => response.json())
-            .then((json) => parseConfig(json, false))
+        axios.get(defaultConfigPath)
+            .then((json) => parseConfig(json.data, false))
             .then((defaultConfig) => {
                 if (!defaultConfig) throw new Error("parse Error");
-                console.log("--- Success DEFAULT CONFIG ---");
-                console.log("Computed Default Table:", defaultConfig);
+                console.log("--- Success DEFAULT CONFIG ---\n", "Computed Default Table:\n", defaultConfig);
                 setDefaultTableConfig(defaultConfig);
-
-                //Get saved configs
-                stateContext.setSavedConfigsLoading(true);
-                stateContext.setSavedConfigsLoadingError(false);
 
                 stateContext.setMaxHeadingDepth(getMaxHeadingDepth(defaultConfig.table));
 
+                setFilterConfig(getFilterFields(defaultConfig.table));
+                setModalConfig(getModalFields(defaultConfig.table));
+
+                setTableConfig(() => defaultConfig);
                 requestSavedConfigs(defaultConfig);
             })
             .catch((error) => {
@@ -65,9 +63,12 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
             });
     }, [defaultConfigPath]);
 
-    const requestSavedConfigs = (defaultConfig: TableConfigType | undefined = defaultTableConfig) => {
+    const requestSavedConfigs = (defaultConfig = defaultTableConfig) => {
         if (!defaultConfig) return;
-        getUserConfigs(propsContext.tableConfigPath)
+        stateContext.setSavedConfigsLoading(true);
+        stateContext.setSavedConfigsLoadingError(false);
+
+        getUserConfigs(propsContext.configPath)
             .then((res) => {
                 let filteredList = (Array.isArray(res.data) ? res.data : [])
                     .filter((savedConfig) => SavedTableConfigInitialSchema.safeParse(savedConfig).success)
@@ -83,8 +84,7 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
                     ) as SavedTableConfigType[];
 
-                console.log("--- Success SAVED CONFIGS ---");
-                console.log("Computed Saved Tables:", computedList);
+                console.log("--- Success SAVED CONFIGS ---\n", "Computed Saved Tables:\n", computedList);
                 setSavedTableConfigs(computedList);
 
                 const notValidSavedConfigs = filteredList.filter(
@@ -101,12 +101,12 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 if (recentSavedConfig) setSelectedSavedConfigId(recentSavedConfig.id);
 
                 const configToSet = recentSavedConfig?.configParams || defaultConfig;
-                setTableConfig(configToSet);
+                setTableConfig(() => configToSet);
             })
             .catch((error) => {
                 console.log("--- Error SAVED CONFIGS ---");
                 stateContext.setSavedConfigsLoadingError(true);
-                setTableConfig(defaultConfig);
+                setTableConfig(() => defaultConfig);
             })
             .finally(() => {
                 stateContext.setSavedConfigsLoading(false);
@@ -156,6 +156,9 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
 
                 hasLeftPin: checkHasPin(Z_TablePinOptions.enum.LEFT),
                 hasRightPin: checkHasPin(Z_TablePinOptions.enum.RIGHT),
+
+                filterConfig,
+                modalConfig,
             }}
         >
             {children}

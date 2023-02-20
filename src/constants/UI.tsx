@@ -1,9 +1,10 @@
 import Tooltip from "../components/Tooltip";
+import { GeneralObject } from "../types/general";
 
 type ErrorControllerType = {
     error: any;
     fieldName?: string | null;
-    record?: { [key: string]: any } | null;
+    record?: GeneralObject | null;
     isTooltip?: boolean;
     isSuccess?: boolean;
     children?: React.ReactNode;

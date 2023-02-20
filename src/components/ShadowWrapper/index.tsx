@@ -25,7 +25,6 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
 
     const getSideOffset = (pinSide: TablePinOptions) => {
         const sidePins = stateContext.columnPins.filter((tableColumnPin) => tableColumnPin.pin === pinSide);
-        console.log(sidePins);
         const offset =
             sidePins?.reduce((offsetSum, columnPin) => offsetSum + columnPin.width, 0) || 0;
         return pinSide === Z_TablePinOptions.enum.LEFT && sidePins.length === 1 && sidePins[0].order === -1 ? 0 : offset;

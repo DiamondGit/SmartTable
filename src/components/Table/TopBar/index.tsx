@@ -39,6 +39,7 @@ const TopBar = ({
     const configContext = useContext(ConfigContext);
     const filterContext = useContext(FilterContext);
     const propsContext = useContext(PropsContext);
+    const stateContext = useContext(StateContext);
     const UI = useContext(UIContext);
     const { isDataLoading, isDataError } = propsContext;
 
@@ -47,24 +48,24 @@ const TopBar = ({
         fontSize: 22,
     };
 
-    const hasFilters = filterContext.filtersList.length > 0;
-
     const isTableDefaultSettings =
         JSON.stringify(configContext.tableConfig) === JSON.stringify(configContext.defaultTableConfig);
 
+    const isAllowedToShowButtons = !stateContext.isDefaultConfigLoadingError && !!configContext.defaultTableConfig;
+
     return (
-        <Aligner style={{ justifyContent: "space-between" }} className={style.topBar}>
-            <Aligner className={`${style.bar} ${style.left}`} gutter={12}>
+        <div className={style.topBar}>
+            <div className={`${style.bar} ${style.left}`}>
                 <h3 className={style.title}>{propsContext.tableTitle}</h3>
                 {!isDefaultConfigLoading
-                    ? !isError && (
+                    ? isAllowedToShowButtons && (
                           <>
-                              <Tooltip title={"Добавить"} placement={"top"} disableHoverListener={isDataLoading}>
-                                  <UI.PrimaryBtn loading={isDataLoading}>
+                              <Tooltip title={"Добавить"} placement={"top"} disableHoverListener={isDataLoading || isError}>
+                                  <UI.PrimaryBtn loading={isDataLoading} disabled={isError}>
                                       <AddIcon sx={iconStyle} />
                                   </UI.PrimaryBtn>
                               </Tooltip>
-                              <SearchInput loading={isDataLoading} />
+                              {!isError && <SearchInput loading={isDataLoading} />}
                           </>
                       )
                     : !computedLoadingConfig.noFuncBtnsLeft && (
@@ -73,13 +74,17 @@ const TopBar = ({
                               <Skeleton variant={"rounded"} width={32} height={32} animation={"wave"} />
                           </>
                       )}
-            </Aligner>
-            <Aligner className={`${style.bar} ${style.right}`} gutter={6}>
+            </div>
+            <div className={`${style.bar} ${style.right}`}>
                 {!isDefaultConfigLoading
-                    ? !isError && (
+                    ? isAllowedToShowButtons && (
                           <>
-                              <Tooltip title={"Полноэкранный режим"} placement={"top"} disableHoverListener={isDataLoading}>
-                                  <UI.SecondaryBtn loading={isDataLoading} onClick={toggleFullscreen}>
+                              <Tooltip
+                                  title={"Полноэкранный режим"}
+                                  placement={"top"}
+                                  disableHoverListener={isDataLoading || isError}
+                              >
+                                  <UI.SecondaryBtn loading={isDataLoading} onClick={toggleFullscreen} disabled={isError}>
                                       {isFullscreen ? (
                                           <CloseFullscreenIcon
                                               sx={iconStyle}
@@ -90,17 +95,21 @@ const TopBar = ({
                                       )}
                                   </UI.SecondaryBtn>
                               </Tooltip>
-                              <Tooltip title={"Фильтр"} placement={"top-end"} disableHoverListener={isDataLoading}>
-                                  <UI.SecondaryBtn loading={isDataLoading} onClick={openFilterModal}>
-                                      <FilterAltIcon sx={iconStyle} className={hasFilters ? style.acitveIcon : ""} />
+                              <Tooltip
+                                  title={"Фильтр"}
+                                  placement={"top-end"}
+                                  disableHoverListener={isDataLoading || isError}
+                              >
+                                  <UI.SecondaryBtn loading={isDataLoading} onClick={openFilterModal} disabled={isError}>
+                                      <FilterAltIcon sx={iconStyle} className={filterContext.hasFilters ? style.acitveIcon : ""} />
                                   </UI.SecondaryBtn>
                               </Tooltip>
                               <Tooltip
                                   title={"Настройка таблицы"}
                                   placement={"top-end"}
-                                  disableHoverListener={isDataLoading}
+                                  disableHoverListener={isDataLoading || isError}
                               >
-                                  <UI.SecondaryBtn loading={isDataLoading} onClick={openSettingsModal}>
+                                  <UI.SecondaryBtn loading={isDataLoading} onClick={openSettingsModal} disabled={isError}>
                                       <SettingsIcon
                                           sx={iconStyle}
                                           className={!isTableDefaultSettings ? style.acitveIcon : ""}
@@ -116,8 +125,8 @@ const TopBar = ({
                               ))}
                           </Aligner>
                       )}
-            </Aligner>
-        </Aligner>
+            </div>
+        </div>
     );
 };
 

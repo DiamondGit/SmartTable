@@ -1,0 +1,170 @@
+{
+    "table": [
+        {
+            "title": "Наименование",
+            "dataIndex": "transportName",
+            "dataType": "TEXT",
+            "hidable": false
+        },
+        {
+            "title": "Регион",
+            "dataIndex": "region.regionName",
+            "dataType": "TEXT",
+            "isRequired": true,
+            "globalDependField": "companyId",
+            "displayOptionDataIndex": "regionName",
+            "fieldGetApi": "/gen-dimensions/region/all-enabled",
+            "field": {
+                "dataIndex": "regionId",
+                "type": "SELECT"
+            },
+            "filterField": {
+                "dataIndex": "regionIds",
+                "type": "MULTISELECT"
+            }
+        },
+        {
+            "title": "Подразделение",
+            "dataIndex": "division.divisionName",
+            "dataType": "TEXT",
+            "isRequired": true,
+            "isFilterable": true,
+            "globalDependField": "companyId",
+            "displayOptionDataIndex": "divisionName",
+            "fieldGetApi": "/gen-dimensions/division/all-enabled",
+            "field": {
+                "type": "SELECT",
+                "dataIndex": "divisionId"
+            }
+        },
+        {
+            "title": "Модель",
+            "dataIndex": "model.modelName",
+            "dataType": "TEXT",
+            "isRequired": true,
+            "dependField": "regionId",
+            "onDependChange": "FETCH",
+            "displayOptionDataIndex": "modelName",
+            "fieldGetApi": "/transports-dimensions/model/as-and-carriages-by-region-id",
+            "field": {
+                "type": "SELECT",
+                "dataIndex": "modelId"
+            },
+            "filterField": {
+                "type": "TEXT",
+                "dataIndex": "modelName"
+            }
+        },
+        {
+            "title": "Подтип транспорта",
+            "dataIndex": "model.series.seriesName",
+            "dataType": "TEXT",
+            "displayOptionDataIndex": "seriesName",
+            "fieldGetApi": "/transports-dimensions/series/all-enabled",
+            "filterField": {
+                "type": "SELECT",
+                "dataIndex": "seriesId"
+            }
+        },
+        {
+            "title": "Тип транспорта",
+            "dataIndex": "model.series.subtypeTs.transportSubtype",
+            "dataType": "TEXT",
+            "displayOptionDataIndex": "transportSubtype",
+            "fieldGetApi": "/transports-dimensions/subtype-ts/all-enabled",
+            "filterField": {
+                "type": "SELECT",
+                "dataIndex": "subTypeId"
+            }
+        },
+        {
+            "fieldGetApi": "/routes/segment/condition-filter",
+            "filterField": {
+                "title": "Тестовое поле (condition)",
+                "dataIndex": "condition",
+                "conditionalDataIndex": {
+                    "from": "fromThis",
+                    "to": "toThis"
+                },
+                "type": "CONDITION"
+            }
+        },
+        {
+            "title": "Номер транспорта",
+            "dataIndex": "transportNo",
+            "isRequired": true,
+            "field": {
+                "type": "TEXT",
+                "dataIndex": "transportNo"
+            }
+        },
+        {
+            "title": "Гаражный номер",
+            "dataIndex": "garageNo",
+            "isRequired": true,
+            "isFilterable": true,
+            "field": {
+                "type": "TEXT",
+                "dataIndex": "garageNo"
+            }
+        },
+        {
+            "title": "Инвентарный номер",
+            "dataIndex": "inventoryCode",
+            "isRequired": true,
+            "field": {
+                "type": "TEXT",
+                "dataIndex": "inventoryCode"
+            }
+        },
+        {
+            "title": "SAP code единицы транспорта",
+            "dataIndex": "sapCodeUnit",
+            "field": {
+                "type": "TEXT",
+                "dataIndex": "sapCodeUnit"
+            }
+        },
+        {
+            "title": "Код транспорта",
+            "dataIndex": "transportCode",
+            "field": {
+                "type": "TEXT",
+                "dataIndex": "transportCode"
+            }
+        },
+        {
+            "title": "Система",
+            "dataType": "TEXT",
+            "dataIndex": "systemName",
+            "fieldGetApi": "/sync-system/system/all-systems?systemTypeIds=7401,7402",
+            "field": {
+                "type": "SELECT",
+                "dataIndex": "asutSystemId"
+            }
+        },
+        {
+            "dataIndex": "future",
+            "field": {
+                "title": "Будущий период",
+                "type": "BOOLEAN",
+                "dataIndex": "future",
+                "initValue": false
+            }
+        },
+        {
+            "dataIndex": "expirationDate",
+            "dependField": "future",
+            "onDependChange": {
+                "value": true,
+                "onTrue": "SHOW",
+                "onFalse": ["HIDE", "RESET"]
+            },
+            "field": {
+                "title": "Дата ввода в будущий период",
+                "type": "DATE",
+                "dataIndex": "expirationDate"
+            }
+        }
+    ]
+}

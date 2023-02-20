@@ -11,8 +11,6 @@ interface StateProviderType {
 const StateProvider = ({ children }: StateProviderType) => {
     const propsContext = useContext(PropsContext);
 
-    const [isSavedSettings, setSavedSettings] = useState(false);
-
     const [isDefaultConfigLoading, setDefaultConfigLoading] = useState(false);
     const [isSavedConfigsLoading, setSavedConfigsLoading] = useState(false);
 
@@ -21,8 +19,6 @@ const StateProvider = ({ children }: StateProviderType) => {
 
     const [sortingColumn, setSortingColumn] = useState("id");
     const [sortingDirection, setSortingDirection] = useState<SortOptions>(Z_SortOptions.enum.ASC);
-
-    const [searchValue, setSearchValue] = useState("");
 
     const [isFiltersFilled, setFiltersFilled] = useState(false);
 
@@ -37,9 +33,6 @@ const StateProvider = ({ children }: StateProviderType) => {
     return (
         <StateContext.Provider
             value={{
-                isSavedSettings,
-                setSavedSettings,
-
                 isDefaultConfigLoadingError,
                 setDefaultConfigLoadingError,
 
@@ -49,7 +42,7 @@ const StateProvider = ({ children }: StateProviderType) => {
                 isSavedConfigsLoading,
                 setSavedConfigsLoading,
 
-                isError: isDefaultConfigLoadingError || isSavedConfigsLoadingError || propsContext.isDataError || false,
+                isError: isDefaultConfigLoadingError || propsContext.isDataError || false,
 
                 isDefaultConfigLoading,
                 setDefaultConfigLoading,
@@ -61,9 +54,6 @@ const StateProvider = ({ children }: StateProviderType) => {
 
                 sortingDirection,
                 setSortingDirection,
-
-                searchValue,
-                setSearchValue,
 
                 isFiltersFilled,
                 setFiltersFilled,
