@@ -1,3 +1,5 @@
+import { message } from "antd";
+import { DefaultOptionType } from "antd/es/select";
 import { FLAG, INDEX_JOINER } from "../constants/general";
 import { TablePinOptions, Z_DependencyTypes, Z_TableFieldTypes, Z_TablePinOptions } from "../types/enums";
 import {
@@ -5,6 +7,7 @@ import {
     ColumnInitialType,
     ColumnPinType,
     ColumnType,
+    FieldType,
     FilterItemType,
     GeneralObject,
     TableConfigInitialSchema,
@@ -125,30 +128,42 @@ const filterDuplicateColumns = (
         !!targetColumn.field.title &&
         !!column.field?.title &&
         targetColumn.field.title === column.field?.title;
-    const hasSameFieldDataIndex = (column: ColumnInitialType) =>
+    const hasSameFieldDataIndexWrite = (column: ColumnInitialType) =>
         !!targetColumn.field &&
-        !!targetColumn.field.dataIndex &&
-        !!column.field?.dataIndex &&
-        targetColumn.field.dataIndex === column.field?.dataIndex;
+        !!targetColumn.field.dataIndex_write &&
+        !!column.field?.dataIndex_write &&
+        targetColumn.field.dataIndex_write === column.field?.dataIndex_write;
+    const hasSameFieldDataIndexRead = (column: ColumnInitialType) =>
+        !!targetColumn.field &&
+        !!targetColumn.field.dataIndex_read &&
+        !!column.field?.dataIndex_read &&
+        targetColumn.field.dataIndex_read === column.field?.dataIndex_read;
     const hasSameFilterTitle = (column: ColumnInitialType) =>
         !!targetColumn.filterField &&
         !!targetColumn.filterField.title &&
         !!column.filterField?.title &&
         targetColumn.filterField.title === column.filterField?.title;
-    const hasSameFilterDataIndex = (column: ColumnInitialType) =>
+    const hasSameFilterDataIndexWrite = (column: ColumnInitialType) =>
         !!targetColumn.filterField &&
-        !!targetColumn.filterField.dataIndex &&
-        !!column.filterField?.dataIndex &&
-        targetColumn.filterField.dataIndex === column.filterField?.dataIndex;
+        !!targetColumn.filterField.dataIndex_write &&
+        !!column.filterField?.dataIndex_write &&
+        targetColumn.filterField.dataIndex_write === column.filterField?.dataIndex_write;
+    const hasSameFilterDataIndexRead = (column: ColumnInitialType) =>
+        !!targetColumn.filterField &&
+        !!targetColumn.filterField.dataIndex_read &&
+        !!column.filterField?.dataIndex_read &&
+        targetColumn.filterField.dataIndex_read === column.filterField?.dataIndex_read;
     return (
         initialColumns.findIndex(
             (column) =>
                 hasSameTitle(column) ||
                 hasSameDataIndex(column) ||
                 hasSameFieldTitle(column) ||
-                hasSameFieldDataIndex(column) ||
+                hasSameFieldDataIndexWrite(column) ||
+                hasSameFieldDataIndexRead(column) ||
                 hasSameFilterTitle(column) ||
-                hasSameFilterDataIndex(column)
+                hasSameFilterDataIndexWrite(column) ||
+                hasSameFilterDataIndexRead(column)
         ) === targetIndex
     );
 };
@@ -160,13 +175,22 @@ const filterAvailableColumns = (column: ColumnInitialType) => {
         if (column.title) {
             if (!column.dataIndex) return false;
         } else {
-            if ((column.field && !column.field.title) || (column.filterField && !column.filterField.title)) return false;
+            if (column.field && !column.field.title) return false;
+            if (column.filterField && !column.filterField.title) return false;
         }
-        if (column.filterField && !column.filterField.dataIndex) return false;
+        if (column.filterField && !column.filterField.dataIndex_write) return false;
+        if (column.field && column.field.type === Z_TableFieldTypes.enum.CONDITION) return false;
         if (
             column.filterField &&
             column.filterField.type === Z_TableFieldTypes.enum.CONDITION &&
-            (!column.filterField.conditionalDataIndex?.from || !column.filterField.conditionalDataIndex.to)
+            (!column.filterField.conditionalDataIndex?.from || !column.filterField.conditionalDataIndex?.to)
+        )
+            return false;
+        if (
+            column.onDependChange &&
+            typeof column.onDependChange === "object" &&
+            !Array.isArray(column.onDependChange) &&
+            (column.onDependChange.value === undefined || !column.onDependChange.onTrue || !column.onDependChange.onFalse)
         )
             return false;
     }
@@ -188,128 +212,123 @@ const computeColumnSchema = (
     const currentPath = prevPath + (initialColumn.dataIndex ? `${prevPath ? "." : ""}${initialColumn.dataIndex}` : "");
     const currentNamedDataIndex = `${prevNamedDataIndex ? `${prevNamedDataIndex}_` : ""}${initialColumn.title}`;
 
-    let generalDeployer: ColumnInitialType = {
-        [FLAG.path]: currentPath,
+    let columnConstructor: ColumnInitialType = {
+        ...initialColumn,
     };
 
-    if (initialColumn.field) {
-        if (!initialColumn.field?.title) {
-            generalDeployer = {
-                ...generalDeployer,
-                field: {
-                    ...initialColumn.field,
-                    ...generalDeployer.field,
-                    title: initialColumn.title,
-                },
-            };
+    if (columnConstructor.field) {
+        if (!columnConstructor.field.title) {
+            columnConstructor.field.title = columnConstructor.title;
         }
-        if (!initialColumn.field?.type) {
-            generalDeployer = {
-                ...generalDeployer,
-                field: {
-                    ...initialColumn.field,
-                    ...generalDeployer.field,
-                    type: Z_TableFieldTypes.enum.NONE,
-                },
-            };
+        if (!columnConstructor.field.type) {
+            columnConstructor.field.type = Z_TableFieldTypes.enum.NONE;
         }
-        if (!initialColumn.field?.initValue) {
-            generalDeployer = {
-                ...generalDeployer,
-                field: {
-                    ...initialColumn.field,
-                    ...generalDeployer.field,
-                    initValue: null,
-                },
-            };
-        }
-    }
-    if (initialColumn.filterField) {
         if (
-            !initialColumn.isFilterable &&
-            initialColumn.filterField.type &&
-            initialColumn.filterField.type !== Z_TableFieldTypes.enum.NONE
+            columnConstructor.field.initValue === undefined &&
+            columnConstructor.field.type !== Z_TableFieldTypes.enum.BOOLEAN
         ) {
-            generalDeployer = {
-                ...generalDeployer,
-                isFilterable: true,
-            };
+            columnConstructor.field.initValue = null;
         }
-        if (!initialColumn.filterField?.title) {
-            generalDeployer = {
-                ...generalDeployer,
-                filterField: {
-                    ...initialColumn.filterField,
-                    ...generalDeployer.filterField,
-                    title: initialColumn.title,
-                },
-            };
+        if (!columnConstructor.field.dataIndex_read) {
+            columnConstructor.field.dataIndex_read = columnConstructor.dataIndex;
         }
-        if (!initialColumn.filterField?.type) {
-            generalDeployer = {
-                ...generalDeployer,
-                filterField: {
-                    ...initialColumn.filterField,
-                    ...generalDeployer.filterField,
-                    type: Z_TableFieldTypes.enum.NONE,
-                },
-            };
+        if (!columnConstructor.field.dataIndex_write) {
+            columnConstructor.field.dataIndex_write = columnConstructor.dataIndex;
         }
-        if (!initialColumn.filterField?.initValue) {
-            generalDeployer = {
-                ...generalDeployer,
-                filterField: {
-                    ...initialColumn.filterField,
-                    ...generalDeployer.filterField,
-                    initValue: null,
-                },
-            };
+        if (columnConstructor.field.type === Z_TableFieldTypes.enum.BOOLEAN) {
+            if (columnConstructor.field.initValue !== undefined) {
+                if (
+                    columnConstructor.field.booleanDataIndex?.onTrue !== undefined &&
+                    columnConstructor.field.booleanDataIndex?.onFalse !== undefined
+                ) {
+                    if (
+                        columnConstructor.field.booleanDataIndex.onTrue !== columnConstructor.field.initValue &&
+                        columnConstructor.field.booleanDataIndex.onFalse !== columnConstructor.field.initValue
+                    ) {
+                        delete columnConstructor.field.booleanDataIndex;
+                        columnConstructor.field.initValue = false;
+                    }
+                } else if (typeof columnConstructor.field.initValue !== "boolean") {
+                    delete columnConstructor.field.booleanDataIndex;
+                    columnConstructor.field.initValue = false;
+                } else {
+                }
+            } else {
+                if (
+                    columnConstructor.field.booleanDataIndex?.onTrue !== undefined &&
+                    columnConstructor.field.booleanDataIndex?.onFalse !== undefined
+                ) {
+                    columnConstructor.field.initValue = columnConstructor.field.booleanDataIndex.onFalse;
+                } else {
+                    delete columnConstructor.field.booleanDataIndex;
+                    columnConstructor.field.initValue = false;
+                }
+            }
         }
-    } else if (!initialColumn.filterField && initialColumn.isFilterable) {
-        generalDeployer = {
-            ...generalDeployer,
-            filterField: { ...initialColumn.field, ...generalDeployer.field, dependType: Z_DependencyTypes.enum.INDEP },
-        };
+    } else {
+        columnConstructor.field = null;
     }
-    if (initialColumn.dependField && !initialColumn.field?.dependType) {
-        generalDeployer = {
-            ...generalDeployer,
-            field: {
-                ...initialColumn.field,
-                ...generalDeployer.field,
-                dependType: Z_DependencyTypes.enum.FULL,
-            },
+    if (columnConstructor.filterField) {
+        if (
+            !columnConstructor.isFilterable &&
+            columnConstructor.filterField.type &&
+            columnConstructor.filterField.type !== Z_TableFieldTypes.enum.NONE
+        ) {
+            columnConstructor.isFilterable = true;
+        }
+        if (!columnConstructor.filterField.title) {
+            columnConstructor.filterField.title = columnConstructor.title;
+        }
+        if (!columnConstructor.filterField.type) {
+            columnConstructor.filterField.type = Z_TableFieldTypes.enum.NONE;
+        }
+        if (columnConstructor.filterField.initValue === undefined) {
+            columnConstructor.filterField.initValue = null;
+        }
+        if (!columnConstructor.filterField.dataIndex_write) {
+            columnConstructor.filterField.dataIndex_write = columnConstructor.dataIndex;
+        }
+    } else if (columnConstructor.isFilterable) {
+        columnConstructor.filterField = {
+            ...columnConstructor.field,
+            dependType: Z_DependencyTypes.enum.INDEP,
         };
+    } else {
+        columnConstructor.filterField = null;
     }
-    if (initialColumn.field?.type === Z_TableFieldTypes.enum.MULTISELECT && !initialColumn.field?.initValue) {
-        generalDeployer = {
-            ...generalDeployer,
-            field: {
-                ...initialColumn.field,
-                ...generalDeployer.field,
-                initValue: [],
-            },
-        };
-    }
-    if (initialColumn.filterField?.type === Z_TableFieldTypes.enum.MULTISELECT && !initialColumn.filterField?.initValue) {
-        generalDeployer = {
-            ...generalDeployer,
-            filterField: {
-                ...initialColumn.filterField,
-                ...generalDeployer.filterField,
-                initValue: [],
-            },
-        };
-    }
-    if (!initialColumn.title) {
-        return {
-            ...initialColumn,
-            ...generalDeployer,
+    if (columnConstructor.dependField && !columnConstructor.field?.dependType) {
+        columnConstructor.field = {
+            ...columnConstructor.field,
+            dependType: Z_DependencyTypes.enum.FULL,
         };
     }
 
-    generalDeployer = {
-        ...generalDeployer,
+    if (columnConstructor.field?.type === Z_TableFieldTypes.enum.MULTISELECT) {
+        if (!columnConstructor.field?.initValue || !Array.isArray(columnConstructor.field.initValue)) {
+            columnConstructor.field.initValue = [];
+        }
+    }
+    if (columnConstructor.filterField?.type === Z_TableFieldTypes.enum.MULTISELECT) {
+        if (!columnConstructor.filterField?.initValue || !Array.isArray(columnConstructor.filterField.initValue)) {
+            columnConstructor.filterField.initValue = [];
+        }
+    }
+    if (
+        (columnConstructor.field?.type === Z_TableFieldTypes.enum.SELECT ||
+            columnConstructor.field?.type === Z_TableFieldTypes.enum.MULTISELECT ||
+            columnConstructor.filterField?.type === Z_TableFieldTypes.enum.SELECT ||
+            columnConstructor.filterField?.type === Z_TableFieldTypes.enum.MULTISELECT) &&
+        !columnConstructor.valueOptionDataIndex
+    ) {
+        columnConstructor.valueOptionDataIndex = "id";
+    }
+    if (!columnConstructor.title) {
+        return columnConstructor;
+    }
+
+    columnConstructor = {
+        ...columnConstructor,
+        [FLAG.path]: currentPath,
         [FLAG.colSpan]: 1,
         [FLAG.rowSpan]: 1,
         [FLAG.rowLevel]: rowLevel,
@@ -317,9 +336,9 @@ const computeColumnSchema = (
         [FLAG.namedDataIndex]: currentNamedDataIndex,
     };
 
-    if (initialColumn.subcolumns) {
+    if (columnConstructor.subcolumns) {
         const computedSubcolumns: ColumnInitialType[] = getFullyComputedColumns(
-            [...initialColumn.subcolumns].map((subcolumn) =>
+            [...columnConstructor.subcolumns].map((subcolumn) =>
                 computeColumnSchema(subcolumn, maxHeadingDepth, mainOrder, currentPath, rowLevel + 1, currentNamedDataIndex)
             )
         );
@@ -331,8 +350,7 @@ const computeColumnSchema = (
             ) || 1;
 
         const resultColumn: Partial<ColumnInitialType> = {
-            ...initialColumn,
-            ...generalDeployer,
+            ...columnConstructor,
             sortable: false,
             subcolumns: computedSubcolumns,
             [FLAG.colSpan]: totalColSpan,
@@ -346,8 +364,7 @@ const computeColumnSchema = (
         return defineDefaultsTableSchema(resultColumn as ColumnInitialType);
     } else
         return defineDefaultsTableSchema({
-            ...initialColumn,
-            ...generalDeployer,
+            ...columnConstructor,
             [FLAG.rowSpan]: maxHeadingDepth - rowLevel,
         });
 };
@@ -430,4 +447,129 @@ export const getFilterFields = (table: ColumnType[]) => {
 
 export const getModalFields = (table: ColumnType[]) => {
     return [...table].filter((column) => !!column.field);
+};
+
+export const getOptionValue = (field: ColumnType, option: GeneralObject | string) =>
+    typeof option === "string"
+        ? option
+        : field.valueOptionDataIndex
+        ? option[field.valueOptionDataIndex].toString()
+        : JSON.stringify(option);
+
+export const getOptionTitle = (field: ColumnType, option: GeneralObject | string) =>
+    typeof option === "string"
+        ? option
+        : field.displayOptionDataIndex
+        ? getConstructedOptionTitle(field, option)
+        : JSON.stringify(option);
+
+const getConstructedOptionTitle = (field: ColumnType, option: GeneralObject) => {
+    const result = checkAndExtractCurlyBraceWords(field.displayOptionDataIndex);
+    if (Array.isArray(result)) {
+        return getFormattedOptionTitle(field, option, result);
+    }
+    return option[field.displayOptionDataIndex];
+};
+
+const getFormattedOptionTitle = (field: ColumnType, option: GeneralObject, replaceWords: string[]) => {
+    let result = field.displayOptionDataIndex;
+    for (let i = 0; i < replaceWords.length; i++) {
+        result = result.replaceAll(`{${replaceWords[i]}}`, getDeepValue(option, replaceWords[i]));
+    }
+    return result;
+};
+
+// returns array of words wrapped with {}
+// "{abc} - {def}" -> ["abc", "def"];
+export const checkAndExtractCurlyBraceWords = (inputString: string): string[] | string => {
+    const words = [];
+    let startIndex = -1;
+    let braceCount = 0;
+    for (let i = 0; i < inputString.length; i++) {
+        if (inputString[i] === "{") {
+            if (braceCount === 0) {
+                startIndex = i + 1;
+            }
+            braceCount++;
+        } else if (inputString[i] === "}") {
+            braceCount--;
+            if (braceCount === 0 && startIndex >= 0) {
+                const word = inputString.substring(startIndex, i);
+                const wordParts = word.split(".");
+                let isWordValid = true;
+                for (const wordPart of wordParts) {
+                    if (
+                        wordPart.match(/^\d/) ||
+                        wordPart.endsWith(".") ||
+                        wordPart.includes("{") ||
+                        wordPart.includes("}") ||
+                        wordPart.includes("..") ||
+                        wordPart === ""
+                    ) {
+                        isWordValid = false;
+                        break;
+                    }
+                }
+                if (isWordValid) {
+                    words.push(word);
+                } else {
+                    return inputString;
+                }
+                startIndex = -1;
+            }
+        }
+    }
+    if (braceCount !== 0 || words.length === 0) {
+        return inputString;
+    }
+    return words;
+};
+
+export const filterOption = (input: string, option: DefaultOptionType | undefined) => {
+    if (!option?.children) return false;
+
+    if (Array.isArray(option.children)) {
+        return option.children.join(" ").toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    } else if (typeof option.children === "string") {
+        return `${option.children}`.toLowerCase().indexOf(input.toLowerCase()) >= 0;
+    }
+    return false;
+};
+
+export function declension(_form_1: string, _form_2: string, _form_3: string, withCount = true) {
+    return (num: number) => {
+        const form_1 = _form_1;
+        const form_2 = _form_2;
+        const form_3 = _form_3;
+
+        const digit = num % 10;
+
+        let result = withCount ? `${num} ` : "";
+
+        if (11 <= num && num <= 20) result += form_3;
+        else if (digit === 1) result += form_1;
+        else if (2 <= digit && digit <= 4) result += form_2;
+        else if ((5 <= digit && digit <= 9) || digit === 0) result += form_3;
+
+        return result;
+    };
+}
+
+export const askDeleteRecordByCount = (count: number) => {
+    return `Вы действительно хотите удалить ${declension("запись", "записи", "записей")(count)}?`;
+};
+
+export const showMessageDeleteRecordByCount = (count: number, isSuccess = true) => {
+    if (isSuccess) {
+        message.success(
+            `${declension("Удалена", "Удалены", "Удалено", false)(count)} ${declension(
+                "запись",
+                "записи",
+                "записей"
+            )(count)}.`,
+            4
+        );
+    } else {
+        message.error(`При попытке удаления ${declension("записи", "записей", "записей")(count)} возникла ошибка.`, 4);
+    }
 };

@@ -28,9 +28,6 @@ interface StateContextType {
     isFiltersFilled: boolean;
     setFiltersFilled: React.Dispatch<React.SetStateAction<boolean>>;
 
-    selectedRows: number[];
-    setSelectedRows: React.Dispatch<React.SetStateAction<number[]>>;
-
     columnPins: ColumnPinType[];
     setColumnPins: React.Dispatch<React.SetStateAction<ColumnPinType[]>>;
 

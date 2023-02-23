@@ -15,6 +15,7 @@ export interface ModalType {
     leftFooter?: React.ReactNode;
     rightFooter?: React.ReactNode;
     type: ModalTypes;
+    closable?: boolean;
     isTransparentModal?: boolean;
     hideRightFooter?: boolean;
     children?: React.ReactNode;
@@ -30,6 +31,7 @@ const Modal = ({
     leftFooter = null,
     rightFooter = null,
     type,
+    closable = true,
     isTransparentModal = false,
     hideRightFooter = false,
     width = 520,
@@ -43,66 +45,6 @@ const Modal = ({
 
     const defaultOkText = "ОК";
     const defaultCancelText = "Отмена";
-    const modalProps = {
-        title: (
-            <div className={style.title}>
-                {type !== Z_ModalTypes.enum.SETTINGS ? (
-                    <div
-                        className={style.draggable}
-                        onMouseEnter={() => {
-                            if (disabled) {
-                                setDisabled(prevState => false);
-                            }
-                        }}
-                        onMouseLeave={() => {
-                            setDisabled(prevState => true);
-                        }}
-                        onFocus={() => {}}
-                        onBlur={() => {}}
-                    >
-                        <Title />
-                        <DragIndicatorIcon sx={{ opacity: 0.3 }} />
-                    </div>
-                ) : (
-                    <Title />
-                )}
-            </div>
-        ),
-        open: open,
-        closeIcon: <CloseIcon />,
-        closable: true,
-        okText: defaultOkText,
-        cancelText: defaultCancelText,
-        footer: (
-            <div className={style.footer}>
-                {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
-                {
-                    !hideRightFooter &&
-                    <div className={`${style.btnContainer} ${style.right}`}>
-                        {!!rightFooter ? (
-                            <>{rightFooter}</>
-                        ) : (
-                            <>
-                                <UI.SecondaryBtn onClick={onCancel}>{defaultCancelText}</UI.SecondaryBtn>
-                                <UI.PrimaryBtn onClick={onConfirm}>{defaultOkText}</UI.PrimaryBtn>
-                            </>
-                        )}
-                    </div>
-                }
-            </div>
-        ),
-        onCancel: onCancel,
-        forceRender: true,
-        width: width,
-        modalRender:
-            type !== Z_ModalTypes.enum.SETTINGS
-                ? (modal: React.ReactNode) => (
-                      <Draggable disabled={disabled} bounds={bounds} onStart={onStart}>
-                          <div ref={draggleRef}>{modal}</div>
-                      </Draggable>
-                  )
-                : undefined,
-    };
 
     const onStart = (_event: DraggableEvent, uiData: DraggableData) => {
         const { clientWidth, clientHeight } = window.document.documentElement;
@@ -120,10 +62,71 @@ const Modal = ({
     };
 
     return (
-        <AntdModal {...modalProps} style={{ top: 150, ...props.style, opacity: isTransparentModal ? .1 : 1 }} className={style.modal}>
-            <div className={style.content}>
-                {children}
-            </div>
+        <AntdModal
+            {...{
+                title: (
+                    <div className={style.title}>
+                        {type !== Z_ModalTypes.enum.SETTINGS ? (
+                            <div
+                                className={style.draggable}
+                                onMouseEnter={() => {
+                                    if (disabled) {
+                                        setDisabled((prevState) => false);
+                                    }
+                                }}
+                                onMouseLeave={() => {
+                                    setDisabled((prevState) => true);
+                                }}
+                                onFocus={() => {}}
+                                onBlur={() => {}}
+                            >
+                                <Title />
+                                <DragIndicatorIcon sx={{ opacity: 0.3 }} />
+                            </div>
+                        ) : (
+                            <Title />
+                        )}
+                    </div>
+                ),
+                open: open,
+                closeIcon: <CloseIcon />,
+                maskClosable: closable,
+                closable: closable,
+                okText: defaultOkText,
+                cancelText: defaultCancelText,
+                footer: (
+                    <div className={style.footer}>
+                        {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
+                        {!hideRightFooter && (
+                            <div className={`${style.btnContainer} ${style.right}`}>
+                                {!!rightFooter ? (
+                                    <>{rightFooter}</>
+                                ) : (
+                                    <>
+                                        <UI.SecondaryBtn onClick={onCancel}>{defaultCancelText}</UI.SecondaryBtn>
+                                        <UI.PrimaryBtn onClick={onConfirm}>{defaultOkText}</UI.PrimaryBtn>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                ),
+                onCancel: onCancel,
+                forceRender: true,
+                width: width,
+                modalRender:
+                    type !== Z_ModalTypes.enum.SETTINGS
+                        ? (modal: React.ReactNode) => (
+                              <Draggable disabled={disabled} bounds={bounds} onStart={onStart}>
+                                  <div ref={draggleRef}>{modal}</div>
+                              </Draggable>
+                          )
+                        : undefined,
+            }}
+            style={{ top: 150, ...props.style, opacity: isTransparentModal ? 0.1 : 1 }}
+            className={style.modal}
+        >
+            <div className={style.content}>{children}</div>
         </AntdModal>
     );
 };

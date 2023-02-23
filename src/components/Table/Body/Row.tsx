@@ -1,6 +1,7 @@
-import { useContext, useRef, useState } from "react";
+import { Checkbox, ConfigProvider as AntdConfigProvider } from "antd";
+import { useContext, useRef } from "react";
 import ConfigContext from "../../../context/ConfigContext";
-import StateContext from "../../../context/StateContext";
+import DataContext from "../../../context/DataContext";
 import TableBodyContext from "../../../context/TableBodyContext";
 import { Z_TablePinOptions } from "../../../types/enums";
 import ActionMenu from "../../ActionMenu";
@@ -9,20 +10,27 @@ import style from "../Table.module.scss";
 import Side from "./Side";
 
 const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
-    const stateContext = useContext(StateContext);
+    const dataContext = useContext(DataContext);
     const actionCellRef = useRef<HTMLTableCellElement>(null);
     const { hasLeftPin } = useContext(ConfigContext);
-    const [isClicked, setClicked] = useState(stateContext.selectedRows.includes(index));
 
-    const toggleRowClick = (event: React.MouseEvent<HTMLElement>) => {
-        if (event.ctrlKey) {
-            setClicked((prevState) => !prevState);
-            stateContext.setSelectedRows((prevState) => {
-                if (prevState.includes(index)) return [...prevState].filter((prevIndexes) => prevIndexes !== index);
-                return [...prevState, index];
+    const handleSelectRow = () => {
+        if (!dataContext.isDeleting) {
+            dataContext.setDataListToDelete((prevList) => {
+                if (prevList.includes(dataRow.id))
+                    return [...prevList].filter((selectedRowId) => selectedRowId !== dataRow.id);
+                return [...prevList, dataRow.id];
             });
+
+            if (dataContext.isDeletingError) {
+                dataContext.setDeletingError(false);
+            }
         }
     };
+
+    const rowClasses = [];
+    if (dataContext.dataListToDelete.includes(dataRow.id)) rowClasses.push(style.selected);
+    if (dataContext.isDeletingError) rowClasses.push(style.deletingError);
 
     return (
         <TableBodyContext.Provider
@@ -31,15 +39,37 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
                 index,
             }}
         >
-            <tr className={`${isClicked ? style.selected : ""}`} onClick={toggleRowClick}>
+            <tr className={rowClasses.join(" ")}>
                 <td
                     className={style.actionCell}
                     style={hasLeftPin ? { position: "sticky", left: 0 } : {}}
                     ref={actionCellRef}
                 >
-                    <Aligner>
-                        <ActionMenu dataRow={dataRow} />
-                    </Aligner>
+                    {dataContext.isSelectingToDelete ? (
+                        <Aligner style={{ margin: "0 4px" }}>
+                            <AntdConfigProvider
+                                theme={
+                                    dataContext.isDeletingError
+                                        ? {
+                                              token: {
+                                                  colorPrimary: "#ff5555",
+                                              },
+                                          }
+                                        : undefined
+                                }
+                            >
+                                <Checkbox
+                                    disabled={dataContext.isDeleting}
+                                    onChange={handleSelectRow}
+                                    checked={dataContext.dataListToDelete.includes(dataRow.id)}
+                                />
+                            </AntdConfigProvider>
+                        </Aligner>
+                    ) : (
+                        <Aligner>
+                            <ActionMenu dataRow={dataRow} />
+                        </Aligner>
+                    )}
                 </td>
                 <Side side={Z_TablePinOptions.enum.LEFT} />
                 <Side />

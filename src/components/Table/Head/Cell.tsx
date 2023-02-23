@@ -2,6 +2,7 @@ import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import { useContext, useEffect, useRef, MouseEventHandler } from "react";
 import { FLAG } from "../../../constants/general";
+import DataContext from "../../../context/DataContext";
 import PaginationContext from "../../../context/PaginationContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
@@ -17,6 +18,7 @@ const Cell = ({ column, order }: HeadCellType) => {
     const headContext = useContext(TableHeadContext);
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
+    const dataContext = useContext(DataContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
@@ -80,7 +82,7 @@ const Cell = ({ column, order }: HeadCellType) => {
         let columnClasses: string[] = [];
         columnClasses = columnClasses.concat(getColumnSortClass(targetColumn));
 
-        if (targetColumn.sortable && !isDataError) columnClasses.push(style.sortable);
+        if (targetColumn.sortable && !isDataError && !dataContext.isSelectingToDelete) columnClasses.push(style.sortable);
         if (targetColumn.subcolumns) columnClasses.push(style.withSubcolumn);
         if (isPinned) {
             columnClasses.push(style.pin);
@@ -109,7 +111,7 @@ const Cell = ({ column, order }: HeadCellType) => {
     if (column[FLAG.rowSpan] !== 1) computedSpan.rowSpan = column[FLAG.rowSpan];
 
     const handleClick: MouseEventHandler | undefined = (event: React.MouseEvent) => {
-        if (column.subcolumns || !column.dataIndex || propsContext.isDataError) return;
+        if (column.subcolumns || !column.dataIndex || propsContext.isDataError || dataContext.isSelectingToDelete) return;
         headContext.handleClick(column[FLAG.path])(event);
     };
 

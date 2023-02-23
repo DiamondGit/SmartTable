@@ -12,14 +12,15 @@
             "dataType": "TEXT",
             "isRequired": true,
             "globalDependField": "companyId",
-            "displayOptionDataIndex": "regionName",
+            "displayOptionDataIndex": "{regionName} ({sapCode})",
             "fieldGetApi": "/gen-dimensions/region/all-enabled",
             "field": {
-                "dataIndex": "regionId",
+                "dataIndex_write": "regionId",
+                "dataIndex_read": "region.id",
                 "type": "SELECT"
             },
             "filterField": {
-                "dataIndex": "regionIds",
+                "dataIndex_write": "regionIds",
                 "type": "MULTISELECT"
             }
         },
@@ -34,7 +35,8 @@
             "fieldGetApi": "/gen-dimensions/division/all-enabled",
             "field": {
                 "type": "SELECT",
-                "dataIndex": "divisionId"
+                "dataIndex_write": "divisionId",
+                "dataIndex_read": "division.id"
             }
         },
         {
@@ -46,13 +48,15 @@
             "onDependChange": "FETCH",
             "displayOptionDataIndex": "modelName",
             "fieldGetApi": "/transports-dimensions/model/as-and-carriages-by-region-id",
+            "paramOnDepend": "regionId",
             "field": {
                 "type": "SELECT",
-                "dataIndex": "modelId"
+                "dataIndex_write": "modelId",
+                "dataIndex_read": "model.id"
             },
             "filterField": {
                 "type": "TEXT",
-                "dataIndex": "modelName"
+                "dataIndex_write": "modelName"
             }
         },
         {
@@ -63,7 +67,7 @@
             "fieldGetApi": "/transports-dimensions/series/all-enabled",
             "filterField": {
                 "type": "SELECT",
-                "dataIndex": "seriesId"
+                "dataIndex_write": "seriesId"
             }
         },
         {
@@ -74,14 +78,14 @@
             "fieldGetApi": "/transports-dimensions/subtype-ts/all-enabled",
             "filterField": {
                 "type": "SELECT",
-                "dataIndex": "subTypeId"
+                "dataIndex_write": "subTypeId"
             }
         },
         {
             "fieldGetApi": "/routes/segment/condition-filter",
             "filterField": {
                 "title": "Тестовое поле (condition)",
-                "dataIndex": "condition",
+                "dataIndex_write": "condition",
                 "conditionalDataIndex": {
                     "from": "fromThis",
                     "to": "toThis"
@@ -94,8 +98,7 @@
             "dataIndex": "transportNo",
             "isRequired": true,
             "field": {
-                "type": "TEXT",
-                "dataIndex": "transportNo"
+                "type": "TEXT"
             }
         },
         {
@@ -104,8 +107,7 @@
             "isRequired": true,
             "isFilterable": true,
             "field": {
-                "type": "TEXT",
-                "dataIndex": "garageNo"
+                "type": "TEXT"
             }
         },
         {
@@ -113,48 +115,47 @@
             "dataIndex": "inventoryCode",
             "isRequired": true,
             "field": {
-                "type": "TEXT",
-                "dataIndex": "inventoryCode"
+                "type": "TEXT"
             }
         },
         {
             "title": "SAP code единицы транспорта",
             "dataIndex": "sapCodeUnit",
             "field": {
-                "type": "TEXT",
-                "dataIndex": "sapCodeUnit"
+                "type": "TEXT"
             }
         },
         {
             "title": "Код транспорта",
             "dataIndex": "transportCode",
             "field": {
-                "type": "TEXT",
-                "dataIndex": "transportCode"
+                "type": "TEXT"
             }
         },
         {
             "title": "Система",
             "dataType": "TEXT",
             "dataIndex": "systemName",
+            "displayOptionDataIndex": "systemName",
+            "valueOptionDataIndex": "systemId",
             "fieldGetApi": "/sync-system/system/all-systems?systemTypeIds=7401,7402",
             "field": {
                 "type": "SELECT",
-                "dataIndex": "asutSystemId"
+                "dataIndex_read": "asutSystemId",
+                "dataIndex_write": "asutSystemId"
             }
         },
         {
             "dataIndex": "future",
             "field": {
                 "title": "Будущий период",
-                "type": "BOOLEAN",
-                "dataIndex": "future",
-                "initValue": false
+                "type": "BOOLEAN"
             }
         },
         {
             "dataIndex": "expirationDate",
             "dependField": "future",
+            "isRequired": true,
             "onDependChange": {
                 "value": true,
                 "onTrue": "SHOW",
@@ -162,8 +163,7 @@
             },
             "field": {
                 "title": "Дата ввода в будущий период",
-                "type": "DATE",
-                "dataIndex": "expirationDate"
+                "type": "DATE"
             }
         }
     ]

@@ -18,11 +18,9 @@ const StateProvider = ({ children }: StateProviderType) => {
     const [isSavedConfigsLoadingError, setSavedConfigsLoadingError] = useState(false);
 
     const [sortingColumn, setSortingColumn] = useState("id");
-    const [sortingDirection, setSortingDirection] = useState<SortOptions>(Z_SortOptions.enum.ASC);
+    const [sortingDirection, setSortingDirection] = useState<SortOptions>(Z_SortOptions.enum.DESC);
 
     const [isFiltersFilled, setFiltersFilled] = useState(false);
-
-    const [selectedRows, setSelectedRows] = useState<number[]>([]);
 
     const [columnPins, setColumnPins] = useState<ColumnPinType[]>([]);
 
@@ -57,9 +55,6 @@ const StateProvider = ({ children }: StateProviderType) => {
 
                 isFiltersFilled,
                 setFiltersFilled,
-
-                selectedRows,
-                setSelectedRows,
 
                 columnPins,
                 setColumnPins,

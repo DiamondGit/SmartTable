@@ -1,11 +1,15 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
+import DataContext from "../../context/DataContext";
 import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
-import { Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
+import { getDeepValue } from "../../functions/global";
+import { ModalTypes, Z_ModalTypes, Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
+import { GeneralObject } from "../../types/general";
 import Aligner from "../Aligner";
+import DataModal from "../Modal/DataModal";
 import FilterModal from "../Modal/FilterModal";
 import SettingsModal from "../Modal/SettingsModal";
 import PaginationWrapper from "../PaginationWrapper";
@@ -21,7 +25,6 @@ const MainContent = () => {
     const stateContext = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const propsContext = useContext(PropsContext);
-    const paginationContext = useContext(PaginationContext);
     const filterContext = useContext(FilterContext);
 
     const isConfigLoaded =
@@ -33,6 +36,26 @@ const MainContent = () => {
     const [isFullscreen, setFullscreen] = useState(false);
     const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
     const [isFilterModalOpen, setFilterModalOpen] = useState(false);
+    const [isDataModalOpen, setDataModalOpen] = useState(false);
+    const [dataModalType, setDataModalType] = useState<ModalTypes>(Z_ModalTypes.enum.ADD);
+
+    const [modalData, setModalData] = useState<GeneralObject>({});
+    const [dataFieldLists, setDataFieldLists] = useState<{ [key: string]: any[] }>({});
+    const [dataFieldLoadings, setDataFieldLoadings] = useState<{ [key: string]: boolean }>({});
+    const [dataOldValues, setDataOldValues] = useState<{ [key: string]: boolean }>({});
+    const [dataFieldErrors, setDataFieldErrors] = useState<{ [key: string]: string }>({});
+
+    const [dataListToDelete, setDataListToDelete] = useState<number[]>([]);
+    const [isSelectingToDelete, setSelectingToDelete] = useState(false);
+    const [isDeleting, setDeleting] = useState(false);
+    const [isDeletingError, setDeletingError] = useState(false);
+    const [isFetchRequired, setFetchRequired] = useState(false);
+    const [isCancelingDelete, setCancelingDelete] = useState(false);
+    const [availableData, setAvailableData] = useState<any[]>([]);
+
+    useEffect(() => {
+        setAvailableData(propsContext.data);
+    }, [propsContext.data]);
 
     const computedLoadingConfig = {
         columnCount:
@@ -60,7 +83,34 @@ const MainContent = () => {
         setFilterModalOpen(true);
     };
 
+    const openDataModal = (modalType: ModalTypes, dataRow: GeneralObject = {}) => {
+        setDataModalOpen(true);
+        if (JSON.stringify(dataRow) === "{}") {
+            setModalData(dataRow);
+            setDataOldValues({});
+        } else {
+            const computedDataRow: GeneralObject = { id: dataRow.id };
+            configContext.modalConfig.forEach((modalField) => {
+                if (modalField.field?.dataIndex_read && modalField.field?.dataIndex_write) {
+                    const value = getDeepValue(dataRow, modalField.field.dataIndex_read);
+                    computedDataRow[modalField.field.dataIndex_write] = !!modalField.displayOptionDataIndex
+                        ? value
+                            ? value.toString()
+                            : value
+                        : value;
+                }
+            });
+            setModalData(computedDataRow);
+            setDataOldValues(computedDataRow);
+        }
+        setDataModalType(modalType);
+    };
+
     useEffect(() => {
+        setSelectingToDelete(false);
+        setCancelingDelete(false);
+        setDataListToDelete([]);
+        setDeletingError(false);
         propsContext.paginationConfig?.getData?.(filterContext.queryProps);
     }, [propsContext.dataRefreshTrigger]);
 
@@ -82,95 +132,143 @@ const MainContent = () => {
     )
         tableClasses.push(style.withLeftShadow);
 
+    const currentData = isSelectingToDelete ? availableData : propsContext.data;
+
     return (
-        <div className={fullscreenContainerClasses.join(" ")}>
-            <div className={tableContainerClasses.join(" ")}>
-                <SettingsModal open={isSettingsModalOpen} setOpen={setSettingsModalOpen} />
-                <FilterModal open={isFilterModalOpen} setOpen={setFilterModalOpen} tableTitle={propsContext.tableTitle} />
-                <TopBar
-                    {...{
-                        isFullscreen,
-                        computedLoadingConfig,
-                        toggleFullscreen,
-                        openSettingsModal,
-                        openFilterModal,
-                    }}
-                />
-                <PaginationWrapper>
-                    <ScrollWrapper isFullscreen={isFullscreen}>
-                        <ShadowWrapper>
-                            <table className={tableClasses.join(" ")}>
-                                {(!stateContext.isDefaultConfigLoadingError || stateContext.isDefaultConfigLoading) && (
-                                    <thead style={{ position: "sticky", top: 0, zIndex: 1000 }}>
-                                        {!stateContext.isDefaultConfigLoading ? (
-                                            <Head />
-                                        ) : (
-                                            <tr>
-                                                <SkeletonFiller columnCount={computedLoadingConfig.columnCount} isHeading />
-                                            </tr>
-                                        )}
-                                    </thead>
-                                )}
-                                {!stateContext.isError ? (
-                                    <tbody>
-                                        {!stateContext.isLoading ? (
-                                            <Body
-                                                data={
-                                                    !propsContext.paginationConfig?.singleData
-                                                        ? propsContext.data
-                                                        : propsContext.data.slice(0, 10)
-                                                }
-                                            />
-                                        ) : (
-                                            <PaginationContext.Consumer>
-                                                {(pagination) => (
+        <DataContext.Provider
+            value={{
+                modalData,
+                setModalData,
+
+                openDataModal,
+
+                dataFieldLists,
+                setDataFieldLists,
+
+                dataFieldLoadings,
+                setDataFieldLoadings,
+
+                dataOldValues,
+                setDataOldValues,
+
+                dataFieldErrors,
+                setDataFieldErrors,
+
+                dataListToDelete,
+                setDataListToDelete,
+
+                isSelectingToDelete,
+                setSelectingToDelete,
+
+                isDeleting,
+                setDeleting,
+
+                isDeletingError,
+                setDeletingError,
+
+                isFetchRequired,
+                setFetchRequired,
+
+                isCancelingDelete,
+                setCancelingDelete,
+
+                availableData,
+                setAvailableData,
+            }}
+        >
+            <div className={fullscreenContainerClasses.join(" ")}>
+                <div className={tableContainerClasses.join(" ")}>
+                    <SettingsModal open={isSettingsModalOpen} setOpen={setSettingsModalOpen} />
+                    <FilterModal open={isFilterModalOpen} setOpen={setFilterModalOpen} />
+                    <DataModal modalType={dataModalType} open={isDataModalOpen} setOpen={setDataModalOpen} />
+                    <TopBar
+                        {...{
+                            isFullscreen,
+                            computedLoadingConfig,
+                            toggleFullscreen,
+                            openSettingsModal,
+                            openFilterModal,
+                        }}
+                    />
+                    <PaginationWrapper>
+                        <ScrollWrapper isFullscreen={isFullscreen}>
+                            <ShadowWrapper>
+                                <table className={tableClasses.join(" ")}>
+                                    {(!stateContext.isDefaultConfigLoadingError || stateContext.isDefaultConfigLoading) && (
+                                        <thead style={{ position: "sticky", top: 0, zIndex: 1000 }}>
+                                            {!stateContext.isDefaultConfigLoading ? (
+                                                <Head />
+                                            ) : (
+                                                <tr>
                                                     <SkeletonFiller
                                                         columnCount={computedLoadingConfig.columnCount}
-                                                        rowCount={
-                                                            isFullscreen
-                                                                ? pagination.pageSize
-                                                                : computedLoadingConfig.rowCount
-                                                        }
+                                                        isHeading
                                                     />
-                                                )}
-                                            </PaginationContext.Consumer>
-                                        )}
-                                    </tbody>
-                                ) : (
-                                    <tbody>
-                                        <tr>
-                                            <td
-                                                colSpan={(configContext.tableConfig?.table.length || 0) + 1}
-                                                className={style.errorContent}
-                                                style={{
-                                                    padding: 0,
-                                                }}
-                                            >
-                                                <Aligner
-                                                    className={style.loadingError}
+                                                </tr>
+                                            )}
+                                        </thead>
+                                    )}
+                                    {!stateContext.isError ? (
+                                        <tbody>
+                                            {!stateContext.isLoading ? (
+                                                <Body
+                                                    data={
+                                                        !propsContext.paginationConfig?.singleData
+                                                            ? currentData
+                                                            : currentData.slice(0, 10)
+                                                    }
+                                                />
+                                            ) : (
+                                                <PaginationContext.Consumer>
+                                                    {(pagination) => (
+                                                        <SkeletonFiller
+                                                            columnCount={computedLoadingConfig.columnCount}
+                                                            rowCount={
+                                                                isFullscreen
+                                                                    ? pagination.pageSize
+                                                                    : computedLoadingConfig.rowCount
+                                                            }
+                                                        />
+                                                    )}
+                                                </PaginationContext.Consumer>
+                                            )}
+                                        </tbody>
+                                    ) : (
+                                        <tbody>
+                                            <tr>
+                                                <td
+                                                    colSpan={(configContext.tableConfig?.table.length || 0) + 1}
+                                                    className={style.errorContent}
                                                     style={{
-                                                        width: "max-content",
-                                                        position: "sticky",
-                                                        left: "50%",
-                                                        transform: "translateX(-50%)",
+                                                        padding: 0,
                                                     }}
                                                 >
-                                                    {stateContext.isDefaultConfigLoadingError
-                                                        ? propsContext.isDataError
-                                                            ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
-                                                            : "ОШИБКА ТАБЛИЦЫ"
-                                                        : propsContext.isDataError && "ОШИБКА ДАННЫХ"}
-                                                </Aligner>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                )}
-                            </table>
-                        </ShadowWrapper>
-                    </ScrollWrapper>
-                </PaginationWrapper>
+                                                    <Aligner
+                                                        className={style.loadingError}
+                                                        style={{
+                                                            width: "max-content",
+                                                            position: "sticky",
+                                                            left: "50%",
+                                                            transform: "translateX(-50%)",
+                                                        }}
+                                                    >
+                                                        {stateContext.isDefaultConfigLoadingError
+                                                            ? propsContext.isDataError
+                                                                ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
+                                                                : "ОШИБКА ТАБЛИЦЫ"
+                                                            : propsContext.isDataError && "ОШИБКА ДАННЫХ"}
+                                                    </Aligner>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    )}
+                                </table>
+                            </ShadowWrapper>
+                        </ScrollWrapper>
+                    </PaginationWrapper>
+                </div>
             </div>
-        </div>
+        </DataContext.Provider>
     );
 };
 

@@ -5,6 +5,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { IconButton, Menu, MenuItem, TextField } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
+import DataContext from "../../../context/DataContext";
 import FilterContext from "../../../context/FilterContext";
 import PaginationContext from "../../../context/PaginationContext";
 import PropsContext from "../../../context/PropsContext";
@@ -28,6 +29,7 @@ interface OptionType {
 const SearchInput = ({ loading = false }: SearchInputType) => {
     const propsContext = useContext(PropsContext);
     const configContext = useContext(ConfigContext);
+    const dataContext = useContext(DataContext);
     const paginationContext = useContext(PaginationContext);
     const filterContext = useContext(FilterContext);
 
@@ -58,7 +60,7 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
     };
 
     useEffect(() => {
-        if (!propsContext.isDataLoading) {
+        if (!propsContext.isDataLoading && !dataContext.isCancelingDelete) {
             let timeout = setTimeout(() => {
                 propsContext.paginationConfig?.getData?.(filterContext.queryProps);
             }, 400);
@@ -68,6 +70,9 @@ const SearchInput = ({ loading = false }: SearchInputType) => {
                     clearTimeout(timeout);
                 }
             };
+        }
+        if (dataContext.isCancelingDelete) {
+            dataContext.setCancelingDelete(false);
         }
     }, [paginationContext.searchValue]);
 

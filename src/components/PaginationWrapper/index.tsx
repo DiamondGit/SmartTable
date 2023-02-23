@@ -2,6 +2,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Pagination as AntdPagination } from "antd";
 import { useContext, useEffect, useState } from "react";
+import DataContext from "../../context/DataContext";
 import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
 import PropsContext from "../../context/PropsContext";
@@ -19,6 +20,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
     const paginationContext = useContext(PaginationContext);
     const filterContext = useContext(FilterContext);
     const stateContext = useContext(StateContext);
+    const dataContext = useContext(DataContext);
     const { paginationConfig = {} as PaginationConfigType, data } = useContext(PropsContext);
 
     const computedPaginationConfig = {
@@ -60,7 +62,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
                 showSizeChanger={!computedPaginationConfig.hideSizeChanger}
                 pageSizeOptions={computedPaginationConfig.pageSizeOptions}
                 size={"small"}
-                disabled={stateContext.isLoading}
+                disabled={stateContext.isLoading || dataContext.isSelectingToDelete}
                 itemRender={(
                     _page: number,
                     type: "page" | "prev" | "next" | "jump-prev" | "jump-next",

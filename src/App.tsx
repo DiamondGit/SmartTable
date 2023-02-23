@@ -9,6 +9,12 @@ import { Button } from "antd";
 const storageUser = localStorage.getItem("user");
 const token = (storageUser && JSON.parse(storageUser)?.token) || "";
 
+const requester = axios.create({
+    headers: {
+        Authorization: `Bearer ${token}`,
+    },
+});
+
 const App = () => {
     const [isAuthorized] = useState(!!token);
     const [companyId] = useState(null);
@@ -27,9 +33,9 @@ const App = () => {
             setDataLoading(true);
             setDataError(false);
 
-            const { currentPage, pageSize, filters = {}, search = "", sortField = "id", sortDir = "DESC" } = params;
+            const { currentPage = 1, pageSize = 10, filters = {}, search = "", sortField = "id", sortDir = "DESC" } = params;
 
-            axios
+            requester
                 .get("/transports-dimensions//transport/all-enabled-only-transports/page", {
                     params: {
                         pageSize: pageSize,
@@ -38,9 +44,6 @@ const App = () => {
                         pageNo: currentPage,
                         search: search,
                         ...filters,
-                    },
-                    headers: {
-                        Authorization: `Bearer ${token}`,
                     },
                 })
                 .then((response) => {
@@ -57,6 +60,18 @@ const App = () => {
                     setDataLoading(false);
                 });
         }
+    };
+
+    const createData = async (params: { [key: string]: any }) => {
+        return await requester.post("/transports-dimensions/transport/create-transport", params);
+    };
+
+    const editData = async (params: { [key: string]: any }) => {
+        return await requester.put("/transports-dimensions/transport/update-transport", params);
+    };
+
+    const deleteData = async (transportId: number) => {
+        return await requester.put(`/transports-dimensions/transport/delete-transport?transportId=${transportId}`);
     };
 
     //provides list of modificators for custom datas
@@ -89,6 +104,9 @@ const App = () => {
                                 paginationConfig: {
                                     dataComputedCount,
                                     getData,
+                                    createData,
+                                    editData,
+                                    deleteData,
                                 },
                                 dataRefreshTrigger,
                                 contentModifier,

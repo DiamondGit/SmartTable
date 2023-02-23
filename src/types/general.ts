@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import z from "zod";
 import { FLAG } from "../constants/general";
 import {
@@ -40,7 +41,9 @@ const columnDefaults = {
     dependField: emptyString,
 
     displayOptionDataIndex: emptyString,
+    valueOptionDataIndex: "id",
     fieldGetApi: emptyString,
+    paramOnDepend: emptyString,
 
     field: {
         title: emptyString,
@@ -51,6 +54,7 @@ const columnDefaults = {
         defaultCatch: null,
         switchValue: null,
         conditionalDataIndex: emptyString,
+        booleanDataIndex: emptyString,
     },
 
     pin: Z_TablePinOptions.enum.NONE,
@@ -76,10 +80,17 @@ const ConditionalDataIndex = z.object({
     to: z.string().default(columnDefaults.field.conditionalDataIndex).catch(columnDefaults.field.conditionalDataIndex),
 });
 
+const BooleanDataIndex = z.object({
+    onTrue: z.string().default(columnDefaults.field.booleanDataIndex).catch(columnDefaults.field.booleanDataIndex),
+    onFalse: z.string().default(columnDefaults.field.booleanDataIndex).catch(columnDefaults.field.booleanDataIndex),
+});
+
 const FieldBaseSchema = z.object({
     title: z.string().catch(columnDefaults.field.title),
-    dataIndex: z.string().catch(columnDefaults.field.dataIndex),
+    dataIndex_write: z.string().catch(columnDefaults.field.dataIndex),
+    dataIndex_read: z.string().catch(columnDefaults.field.dataIndex),
     conditionalDataIndex: ConditionalDataIndex.optional(),
+    booleanDataIndex: BooleanDataIndex.optional(),
     type: Z_TableFieldTypes.default(columnDefaults.field.type).catch(columnDefaults.field.type),
     initValue: z.any().default(columnDefaults.field.initValue).catch(columnDefaults.field.initValue),
     dependType: Z_DependencyTypes.default(columnDefaults.field.dependType),
@@ -89,9 +100,9 @@ export type FilterItemType = z.infer<typeof FieldBaseSchema>;
 const FieldSchema = FieldBaseSchema.nullable()
     .default(columnDefaults.field.defaultCatch)
     .catch(columnDefaults.field.defaultCatch);
+export type FieldType = z.infer<typeof FieldSchema>;
 
-const FieldPartialSchema = FieldBaseSchema.extend({ conditionalDataIndex: ConditionalDataIndex.partial() })
-    .partial()
+const FieldPartialSchema = FieldBaseSchema.deepPartial()
     .nullable()
     .default(columnDefaults.field.defaultCatch)
     .catch(columnDefaults.field.defaultCatch);
@@ -110,7 +121,9 @@ export const ColumnBaseSchema = z.object({
     onDependChange: DependChangeSchema.optional(),
 
     displayOptionDataIndex: z.string().optional().catch(columnDefaults.displayOptionDataIndex),
+    valueOptionDataIndex: z.string().optional().catch(columnDefaults.valueOptionDataIndex),
     fieldGetApi: z.string().optional().catch(columnDefaults.fieldGetApi),
+    paramOnDepend: z.string().optional().catch(columnDefaults.paramOnDepend),
 
     field: FieldSchema,
     filterField: FieldSchema,
@@ -169,6 +182,9 @@ const tableConfigDefaults = {
     loadable: false,
     highlightable: true,
     warningText: null,
+    dataCreateApi: emptyString,
+    dataDeleteApi: emptyString,
+    dataUpdateApi: emptyString,
 };
 
 const TableConfigBaseSchema = z.object({
@@ -179,6 +195,9 @@ const TableConfigBaseSchema = z.object({
     loadable: z.boolean().default(tableConfigDefaults.loadable).catch(tableConfigDefaults.loadable),
     highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
     warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
+    dataCreateApi: z.string().default(tableConfigDefaults.dataCreateApi).catch(tableConfigDefaults.dataCreateApi),
+    dataDeleteApi: z.string().default(tableConfigDefaults.dataDeleteApi).catch(tableConfigDefaults.dataDeleteApi),
+    dataUpdateApi: z.string().default(tableConfigDefaults.dataUpdateApi).catch(tableConfigDefaults.dataUpdateApi),
 });
 type TableConfigBaseType = z.infer<typeof TableConfigBaseSchema>;
 
@@ -228,7 +247,7 @@ type DataComputedCountType = {
     totalPages: number;
 };
 
-export type DataRequestParamsType = {
+type GetDataRequestParamsType = {
     currentPage: number;
     pageSize: number;
     filters?: GeneralObject;
@@ -245,11 +264,21 @@ export type PaginationConfigType = {
     hideBottom?: boolean;
     bottomPosition?: PaginationPositionType;
 } & (
-    | { singleData: true; dataComputedCount?: never; getData?: never }
+    | {
+          singleData: true;
+          dataComputedCount?: never;
+          getData?: never;
+          createData?: never;
+          editData?: never;
+          deleteData?: never;
+      }
     | {
           singleData?: false;
           dataComputedCount: DataComputedCountType;
-          getData: (dataRequestParams: DataRequestParamsType) => void;
+          getData: (dataRequestParams: GetDataRequestParamsType) => void;
+          createData?: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
+          editData?: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
+          deleteData?: (dataId: number) => Promise<AxiosResponse<any, any>>;
       }
 );
 

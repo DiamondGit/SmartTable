@@ -3,19 +3,18 @@ import { Col, Input, Row, Select } from "antd";
 import { DefaultOptionType } from "antd/es/select";
 import { useContext, useEffect } from "react";
 import Modal, { ModalType } from "..";
-import { FLAG } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
 import FilterContext from "../../../context/FilterContext";
 import PropsContext from "../../../context/PropsContext";
 import UIContext from "../../../context/UIContext";
 import { requester } from "../../../controllers/controllers";
-import { Z_DependencyTypes, Z_ModalTypes, Z_TableFieldTypes } from "../../../types/enums";
+import { filterOption, getOptionTitle, getOptionValue } from "../../../functions/global";
+import { Z_ModalTypes, Z_TableFieldTypes } from "../../../types/enums";
 import { ColumnType, GeneralObject } from "../../../types/general";
 import Aligner from "../../Aligner";
 import style from "./FilterModal.module.scss";
 
 interface FilterModalType {
-    tableTitle?: string;
     open: boolean;
     setOpen: (state: boolean) => void;
 }
@@ -23,10 +22,19 @@ interface FilterModalType {
 const FilterField = ({ field }: { field: ColumnType }) => {
     const filterContext = useContext(FilterContext);
     const hasAPI = !!field.fieldGetApi;
-    const dataIndex = field.filterField?.dataIndex || "";
+    const dataIndex = field.filterField?.dataIndex_write || "";
 
     const options = filterContext.filterFieldLists[dataIndex] || [];
     const loadingField = filterContext.filterFieldLoadings[dataIndex];
+
+    const setModalValue = (dataIndex: string | undefined, value: boolean) => {
+        if (dataIndex) {
+            filterContext.setModalFilterValues((prevValues) => ({
+                ...prevValues,
+                [dataIndex]: value,
+            }));
+        }
+    };
 
     const handleChange =
         (certainDataIndex = "") =>
@@ -40,50 +48,20 @@ const FilterField = ({ field }: { field: ColumnType }) => {
             const isCondition = field.filterField?.type === Z_TableFieldTypes.enum.CONDITION;
 
             if (isSelect) {
-                filterContext.setModalFilterValues((prevValues) => ({
-                    ...prevValues,
-                    [computedDataIndex]: event || initValue,
-                }));
+                setModalValue(computedDataIndex, event || initValue);
             } else if (isMultiselect) {
                 const result = Array.isArray(event) ? event : [];
-                filterContext.setModalFilterValues((prevValues) => ({
-                    ...prevValues,
-                    [computedDataIndex]: (result || []).join(",") || initValue,
-                }));
+                setModalValue(computedDataIndex, (result || []).join(",") || initValue);
             } else if (isCondition) {
-                filterContext.setModalFilterValues((prevValues) => ({
-                    ...prevValues,
-                    [computedDataIndex]: (certainDataIndex ? event?.target?.value : event) || initValue,
-                }));
+                setModalValue(computedDataIndex, (certainDataIndex ? event?.target?.value : event) || initValue);
                 if (!certainDataIndex && !event) {
-                    filterContext.setModalFilterValues((prevValues) => ({
-                        ...prevValues,
-                        [field.filterField?.conditionalDataIndex?.from || ""]: initValue,
-                        [field.filterField?.conditionalDataIndex?.to || ""]: initValue,
-                    }));
+                    setModalValue(field.filterField?.conditionalDataIndex?.from, initValue);
+                    setModalValue(field.filterField?.conditionalDataIndex?.to, initValue);
                 }
             } else {
-                filterContext.setModalFilterValues((prevValues) => ({
-                    ...prevValues,
-                    [computedDataIndex]: event?.target?.value || initValue,
-                }));
+                setModalValue(computedDataIndex, event?.target?.value || initValue);
             }
         };
-
-    const getOptionValue = (option: GeneralObject) => (field.displayOptionDataIndex ? option.id.toString() : option);
-    const getOptionTitle = (option: GeneralObject) =>
-        field.displayOptionDataIndex ? option[field.displayOptionDataIndex] : option;
-
-    const filterOption = (input: string, option: DefaultOptionType | undefined) => {
-        if (!option?.children) return false;
-
-        if (Array.isArray(option.children)) {
-            return option.children.join(" ").toLowerCase().indexOf(input.toLowerCase()) >= 0;
-        } else if (typeof option.children === "string") {
-            return `${option.children}`.toLowerCase().indexOf(input.toLowerCase()) >= 0;
-        }
-        return false;
-    };
 
     const currentValue = filterContext.modalFilterValues[dataIndex];
     const isMultiselect = field.filterField?.type === Z_TableFieldTypes.enum.MULTISELECT;
@@ -128,8 +106,12 @@ const FilterField = ({ field }: { field: ColumnType }) => {
     };
 
     const computedOptions = [...options].map((option) => (
-        <Select.Option key={getOptionValue(option)} value={getOptionValue(option)} style={{ width: "calc(100% - 16px)" }}>
-            {getOptionTitle(option)}
+        <Select.Option
+            key={getOptionValue(field, option)}
+            value={getOptionValue(field, option)}
+            style={{ width: "calc(100% - 16px)" }}
+        >
+            {getOptionTitle(field, option)}
         </Select.Option>
     ));
 
@@ -149,9 +131,7 @@ const FilterField = ({ field }: { field: ColumnType }) => {
                     gap: "8px",
                 }}
             >
-                <Select {...commonSelectProps}>
-                    {computedOptions}
-                </Select>
+                <Select {...commonSelectProps}>{computedOptions}</Select>
                 {hasValue && (
                     <>
                         <Input
@@ -167,7 +147,9 @@ const FilterField = ({ field }: { field: ColumnType }) => {
                                 <Input
                                     {...commonProps}
                                     {...commonConditionProps}
-                                    value={filterContext.modalFilterValues?.[field.filterField?.conditionalDataIndex?.to || ""]}
+                                    value={
+                                        filterContext.modalFilterValues?.[field.filterField?.conditionalDataIndex?.to || ""]
+                                    }
                                     onChange={handleChange(field.filterField?.conditionalDataIndex?.to)}
                                     type={"number"}
                                 />
@@ -185,7 +167,7 @@ const FilterField = ({ field }: { field: ColumnType }) => {
         ),
     };
     if (field.filterField?.type === Z_TableFieldTypes.enum.NONE) return null;
-    return <div>{fieldType[field.filterField?.type as string]}</div>;
+    return fieldType[field.filterField?.type as string];
 };
 
 const FilterItem = ({ field }: { field: ColumnType }) => {
@@ -201,18 +183,44 @@ const FilterItem = ({ field }: { field: ColumnType }) => {
     );
 };
 
-const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
+const FilterModal = ({ open, setOpen }: FilterModalType) => {
     const propsContext = useContext(PropsContext);
     const filterContext = useContext(FilterContext);
     const configContext = useContext(ConfigContext);
     const UI = useContext(UIContext);
+
+    const setModalValue = (value: GeneralObject) => {
+        filterContext.setModalFilterValues(() => value);
+    };
+
+    const setValue = (value: GeneralObject) => {
+        filterContext.setFilterValues(() => value);
+    };
+
+    const setLoading = (dataIndex: string | undefined, value: boolean) => {
+        if (dataIndex) {
+            filterContext.setFilterFieldLoadings((prevLoadings) => ({
+                ...prevLoadings,
+                [dataIndex]: value,
+            }));
+        }
+    };
+
+    const setList = (dataIndex: string | undefined, value: any[]) => {
+        if (dataIndex) {
+            filterContext.setFilterFieldLists((prevLists) => ({
+                ...prevLists,
+                [dataIndex]: value,
+            }));
+        }
+    };
 
     const closeModal = () => {
         setOpen(false);
     };
 
     const handleCancelFilter = () => {
-        filterContext.setModalFilterValues(filterContext.filterValues);
+        setModalValue(filterContext.filterValues);
         closeModal();
     };
 
@@ -221,7 +229,7 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
         Object.keys(filterContext.modalFilterValues).forEach((filterField) => {
             if (
                 filterContext.modalFilterValues[filterField] !==
-                configContext.filterConfig.find((field) => field.filterField?.dataIndex === filterField)?.filterField
+                configContext.filterConfig.find((field) => field.filterField?.dataIndex_write === filterField)?.filterField
                     ?.initValue
             ) {
                 computedFilterValues[filterField] = filterContext.modalFilterValues[filterField];
@@ -233,12 +241,12 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
             filters: computedFilterValues,
         });
 
-        filterContext.setFilterValues(computedFilterValues);
+        setValue(computedFilterValues);
         closeModal();
     };
 
     const resetFilters = () => {
-        filterContext.setModalFilterValues({});
+        setModalValue({});
     };
 
     useEffect(() => {
@@ -252,29 +260,20 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
                         filterField.fieldGetApi
                 )
                 .forEach((filterField) => {
-                    const dataIndex = filterField.filterField?.dataIndex;
+                    const dataIndex = filterField.filterField?.dataIndex_write;
                     if (
                         dataIndex &&
                         filterContext.filterFieldLists[dataIndex] === undefined &&
                         !filterContext.filterFieldLoadings[dataIndex]
                     ) {
-                        filterContext.setFilterFieldLoadings((prevList) => ({
-                            ...prevList,
-                            [dataIndex]: true,
-                        }));
+                        setLoading(dataIndex, true);
                         requester
                             .get(filterField.fieldGetApi)
                             .then((response) => {
-                                filterContext.setFilterFieldLists((prevList) => ({
-                                    ...prevList,
-                                    [dataIndex]: response.data || [],
-                                }));
+                                setList(dataIndex, response.data || []);
                             })
                             .finally(() => {
-                                filterContext.setFilterFieldLoadings((prevList) => ({
-                                    ...prevList,
-                                    [dataIndex]: false,
-                                }));
+                                setLoading(dataIndex, false);
                             });
                     }
                 });
@@ -285,7 +284,7 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
         Title: () => (
             <Aligner style={{ justifyContent: "flex-start" }} gutter={8}>
                 <FilterAltIcon sx={{ fontSize: 24 }} />
-                {`Фильтр таблицы "${tableTitle}"`.trim()}
+                {`Фильтр таблицы "${propsContext.tableTitle}"`.trim()}
             </Aligner>
         ),
         open: open,
@@ -304,47 +303,9 @@ const FilterModal = ({ tableTitle = "", open, setOpen }: FilterModalType) => {
         ),
     };
 
-    const notFoundFilters =
-        configContext.filterConfig.filter(
-            (column) =>
-                (column.filterField?.type === Z_TableFieldTypes.enum.SELECT ||
-                    column.filterField?.type === Z_TableFieldTypes.enum.MULTISELECT ||
-                    column.filterField?.type === Z_TableFieldTypes.enum.CONDITION) &&
-                !column.fieldGetApi
-        ) || ([] as any[]);
-
-    const dependFields = configContext.filterConfig.filter(
-        (column) => column.dependField && column.filterField?.dependType !== Z_DependencyTypes.enum.INDEP
-    );
-
     return (
         <Modal {...modalProps}>
             <div className={style.filterContainer}>
-                {notFoundFilters.length > 0 && (
-                    <div style={{ color: "red" }}>
-                        <span>Отсутствует API для следующих полей:</span>
-                        <ul>
-                            {notFoundFilters.map((columnFilter) => (
-                                <li style={{ listStyleType: "disc" }} key={columnFilter[FLAG.path]}>
-                                    {columnFilter.filterField?.title}
-                                </li>
-                            ))}
-                        </ul>
-                        <br />
-                    </div>
-                )}
-                {dependFields.length > 0 && (
-                    <div style={{ color: "coral" }}>
-                        <ul>
-                            {dependFields.map((columnFilter) => (
-                                <li style={{ listStyleType: "disc" }} key={columnFilter[FLAG.path]}>
-                                    {`${columnFilter.filterField?.dataIndex} DEPENDS ON ${columnFilter.dependField} (${columnFilter.filterField?.dependType})`}
-                                </li>
-                            ))}
-                        </ul>
-                        <br />
-                    </div>
-                )}
                 <Aligner isVertical gutter={8}>
                     {[...Array(Math.ceil(configContext.filterConfig.length / 2))]
                         .map((_, index) => index * 2)

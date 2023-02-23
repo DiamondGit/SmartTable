@@ -195,10 +195,12 @@
                         &.withSubcolumn {
                             text-align: center;
                         }
-                        &.pin, &.actionCell.withLeftPin {
+                        &.pin,
+                        &.actionCell.withLeftPin {
                             position: sticky;
                             z-index: $zIndex_table_thead_pinned;
-                            &.lastPinnedLeftColumn, &.lastPinnedRightColumn {
+                            &.lastPinnedLeftColumn,
+                            &.lastPinnedRightColumn {
                                 box-shadow: 0 0 8px 8px rgba(black, 0.15);
                             }
                             &.lastPinnedLeftColumn {
@@ -218,6 +220,7 @@
                 td {
                     line-height: 18px;
                     background-color: $white-400;
+                    transition: background .2s;
                     &:not(.actionCell) {
                         text-align: left;
                         vertical-align: top;
@@ -226,7 +229,8 @@
                     &.pin {
                         position: sticky;
                         z-index: $zIndex_table_tbody_pinned;
-                        &.lastPinnedLeftColumn, &.lastPinnedRightColumn {
+                        &.lastPinnedLeftColumn,
+                        &.lastPinnedRightColumn {
                             box-shadow: 0 0 8px 8px rgba(black, 0.15);
                         }
                         &.lastPinnedLeftColumn {
@@ -266,10 +270,18 @@
                 }
                 &.selected {
                     td {
-                        background-color: $gray-300;
+                        background-color: $gray-350;
                     }
                     &:hover td {
-                        background-color: $gray-350;
+                        background-color: $gray-400;
+                    }
+                    &.deletingError {
+                        td {
+                            background-color: $red-200;
+                        }
+                        &:hover td {
+                            background-color: $red-250;
+                        }
                     }
                 }
                 .emptyBoxImg {
