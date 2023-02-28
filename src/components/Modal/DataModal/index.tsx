@@ -1,12 +1,14 @@
 import AddBoxIcon from "@mui/icons-material/AddBox";
+import AnnouncementIcon from "@mui/icons-material/Announcement";
 import EditIcon from "@mui/icons-material/Edit";
 import { Col, Input, message, Row, Select, Switch } from "antd";
 import { useContext, useEffect, useState } from "react";
 import Modal, { ModalType } from "..";
+import { ErrorText } from "../../../constants/UI";
 import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import FilterContext from "../../../context/FilterContext";
-import PropsContext from "../../../context/PropsContext";
 import UIContext from "../../../context/UIContext";
 import { requester } from "../../../controllers/controllers";
 import { filterOption, getOptionTitle, getOptionValue } from "../../../functions/global";
@@ -20,9 +22,7 @@ import {
 } from "../../../types/enums";
 import { ColumnType, GeneralObject } from "../../../types/general";
 import Aligner from "../../Aligner";
-import AnnouncementIcon from "@mui/icons-material/Announcement";
 import Tooltip from "../../Tooltip";
-import { ErrorText } from "../../../constants/UI";
 
 interface DataModalType {
     modalType: ModalTypes;
@@ -82,22 +82,66 @@ const DataField = ({ field, disabled }: { field: ColumnType; disabled: boolean }
         if (!targetDataIndex) return;
         const depends = configContext.modalConfig.filter(
             (modalField) =>
-                modalField.dependField === targetDataIndex && modalField.onDependChange === Z_DependencyActions.enum.FETCH
+                modalField.dependField &&
+                (typeof modalField.dependField === "string"
+                    ? modalField.dependField === targetDataIndex
+                    : modalField.dependField.includes(targetDataIndex)) &&
+                modalField.onDependChange === Z_DependencyActions.enum.FETCH
         );
         depends.forEach((dependField) => {
-            setList(dependField.field?.dataIndex_write, []);
-            setData(dependField.field?.dataIndex_write, null);
-            updateDependencies(dependField.field?.dataIndex_write, null);
-            if (isDirectDepends) {
-                setLoading(dependField.field?.dataIndex_write, true);
-                requester
-                    .get(dependField.fieldGetApi, { params: { [dependField.paramOnDepend]: newValue } })
-                    .then((response) => {
-                        setList(dependField.field?.dataIndex_write, response.data || []);
-                    })
-                    .finally(() => {
-                        setLoading(dependField.field?.dataIndex_write, false);
-                    });
+            if (dependField.field?.dataIndex_write) {
+                if (typeof dependField.dependField === "string") {
+                    setList(dependField.field.dataIndex_write, []);
+                    setData(dependField.field.dataIndex_write, null);
+                    updateDependencies(dependField.field.dataIndex_write, null);
+                    if (isDirectDepends) {
+                        setLoading(dependField.field.dataIndex_write, true);
+
+                        const computedParam = dependField.paramOnDepend
+                            ? typeof dependField.paramOnDepend === "string"
+                                ? dependField.paramOnDepend
+                                : dependField.paramOnDepend[0]
+                            : dependField.field.dataIndex_write;
+
+                        requester
+                            .get(dependField.fieldGetApi, { params: { [computedParam]: newValue } })
+                            .then((response) => {
+                                setList(dependField.field?.dataIndex_write, response.data || []);
+                            })
+                            .finally(() => {
+                                setLoading(dependField.field?.dataIndex_write, false);
+                            });
+                    }
+                } else {
+                    const dependParams: GeneralObject = {};
+                    for (let i = 0; i < dependField.dependField.length; i++) {
+                        dependParams[
+                            dependField.paramOnDepend && Array.isArray(dependField.paramOnDepend)
+                                ? dependField.paramOnDepend[i] || dependField.dependField[i]
+                                : dependField.dependField[i]
+                        ] =
+                            dependField.dependField[i] === targetDataIndex
+                                ? newValue
+                                : dataContext.modalData[dependField.dependField[i]];
+                    }
+
+                    if (Object.values(dependParams).every((dependValue) => dependValue !== undefined)) {
+                        setList(dependField.field.dataIndex_write, []);
+                        setData(dependField.field.dataIndex_write, null);
+                        updateDependencies(dependField.field.dataIndex_write, null);
+                        if (isDirectDepends) {
+                            setLoading(dependField.field.dataIndex_write, true);
+                            requester
+                                .get(dependField.fieldGetApi, { params: dependParams })
+                                .then((response) => {
+                                    setList(dependField.field?.dataIndex_write, response.data || []);
+                                })
+                                .finally(() => {
+                                    setLoading(dependField.field?.dataIndex_write, false);
+                                });
+                        }
+                    }
+                }
             }
         });
     };
@@ -130,7 +174,7 @@ const DataField = ({ field, disabled }: { field: ColumnType; disabled: boolean }
 
     const defaultValue = currentValue || field.field?.initValue || (isMultiselect ? [] : null);
 
-    const isDepends = !!field.dependField && !!field.field?.dependType;
+    const isDepends = field.dependField !== undefined && !!field.field?.dependType;
 
     const value = isMultiselect
         ? Array.isArray(currentValue)
@@ -163,18 +207,36 @@ const DataField = ({ field, disabled }: { field: ColumnType; disabled: boolean }
         style: { width: "100%" },
     };
 
+    const getPlaceholder = () => {
+        const LOADING = "Загрузка...";
+        const SELECT = "Выберите";
+        const NOT_SELECTED = "Не выбрано:";
+
+        const getDependTitle = (dependDataIndex: string) =>
+            configContext.modalConfig.find((modalField) => modalField.field?.dataIndex_write === dependDataIndex)?.field
+                ?.title;
+
+        if (loadingField) return LOADING;
+        else if (!isDepends) return SELECT;
+        else if (field.dependField === undefined) return SELECT;
+        else if (typeof field.dependField === "string") {
+            if (dataContext.modalData[field.dependField] !== undefined) return SELECT;
+            else return `${NOT_SELECTED} ${getDependTitle(field.dependField)}`;
+        }
+        if (field.dependField.some((dependField) => dataContext.modalData[dependField] === undefined)) {
+            return `${NOT_SELECTED} ${field.dependField
+                .filter((dependField) => dataContext.modalData[dependField] === undefined)
+                .map((dependField) => getDependTitle(dependField))
+                .join(", ")}`;
+        }
+        return SELECT;
+    };
+
     const commonSelectProps = {
         ...commonFieldProps,
         showArrow: true,
         showSearch: true,
-        placeholder: loadingField
-            ? "Загрузка..."
-            : !isDepends || dataContext.modalData[field.dependField] !== undefined
-            ? "Выберите"
-            : `Не выбрано: ${
-                  configContext.modalConfig.find((modalField) => modalField.field?.dataIndex_write === field.dependField)
-                      ?.field?.title
-              }`,
+        placeholder: getPlaceholder(),
         disabled: !hasAPI || disabled,
         loading: loadingField,
         filterOption: filterOption,
@@ -203,7 +265,12 @@ const DataField = ({ field, disabled }: { field: ColumnType; disabled: boolean }
         ),
     };
     if (field.field?.type === Z_TableFieldTypes.enum.NONE) return null;
-    if (field.dependField && !Array.isArray(field.onDependChange) && typeof field.onDependChange === "object") {
+    if (
+        field.dependField &&
+        typeof field.dependField === "string" &&
+        !Array.isArray(field.onDependChange) &&
+        typeof field.onDependChange === "object"
+    ) {
         const isTrue = field.onDependChange?.value === dataContext.modalData[field.dependField];
         let operations: DependencyActionType[] = [];
         if (isTrue && field.onDependChange?.onTrue) {
@@ -225,7 +292,7 @@ const DataField = ({ field, disabled }: { field: ColumnType; disabled: boolean }
                         setLoading(field.field?.dataIndex_write, false);
                     });
             } else if (operations[i] === Z_DependencyActions.enum.RESET) {
-                setData(field.field?.dataIndex_write, null);
+                setData(field.field?.dataIndex_write, field.field?.initValue || null);
             }
         }
     }
@@ -242,7 +309,12 @@ const FieldItem = ({
     showDataChangedIcon?: boolean;
 }) => {
     const dataContext = useContext(DataContext);
-    if (field.dependField && !Array.isArray(field.onDependChange) && typeof field.onDependChange === "object") {
+    if (
+        field.dependField &&
+        typeof field.dependField === "string" &&
+        !Array.isArray(field.onDependChange) &&
+        typeof field.onDependChange === "object"
+    ) {
         const isTrue = field.onDependChange?.value === dataContext.modalData[field.dependField];
         let operations: DependencyActionType[] = [];
         if (isTrue && field.onDependChange?.onTrue) {
@@ -284,7 +356,7 @@ const FieldItem = ({
 };
 
 const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
-    const propsContext = useContext(PropsContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const filterContext = useContext(FilterContext);
     const configContext = useContext(ConfigContext);
     const dataContext = useContext(DataContext);
@@ -346,13 +418,13 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
     };
 
     const handleConfirmData = () => {
-        if (isAddModal && propsContext.paginationConfig?.createData) {
+        if (isAddModal && configContext.defaultTableConfig?.dataCreateApi) {
             setRequiestLoading(true);
-            propsContext.paginationConfig
+            dataFetchContext
                 .createData(dataContext.modalData)
                 .then(() => {
                     message.success("Добавлено");
-                    propsContext.paginationConfig?.getData?.(filterContext.queryProps);
+                    dataFetchContext.getData(filterContext.queryProps);
                     closeModal();
                 })
                 .catch((error) => {
@@ -363,13 +435,13 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
                 .finally(() => {
                     setRequiestLoading(false);
                 });
-        } else if (isEditModal && propsContext.paginationConfig?.editData) {
+        } else if (isEditModal && configContext.defaultTableConfig?.dataUpdateApi) {
             setRequiestLoading(true);
-            propsContext.paginationConfig
-                .editData(dataContext.modalData)
+            dataFetchContext
+                .updateData(dataContext.modalData)
                 .then(() => {
                     message.success("Изменено");
-                    propsContext.paginationConfig?.getData?.(filterContext.queryProps);
+                    dataFetchContext.getData(filterContext.queryProps);
                     closeModal();
                 })
                 .catch((error) => {
@@ -410,17 +482,27 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
                 );
 
                 depends.forEach((depend) => {
-                    setLoading(depend.field?.dataIndex_write, true);
-                    requester
-                        .get(depend.fieldGetApi, {
-                            params: { [depend.dependField]: dataContext.modalData[depend.dependField] },
-                        })
-                        .then((response) => {
-                            setList(depend.field?.dataIndex_write, response.data || []);
-                        })
-                        .finally(() => {
-                            setLoading(depend.field?.dataIndex_write, false);
-                        });
+                    const params: GeneralObject = {};
+                    if (depend.dependField) {
+                        if (typeof depend.dependField === "string") {
+                            params[depend.dependField] = dataContext.modalData[depend.dependField];
+                        } else {
+                            for (const dependField of depend.dependField) {
+                                params[dependField] = dataContext.modalData[dependField];
+                            }
+                        }
+                        setLoading(depend.field?.dataIndex_write, true);
+                        requester
+                            .get(depend.fieldGetApi, {
+                                params,
+                            })
+                            .then((response) => {
+                                setList(depend.field?.dataIndex_write, response.data || []);
+                            })
+                            .finally(() => {
+                                setLoading(depend.field?.dataIndex_write, false);
+                            });
+                    }
                 });
             }
             configContext.modalConfig
@@ -429,7 +511,7 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
                         (field.field?.type === Z_TableFieldTypes.enum.SELECT ||
                             field.field?.type === Z_TableFieldTypes.enum.MULTISELECT) &&
                         field.fieldGetApi &&
-                        (!field.dependField ||
+                        (field.dependField === undefined ||
                             !field.onDependChange ||
                             field.field.dependType !== Z_DependencyTypes.enum.FULL)
                 )
@@ -454,15 +536,15 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
         }
     }, [open]);
 
-    const noCreateApi = !propsContext.paginationConfig?.createData;
-    const noEditApi = !propsContext.paginationConfig?.editData;
+    const noCreateApi = !configContext.defaultTableConfig?.dataCreateApi;
+    const noEditApi = !configContext.defaultTableConfig?.dataUpdateApi;
 
-    const getApiErrorText = () => {
-        return isAddModal && noCreateApi ? (
-            <ErrorText text={"Отсутствует API для создания!"} />
-        ) : isEditModal && noEditApi ? (
-            <ErrorText text={"Отсутствует API для изменения!"} />
-        ) : undefined;
+    const getErrorText = () => {
+        if (isAddModal && noCreateApi) return <ErrorText text={"Отсутствует API для создания!"} />;
+        else if (isEditModal && noEditApi) return <ErrorText text={"Отсутствует API для изменения!"} />;
+        else if (dataContext.dataFieldErrors.error !== undefined)
+            return <ErrorText text={dataContext.dataFieldErrors.error} />;
+        return undefined;
     };
 
     const modalProps: ModalType = {
@@ -482,10 +564,7 @@ const DataModal = ({ modalType, open, setOpen }: DataModalType) => {
         type: modalType,
         width: 700,
         closable: !requestLoading,
-        leftFooter:
-            getApiErrorText() || dataContext.dataFieldErrors.error !== undefined ? (
-                <ErrorText text={dataContext.dataFieldErrors.error} />
-            ) : undefined,
+        leftFooter: getErrorText(),
         rightFooter: (
             <>
                 <UI.SecondaryBtn onClick={handleCancelData} loading={requestLoading}>

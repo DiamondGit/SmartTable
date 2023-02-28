@@ -1,5 +1,7 @@
 import { useContext, useRef } from "react";
 import { FLAG } from "../../../constants/general";
+import { ErrorText, TableDataSkeleton } from "../../../constants/UI";
+import DataFetchContext from "../../../context/DataFetchContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableBodyContext from "../../../context/TableBodyContext";
@@ -14,6 +16,7 @@ const Cell = ({ column, order }: BodyCellType) => {
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
     const bodyContext = useContext(TableBodyContext);
+    const dataFetchContext = useContext(DataFetchContext);
 
     const cellRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
@@ -65,15 +68,20 @@ const Cell = ({ column, order }: BodyCellType) => {
             className={getColumnClasses(column).join(" ")}
             style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, column[FLAG.namedDataIndex])}
         >
-            {column.modifiableContent ? (
-                field !== undefined ? (
-                    field(bodyContext.dataRow)
-                ) : (
-                    <strong style={{ color: "red" }}>{`MODIFIER "${column[FLAG.path]}" NOT PROVIDED`}</strong>
-                )
-            ) : (
-                field
-            )}
+            {
+                !dataFetchContext.isDataLoading ?
+                    column.modifiableContent ? (
+                        field !== undefined ? (
+                            field(bodyContext.dataRow)
+                        ) : (
+                            <ErrorText text={`Отсутствует модификатор для ячейки ${column[FLAG.path]}`} />
+                        )
+                    ) : (
+                        field
+                    )
+                    :
+                    <TableDataSkeleton dataType={column.dataType} />
+            }
         </td>
     );
 };

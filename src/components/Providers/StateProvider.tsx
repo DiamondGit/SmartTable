@@ -9,7 +9,7 @@ interface StateProviderType {
 }
 
 const StateProvider = ({ children }: StateProviderType) => {
-    const propsContext = useContext(PropsContext);
+    const { hasAccessTo } = useContext(PropsContext);
 
     const [isDefaultConfigLoading, setDefaultConfigLoading] = useState(false);
     const [isSavedConfigsLoading, setSavedConfigsLoading] = useState(false);
@@ -31,6 +31,10 @@ const StateProvider = ({ children }: StateProviderType) => {
     return (
         <StateContext.Provider
             value={{
+                canCreate: hasAccessTo?.create || false,
+                canUpdate: hasAccessTo?.update || false,
+                canDelete: hasAccessTo?.delete || false,
+
                 isDefaultConfigLoadingError,
                 setDefaultConfigLoadingError,
 
@@ -40,12 +44,8 @@ const StateProvider = ({ children }: StateProviderType) => {
                 isSavedConfigsLoading,
                 setSavedConfigsLoading,
 
-                isError: isDefaultConfigLoadingError || propsContext.isDataError || false,
-
                 isDefaultConfigLoading,
                 setDefaultConfigLoading,
-
-                isLoading: isDefaultConfigLoading || isSavedConfigsLoading || propsContext.isDataLoading || false,
 
                 sortingColumn,
                 setSortingColumn,

@@ -1,23 +1,20 @@
 import { useContext, useEffect, useRef, useState } from "react";
+import { ACTION_COLUMN_NAME, FLAG } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
+import DataFetchContext from "../../../context/DataFetchContext";
+import FilterContext from "../../../context/FilterContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
-import { ColumnPinType, ColumnType, ComputedRowLevelsType, ComputedRowLevelType } from "../../../types/general";
-import { SortOptions, Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
+import { SortOptions, Z_SortOptions, Z_TablePinOptions } from "../../../types/enums";
+import { ColumnPinType, ColumnType, ComputedRowLevelsType } from "../../../types/general";
 import style from "../Table.module.scss";
-import Side from "./Side";
-import { ACTION_COLUMN_NAME, FLAG } from "../../../constants/general";
-import { joinIndexes } from "../../../functions/global";
 import Row from "./Row";
-import PaginationContext from "../../../context/PaginationContext";
-import PropsContext from "../../../context/PropsContext";
-import FilterContext from "../../../context/FilterContext";
 
 const Head = () => {
     const { tableConfig, hasLeftPin } = useContext(ConfigContext);
     const actionCellRef = useRef<HTMLTableCellElement>(null);
     const stateContext = useContext(StateContext);
-    const propsContext = useContext(PropsContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const filterContext = useContext(FilterContext);
 
     const defaultRowLevels: ComputedRowLevelsType = [];
@@ -78,7 +75,7 @@ const Head = () => {
     const updateSort = (sortingColumn: string, sortingDirection: SortOptions = Z_SortOptions.enum.ASC) => {
         stateContext.setSortingColumn(sortingColumn);
         stateContext.setSortingDirection(sortingDirection);
-        propsContext.paginationConfig?.getData?.({
+        dataFetchContext.getData({
             ...filterContext.queryProps,
             sortField: sortingColumn,
             sortDir: sortingDirection,

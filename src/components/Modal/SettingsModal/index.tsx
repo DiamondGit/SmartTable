@@ -18,6 +18,7 @@ import Tooltip from "../../Tooltip";
 import ConfigSelector from "./ConfigSelector";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { GeneralObject } from "../../../types/general";
 
 interface SettingsModalType {
     open: boolean;
@@ -36,12 +37,16 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     const [isEditingSavedConfig, setEditingSavedConfig] = useState(false);
     const [askDeleteSavedConfig, setAskDeleteSavedConfig] = useState(false);
 
+    const [configError, setConfigError] = useState<GeneralObject>({});
+    const hasError = Object.values(configError).some((error) => !!error);
+
     const closeModal = () => {
         setOpen(false);
         setSavingSettings(false);
         setResettedHard(false);
         setEditingSavedConfig(false);
         cancelDeleteSavedConfig();
+        setConfigError({});
     };
 
     const applySettings = () => {
@@ -95,6 +100,8 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 configName: settingsName,
                 configParams: configContext.modalTableConfig,
                 tableName: propsContext.configPath,
+            }).catch((error) => {
+                setConfigError(error?.response?.data?.errors || {});
             });
             configContext.requestSavedConfigs();
         } else if (configContext.modalTableConfig) {
@@ -102,11 +109,15 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 configName: settingsName,
                 configParams: configContext.modalTableConfig,
                 tableName: propsContext.configPath,
-            }).then(() => {
-                handleCancelSaveSettings();
-                handleConfirmSettings();
-                configContext.requestSavedConfigs();
-            });
+            })
+                .then(() => {
+                    handleCancelSaveSettings();
+                    handleConfirmSettings();
+                    configContext.requestSavedConfigs();
+                })
+                .catch((error) => {
+                    setConfigError(error?.response?.data?.errors || {});
+                });
         }
     };
 
@@ -162,6 +173,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     }, [configContext.modalTableConfig]);
 
     const handleChangeSettingsName = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setConfigError({});
         if (event.target.value.length < 16) setSettingsName(event.target.value);
     };
 
@@ -215,6 +227,8 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 isSavingSettings ? (
                     <Aligner style={{ justifyContent: "space-between", width: "100%" }}>
                         <TextField
+                            error={hasError}
+                            helperText={configError.configName}
                             label="Название"
                             variant="outlined"
                             size={"small"}
@@ -234,6 +248,8 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         ) : isEditingSavedConfig ? (
             <Aligner style={{ justifyContent: "space-between", width: "100%" }}>
                 <TextField
+                    error={hasError}
+                    helperText={configError.configName}
                     label="Название"
                     variant="outlined"
                     size={"small"}

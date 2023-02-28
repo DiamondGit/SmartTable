@@ -3,21 +3,21 @@ import { SortOptions } from "../types/enums";
 import { ColumnPinType } from "../types/general";
 
 interface StateContextType {
+    canCreate: boolean;
+    canUpdate: boolean;
+    canDelete: boolean;
+
     isDefaultConfigLoadingError: boolean;
     setDefaultConfigLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
     
     isSavedConfigsLoadingError: boolean;
     setSavedConfigsLoadingError: React.Dispatch<React.SetStateAction<boolean>>;
 
-    isError: boolean;
-
     isDefaultConfigLoading: boolean;
     setDefaultConfigLoading: React.Dispatch<React.SetStateAction<boolean>>;
 
     isSavedConfigsLoading: boolean;
     setSavedConfigsLoading: React.Dispatch<React.SetStateAction<boolean>>;
-
-    isLoading: boolean;
 
     sortingColumn: string;
     setSortingColumn: React.Dispatch<React.SetStateAction<string>>;

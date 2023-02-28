@@ -1,4 +1,3 @@
-import _tableData_ from "../data/data.json";
 import axios from "axios";
 import { CreateConfigType, UpdateConfigType } from "../types/general";
 import CONFIG_URL from "./configURL";
@@ -11,12 +10,6 @@ export const requester = axios.create({
         Authorization: `Bearer ${token}`,
     },
 });
-
-export const getTableData = async (tableName: string): Promise<any[]> => {
-    return await new Promise((resolve, reject) => {
-        return setTimeout(() => resolve(_tableData_), 1500);
-    });
-};
 
 export const getUserConfigs = async (tableName: string) => {
     return await requester.get(CONFIG_URL.get(tableName));

@@ -9,6 +9,9 @@ import DraggableListItem from "./DraggableListItem";
 const DraggableList = () => {
     const configContext = useContext(ConfigContext);
 
+    if (!configContext.modalTableConfig) return null;
+    const columns = configContext.modalTableConfig.table.filter((column) => column.title && column.dataIndex);
+
     const reorder = (list: ColumnType[], startIndex: number, endIndex: number): ColumnType[] => {
         const result = Array.from(list);
         const [removed] = result.splice(startIndex, 1);
@@ -21,16 +24,28 @@ const DraggableList = () => {
         if (!destination) return;
 
         if (configContext.modalTableConfig) {
-            const newItems = reorder(configContext.modalTableConfig.table, source.index, destination.index);
+            const newItems = reorder(columns, source.index, destination.index);
+
+            let index = 0;
+            const computedConfig = [...configContext.modalTableConfig.table].map((initialColumn) => {
+                if (
+                    newItems.some(
+                        (newColumn) =>
+                            newColumn.title === initialColumn.title && newColumn.dataIndex === initialColumn.dataIndex
+                    )
+                ) {
+                    return newItems[index++];
+                }
+                return initialColumn;
+            });
+
             configContext.setModalTableConfig({
                 ...configContext.modalTableConfig,
-                table: newItems,
+                table: computedConfig,
             });
         }
     };
 
-    if (!configContext.modalTableConfig) return null;
-    const columns = configContext.modalTableConfig.table;
     return (
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="droppable-list" ignoreContainerClipping>

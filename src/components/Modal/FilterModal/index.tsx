@@ -4,6 +4,8 @@ import { DefaultOptionType } from "antd/es/select";
 import { useContext, useEffect } from "react";
 import Modal, { ModalType } from "..";
 import ConfigContext from "../../../context/ConfigContext";
+import DataContext from "../../../context/DataContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import FilterContext from "../../../context/FilterContext";
 import PropsContext from "../../../context/PropsContext";
 import UIContext from "../../../context/UIContext";
@@ -187,6 +189,7 @@ const FilterModal = ({ open, setOpen }: FilterModalType) => {
     const propsContext = useContext(PropsContext);
     const filterContext = useContext(FilterContext);
     const configContext = useContext(ConfigContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const UI = useContext(UIContext);
 
     const setModalValue = (value: GeneralObject) => {
@@ -236,7 +239,7 @@ const FilterModal = ({ open, setOpen }: FilterModalType) => {
             }
         });
 
-        propsContext.paginationConfig?.getData?.({
+        dataFetchContext.getData?.({
             ...filterContext.queryProps,
             filters: computedFilterValues,
         });

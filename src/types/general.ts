@@ -1,3 +1,5 @@
+import { SvgIconTypeMap } from "@mui/material";
+import { OverridableComponent } from "@mui/material/OverridableComponent";
 import { AxiosResponse } from "axios";
 import z from "zod";
 import { FLAG } from "../constants/general";
@@ -117,13 +119,19 @@ export const ColumnBaseSchema = z.object({
 
     globalDependField: z.string().optional().catch(columnDefaults.globalDependField),
 
-    dependField: z.string().optional().catch(columnDefaults.dependField),
+    dependField: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .catch(columnDefaults.dependField),
     onDependChange: DependChangeSchema.optional(),
 
     displayOptionDataIndex: z.string().optional().catch(columnDefaults.displayOptionDataIndex),
     valueOptionDataIndex: z.string().optional().catch(columnDefaults.valueOptionDataIndex),
     fieldGetApi: z.string().optional().catch(columnDefaults.fieldGetApi),
-    paramOnDepend: z.string().optional().catch(columnDefaults.paramOnDepend),
+    paramOnDepend: z
+        .union([z.string(), z.array(z.string())])
+        .optional()
+        .catch(columnDefaults.paramOnDepend),
 
     field: FieldSchema,
     filterField: FieldSchema,
@@ -176,12 +184,15 @@ export const ColumnInitialSchema: z.ZodType<ColumnInitialType> = z.lazy(() =>
 
 const tableConfigDefaults = {
     cellSize: Z_TableCellSizes.enum.MEDIUM,
-    editable: true,
+    addable: true,
+    updatable: true,
     deletable: true,
+    searchable: true,
     isDashboard: false,
     loadable: false,
     highlightable: true,
     warningText: null,
+    dataGetApi: emptyString,
     dataCreateApi: emptyString,
     dataDeleteApi: emptyString,
     dataUpdateApi: emptyString,
@@ -189,12 +200,15 @@ const tableConfigDefaults = {
 
 const TableConfigBaseSchema = z.object({
     cellSize: Z_TableCellSizes.default(tableConfigDefaults.cellSize).catch(tableConfigDefaults.cellSize),
-    editable: z.boolean().default(tableConfigDefaults.editable).catch(tableConfigDefaults.editable),
+    addable: z.boolean().default(tableConfigDefaults.addable).catch(tableConfigDefaults.addable),
+    updatable: z.boolean().default(tableConfigDefaults.updatable).catch(tableConfigDefaults.updatable),
     deletable: z.boolean().default(tableConfigDefaults.deletable).catch(tableConfigDefaults.deletable),
+    searchable: z.boolean().default(tableConfigDefaults.searchable).catch(tableConfigDefaults.searchable),
     isDashboard: z.boolean().default(tableConfigDefaults.isDashboard).catch(tableConfigDefaults.isDashboard),
     loadable: z.boolean().default(tableConfigDefaults.loadable).catch(tableConfigDefaults.loadable),
     highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
     warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
+    dataGetApi: z.string().default(tableConfigDefaults.dataGetApi).catch(tableConfigDefaults.dataGetApi),
     dataCreateApi: z.string().default(tableConfigDefaults.dataCreateApi).catch(tableConfigDefaults.dataCreateApi),
     dataDeleteApi: z.string().default(tableConfigDefaults.dataDeleteApi).catch(tableConfigDefaults.dataDeleteApi),
     dataUpdateApi: z.string().default(tableConfigDefaults.dataUpdateApi).catch(tableConfigDefaults.dataUpdateApi),
@@ -242,11 +256,6 @@ const defaultPaginationPosition = Z_PaginationPositions.enum.RIGHT;
 export const PaginationPositionSchema =
     Z_PaginationPositions.default(defaultPaginationPosition).catch(defaultPaginationPosition);
 
-type DataComputedCountType = {
-    totalItems: number;
-    totalPages: number;
-};
-
 type GetDataRequestParamsType = {
     currentPage: number;
     pageSize: number;
@@ -263,24 +272,8 @@ export type PaginationConfigType = {
     hideTop?: boolean;
     hideBottom?: boolean;
     bottomPosition?: PaginationPositionType;
-} & (
-    | {
-          singleData: true;
-          dataComputedCount?: never;
-          getData?: never;
-          createData?: never;
-          editData?: never;
-          deleteData?: never;
-      }
-    | {
-          singleData?: false;
-          dataComputedCount: DataComputedCountType;
-          getData: (dataRequestParams: GetDataRequestParamsType) => void;
-          createData?: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
-          editData?: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
-          deleteData?: (dataId: number) => Promise<AxiosResponse<any, any>>;
-      }
-);
+    singleData?: boolean;
+};
 
 export type TableFilterItemType = {
     title: string;
@@ -316,9 +309,12 @@ export type TableInitializationType = {
     paginationConfig?: PaginationConfigType;
     dataRefreshTrigger?: number;
     contentModifier?: { [key: string]: (record: GeneralObject) => JSX.Element | string | number };
-    data: any[];
-    isDataError?: boolean;
-    isDataLoading?: boolean;
+    data?: any[];
+    hasAccessTo?: {
+        create?: boolean;
+        update?: boolean;
+        delete?: boolean;
+    }
 };
 
 export type ComputedRowType = ColumnType[];
@@ -344,3 +340,12 @@ export type UpdateConfigType = ConfigBaseType & {
     id: number;
     tableName: string;
 };
+
+export type ActionMenuType = {
+    Icon: OverridableComponent<SvgIconTypeMap<{}, "svg">> & {
+        muiName: string;
+    };
+    text: string;
+    value: string;
+    color: string;
+}[];

@@ -24,6 +24,7 @@
         }
     }
     .tableContainer {
+        min-width: 560px;
         height: 100%;
         display: grid;
         grid-template-columns: 100%;
@@ -156,9 +157,18 @@
                         color: $white-400;
                         line-height: 18px;
                         user-select: none;
-                        // box-sizing: content-box;
-                        // background-color: $blue-400;
-                        background: linear-gradient(to left bottom, $blue-300, $blue-500);
+                        background-color: $blue-400;
+                        &::before {
+                            content: "";
+                            position: absolute;
+                            top: 0;
+                            left: -1px;
+                            bottom: 0;
+                            width: 1px;
+                            height: calc(100% - 20px);
+                            transform: translateY(10px);
+                            background-color: rgba($blue-200, .35);
+                        }
                         &:not(.actionCell):hover {
                             background-color: $blue-500;
                             &:not(:first-child) {
@@ -260,7 +270,7 @@
                     background-color: $gray-250;
                 }
                 &:nth-child(even) td.sortColumn {
-                    background-color: $gray-250;
+                    background-color: $gray-260;
                 }
                 &:hover td:not(.errorContent) {
                     background-color: $blue-150;

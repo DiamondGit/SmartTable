@@ -29,6 +29,8 @@ interface ConfigContextType {
 
     filterConfig: ColumnType[];
     modalConfig: ColumnType[];
+
+    hasActionColumn: boolean;
 }
 
 const ConfigContext = createContext<ConfigContextType>({} as ConfigContextType);

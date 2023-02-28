@@ -10,6 +10,7 @@ import DataContext from "../../../context/DataContext";
 import { Checkbox, ConfigProvider as AntdConfigProvider } from "antd";
 import Aligner from "../../Aligner";
 import PropsContext from "../../../context/PropsContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 
 type HeadRowType = {
     level: number;
@@ -18,29 +19,29 @@ type HeadRowType = {
 };
 
 const Row = ({ level, rowLevel, actionCellRef }: HeadRowType) => {
-    const { hasLeftPin } = useContext(ConfigContext);
+    const { hasLeftPin, hasActionColumn } = useContext(ConfigContext);
     const dataContext = useContext(DataContext);
     const stateContext = useContext(StateContext);
-    const propsContext = useContext(PropsContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const rowRef = useRef<HTMLTableRowElement>(null);
 
     const actionCellClasses = [style.actionCell];
     if (hasLeftPin) actionCellClasses.push(style.withLeftPin);
 
-    const isAllChecked = dataContext.dataListToDelete.length === propsContext.data.length;
+    const isAllChecked = dataContext.dataListToDelete.length === dataFetchContext.data.length;
     const isIndeterminate =
-        dataContext.dataListToDelete.length !== 0 && dataContext.dataListToDelete.length < propsContext.data.length;
+        dataContext.dataListToDelete.length !== 0 && dataContext.dataListToDelete.length < dataFetchContext.data.length;
     const handleChangeCheckbox = () => {
         if (isAllChecked) {
             dataContext.setDataListToDelete([]);
         } else {
-            dataContext.setDataListToDelete(propsContext.data.map((dataRow) => dataRow.id));
+            dataContext.setDataListToDelete(dataFetchContext.data.map((dataRow) => dataRow.id));
         }
     };
 
     return (
         <tr ref={rowRef} style={{ position: "relative", zIndex: "auto" }}>
-            {level === 0 && (
+            {level === 0 && hasActionColumn && (
                 <th className={actionCellClasses.join(" ")} ref={actionCellRef} rowSpan={stateContext.maxHeadingDepth}>
                     {dataContext.isSelectingToDelete && (
                         <Aligner>

@@ -1,4 +1,8 @@
 {
+    "dataGetApi": "/transports-dimensions//transport/all-enabled-only-transports/page",
+    "dataCreateApi": "/transports-dimensions/transport/create-transport",
+    "dataUpdateApi": "/transports-dimensions/transport/update-transport",
+    "dataDeleteApi": "/transports-dimensions/transport/delete-transport?transportId=",
     "table": [
         {
             "title": "Наименование",
@@ -158,7 +162,6 @@
             "isRequired": true,
             "onDependChange": {
                 "value": true,
-                "onTrue": "SHOW",
                 "onFalse": ["HIDE", "RESET"]
             },
             "field": {

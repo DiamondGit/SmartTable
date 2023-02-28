@@ -1,3 +1,4 @@
+import { AxiosResponse } from "axios";
 import { createContext } from "react";
 import { ModalTypes } from "../types/enums";
 import { GeneralObject } from "../types/general";

@@ -1,12 +1,14 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
 import DataContext from "../../context/DataContext";
+import DataFetchContext from "../../context/DataFetchContext";
 import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
+import { requester } from "../../controllers/controllers";
 import { getDeepValue } from "../../functions/global";
-import { ModalTypes, Z_ModalTypes, Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
+import { ModalTypes, Z_ModalTypes, Z_SortOptions, Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
 import { GeneralObject } from "../../types/general";
 import Aligner from "../Aligner";
 import DataModal from "../Modal/DataModal";
@@ -22,10 +24,12 @@ import style from "./Table.module.scss";
 import TopBar from "./TopBar";
 
 const MainContent = () => {
+    const dataFetchContext = useContext(DataFetchContext);
     const stateContext = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const propsContext = useContext(PropsContext);
     const filterContext = useContext(FilterContext);
+    const paginationContext = useContext(PaginationContext);
 
     const isConfigLoaded =
         !stateContext.isDefaultConfigLoading && !stateContext.isDefaultConfigLoadingError && configContext.tableConfig;
@@ -54,12 +58,12 @@ const MainContent = () => {
     const [availableData, setAvailableData] = useState<any[]>([]);
 
     useEffect(() => {
-        setAvailableData(propsContext.data);
-    }, [propsContext.data]);
+        setAvailableData(dataFetchContext.data);
+    }, [dataFetchContext.data]);
 
     const computedLoadingConfig = {
         columnCount:
-            propsContext.isDataLoading && isConfigLoaded
+            dataFetchContext.isDataLoading && isConfigLoaded
                 ? configContext.tableConfig?.table.filter((column) => column.visible).length || defaultColumnCount
                 : defaultColumnCount,
         rowCount: defaultRowCount,
@@ -111,8 +115,8 @@ const MainContent = () => {
         setCancelingDelete(false);
         setDataListToDelete([]);
         setDeletingError(false);
-        propsContext.paginationConfig?.getData?.(filterContext.queryProps);
-    }, [propsContext.dataRefreshTrigger]);
+        dataFetchContext.getData(filterContext.queryProps);
+    }, [dataFetchContext.dataGetApi, propsContext.dataRefreshTrigger]);
 
     const fullscreenContainerClasses = [style.fullscreenContainer];
     if (isFullscreen) fullscreenContainerClasses.push(style.active);
@@ -123,7 +127,11 @@ const MainContent = () => {
     ];
 
     const tableClasses = [style.table];
-    if (stateContext.isLoading && !stateContext.isError) tableClasses.push(style.loading);
+    if (
+        (stateContext.isDefaultConfigLoading || dataFetchContext.isDataLoading) &&
+        !(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError)
+    )
+        tableClasses.push(style.loading);
     if (
         stateContext.columnPins.some(
             (tableColumnPin) => tableColumnPin.pin === Z_TablePinOptions.enum.LEFT && tableColumnPin.order !== -1
@@ -132,7 +140,7 @@ const MainContent = () => {
     )
         tableClasses.push(style.withLeftShadow);
 
-    const currentData = isSelectingToDelete ? availableData : propsContext.data;
+    const currentData = isSelectingToDelete ? availableData : propsContext.data || dataFetchContext.data || [];
 
     return (
         <DataContext.Provider
@@ -208,29 +216,26 @@ const MainContent = () => {
                                             )}
                                         </thead>
                                     )}
-                                    {!stateContext.isError ? (
+                                    {!(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError) ? (
                                         <tbody>
-                                            {!stateContext.isLoading ? (
+                                            {!(stateContext.isDefaultConfigLoading) ? (
                                                 <Body
                                                     data={
                                                         !propsContext.paginationConfig?.singleData
                                                             ? currentData
                                                             : currentData.slice(0, 10)
                                                     }
+                                                    defaultRowCount={computedLoadingConfig.rowCount}
                                                 />
                                             ) : (
-                                                <PaginationContext.Consumer>
-                                                    {(pagination) => (
-                                                        <SkeletonFiller
-                                                            columnCount={computedLoadingConfig.columnCount}
-                                                            rowCount={
-                                                                isFullscreen
-                                                                    ? pagination.pageSize
-                                                                    : computedLoadingConfig.rowCount
-                                                            }
-                                                        />
-                                                    )}
-                                                </PaginationContext.Consumer>
+                                                <SkeletonFiller
+                                                    columnCount={computedLoadingConfig.columnCount}
+                                                    rowCount={
+                                                        isFullscreen
+                                                            ? paginationContext.pageSize
+                                                            : computedLoadingConfig.rowCount
+                                                    }
+                                                />
                                             )}
                                         </tbody>
                                     ) : (
@@ -253,10 +258,10 @@ const MainContent = () => {
                                                         }}
                                                     >
                                                         {stateContext.isDefaultConfigLoadingError
-                                                            ? propsContext.isDataError
+                                                            ? dataFetchContext.isDataError
                                                                 ? "ОШИБКА ТАБЛИЦЫ И ДАННЫХ"
                                                                 : "ОШИБКА ТАБЛИЦЫ"
-                                                            : propsContext.isDataError && "ОШИБКА ДАННЫХ"}
+                                                            : dataFetchContext.isDataError && "ОШИБКА ДАННЫХ"}
                                                     </Aligner>
                                                 </td>
                                             </tr>

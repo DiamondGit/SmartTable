@@ -8,6 +8,7 @@ import { Popconfirm } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import FilterContext from "../../../context/FilterContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
@@ -45,8 +46,9 @@ const TopBar = ({
     const propsContext = useContext(PropsContext);
     const stateContext = useContext(StateContext);
     const dataContext = useContext(DataContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const UI = useContext(UIContext);
-    const { isDataLoading, isDataError } = propsContext;
+    const { isDataLoading, isDataError } = dataFetchContext;
 
     const isError = isDefaultConfigLoadingError || isDataError;
     const iconStyle = {
@@ -71,7 +73,7 @@ const TopBar = ({
             dataContext.setDeletingError(false);
 
             if (!isFetching && (dataContext.isFetchRequired || isAutoDataUpdate)) {
-                propsContext.paginationConfig?.getData?.(filterContext.queryProps);
+                dataFetchContext.getData(filterContext.queryProps);
             }
         };
 
@@ -79,8 +81,8 @@ const TopBar = ({
         dataContext.setDeleting(true);
         Promise.allSettled(
             dataContext.dataListToDelete.map((dataId) =>
-                propsContext.paginationConfig
-                    ?.deleteData?.(dataId)
+            dataFetchContext
+                    .deleteData(dataId)
                     .then((result) =>
                         Promise.resolve({
                             result: result,
@@ -93,6 +95,7 @@ const TopBar = ({
                             dataId: dataId,
                         })
                     )
+                    
             )
         )
             .then((results) => {
@@ -135,7 +138,7 @@ const TopBar = ({
             });
     };
 
-    const hasDeleteApi = !!propsContext.paginationConfig?.deleteData;
+    const hasDeleteApi = !!configContext.defaultTableConfig?.dataDeleteApi;
 
     return (
         <div className={style.topBar}>
@@ -145,16 +148,20 @@ const TopBar = ({
                     !isDefaultConfigLoading ? (
                         isAllowedToShowButtons && (
                             <>
-                                <Tooltip
-                                    title={"Добавить"}
-                                    placement={"top"}
-                                    disableHoverListener={isDataLoading || isError}
-                                >
-                                    <UI.PrimaryBtn loading={isDataLoading} disabled={isError} onClick={handleAddData}>
-                                        <AddIcon sx={iconStyle} />
-                                    </UI.PrimaryBtn>
-                                </Tooltip>
-                                {!isError && <SearchInput loading={isDataLoading} />}
+                                {configContext.defaultTableConfig.addable && stateContext.canCreate && (
+                                    <Tooltip
+                                        title={"Добавить"}
+                                        placement={"top"}
+                                        disableHoverListener={isDataLoading || isError}
+                                    >
+                                        <UI.PrimaryBtn loading={isDataLoading} disabled={isError} onClick={handleAddData}>
+                                            <AddIcon sx={iconStyle} />
+                                        </UI.PrimaryBtn>
+                                    </Tooltip>
+                                )}
+                                {!isError && configContext.defaultTableConfig.searchable && (
+                                    <SearchInput loading={isDataLoading} />
+                                )}
                             </>
                         )
                     ) : (

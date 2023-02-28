@@ -195,9 +195,12 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                         <PushPinIcon className={pinClasses.join(" ")} />
                         {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
                     </UI.SecondaryBtn>
-                    <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
-                        <LightbulbIcon className={highlightClasses.join(" ")} />
-                    </UI.SecondaryBtn>
+                    {
+                        false &&
+                        <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
+                            <LightbulbIcon className={highlightClasses.join(" ")} />
+                        </UI.SecondaryBtn>
+                    }
                 </Aligner>
                 <DragHandleIcon className={style.dragIcon} />
             </Aligner>

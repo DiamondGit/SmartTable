@@ -1,8 +1,9 @@
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import { Pagination as AntdPagination } from "antd";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import DataContext from "../../context/DataContext";
+import DataFetchContext from "../../context/DataFetchContext";
 import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
 import PropsContext from "../../context/PropsContext";
@@ -17,14 +18,15 @@ interface PaginationWrapperType {
 }
 
 const PaginationWrapper = ({ children }: PaginationWrapperType) => {
+    const dataFetchContext = useContext(DataFetchContext);
     const paginationContext = useContext(PaginationContext);
     const filterContext = useContext(FilterContext);
     const stateContext = useContext(StateContext);
     const dataContext = useContext(DataContext);
-    const { paginationConfig = {} as PaginationConfigType, data } = useContext(PropsContext);
+    const { paginationConfig = {} as PaginationConfigType } = useContext(PropsContext);
 
     const computedPaginationConfig = {
-        total: paginationConfig.singleData ? data.length : paginationConfig.dataComputedCount.totalItems,
+        total: paginationConfig.singleData ? dataFetchContext.data.length : dataFetchContext.dataComputedCount.totalItems,
         pageSize: paginationContext.pageSize,
         showTotal:
             paginationConfig.hideTotal === undefined
@@ -34,7 +36,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         pageSizeOptions:
             paginationContext.computedPageSizeOptions.length > 0
                 ? paginationContext.computedPageSizeOptions
-                : paginationContext.defaultPageSizeOptions,
+                : dataFetchContext.defaultPageSizeOptions,
         bottomPosition: PaginationPositionSchema.parse(paginationConfig.bottomPosition),
         hideTop: paginationConfig.hideTop || false,
         hideBottom: paginationConfig.hideBottom || false,
@@ -44,7 +46,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         const computedNewCurrentPage = newPageSize !== paginationContext.pageSize ? 1 : newCurrentPage;
         paginationContext.setCurrentPage(computedNewCurrentPage);
         paginationContext.setPageSize(newPageSize);
-        paginationConfig.getData?.({
+        dataFetchContext.getData({
             ...filterContext.queryProps,
             currentPage: computedNewCurrentPage,
             pageSize: newPageSize,
@@ -62,7 +64,9 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
                 showSizeChanger={!computedPaginationConfig.hideSizeChanger}
                 pageSizeOptions={computedPaginationConfig.pageSizeOptions}
                 size={"small"}
-                disabled={stateContext.isLoading || dataContext.isSelectingToDelete}
+                disabled={
+                    stateContext.isDefaultConfigLoading || dataFetchContext.isDataLoading || dataContext.isSelectingToDelete
+                }
                 itemRender={(
                     _page: number,
                     type: "page" | "prev" | "next" | "jump-prev" | "jump-next",
@@ -86,19 +90,19 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         </div>
     );
 
-    const hasData = data.length > 0;
+    const hasData = dataFetchContext.data.length > 0;
     const visibleTopPagination = hasData && !computedPaginationConfig.hideTop;
     const visibleBottomPagination = hasData && !computedPaginationConfig.hideBottom;
 
     return (
         <div className={style.wrapper}>
-            {visibleTopPagination && !stateContext.isError && (
+            {visibleTopPagination && !(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError) && (
                 <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr max-content" }}>
                     {visibleTopPagination && <Pagination />}
                 </div>
             )}
             <div className={style.content}>{children}</div>
-            {visibleBottomPagination && !stateContext.isError && (
+            {visibleBottomPagination && !(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError) && (
                 <Pagination position={computedPaginationConfig.bottomPosition} />
             )}
         </div>

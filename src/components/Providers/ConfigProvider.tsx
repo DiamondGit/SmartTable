@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
+import DataFetchContext from "../../context/DataFetchContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { deleteConfig, getUserConfigs } from "../../controllers/controllers";
@@ -22,6 +23,7 @@ interface ConfigProviderType {
 const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => {
     const propsContext = useContext(PropsContext);
     const stateContext = useContext(StateContext);
+    const dataFetchContext = useContext(DataFetchContext);
 
     const [defaultTableConfig, setDefaultTableConfig] = useState<TableConfigType>();
     const [tableConfig, setTableConfig] = useState<TableConfigType>();
@@ -38,8 +40,10 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
     useEffect(() => {
         stateContext.setDefaultConfigLoading(true);
         stateContext.setDefaultConfigLoadingError(false);
+        dataFetchContext.setDataLoading(true);
 
-        axios.get(defaultConfigPath)
+        axios
+            .get(defaultConfigPath)
             .then((json) => parseConfig(json.data, false))
             .then((defaultConfig) => {
                 if (!defaultConfig) throw new Error("parse Error");
@@ -51,12 +55,29 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 setFilterConfig(getFilterFields(defaultConfig.table));
                 setModalConfig(getModalFields(defaultConfig.table));
 
+                if (defaultConfig.table.length === 0) stateContext.setDefaultConfigLoadingError(true);
+
                 setTableConfig(() => defaultConfig);
                 requestSavedConfigs(defaultConfig);
+
+                if (defaultConfig.dataGetApi) {
+                    dataFetchContext.setDataGetApi(defaultConfig.dataGetApi);
+                    dataFetchContext.getData({});
+                }
+                if (defaultConfig.dataCreateApi) {
+                    dataFetchContext.setDataCreateApi(defaultConfig.dataCreateApi);
+                }
+                if (defaultConfig.dataUpdateApi) {
+                    dataFetchContext.setDataUpdateApi(defaultConfig.dataUpdateApi);
+                }
+                if (defaultConfig.dataDeleteApi) {
+                    dataFetchContext.setDataDeleteApi(defaultConfig.dataDeleteApi);
+                }
             })
             .catch((error) => {
-                console.log("--- Error DEFAULT CONFIG ---");
+                console.log("--- Error DEFAULT CONFIG ---\n", error.issues ?? error);
                 stateContext.setDefaultConfigLoadingError(true);
+                dataFetchContext.setDataLoading(false);
             })
             .finally(() => {
                 stateContext.setDefaultConfigLoading(false);
@@ -159,6 +180,12 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
 
                 filterConfig,
                 modalConfig,
+
+                hasActionColumn:
+                    (defaultTableConfig?.addable && stateContext.canCreate) ||
+                    (defaultTableConfig?.updatable && stateContext.canUpdate) ||
+                    (defaultTableConfig?.deletable && stateContext.canDelete) ||
+                    false,
             }}
         >
             {children}

@@ -1,7 +1,14 @@
 import { message } from "antd";
 import { DefaultOptionType } from "antd/es/select";
 import { FLAG, INDEX_JOINER } from "../constants/general";
-import { TablePinOptions, Z_DependencyTypes, Z_TableFieldTypes, Z_TablePinOptions } from "../types/enums";
+import {
+    DependencyActionType,
+    TablePinOptions,
+    Z_DependencyActions,
+    Z_DependencyTypes,
+    Z_TableFieldTypes,
+    Z_TablePinOptions,
+} from "../types/enums";
 import {
     ColumnBaseSchema,
     ColumnInitialType,
@@ -296,11 +303,34 @@ const computeColumnSchema = (
     } else {
         columnConstructor.filterField = null;
     }
-    if (columnConstructor.dependField && !columnConstructor.field?.dependType) {
+    if (columnConstructor.dependField !== undefined && !columnConstructor.field?.dependType) {
         columnConstructor.field = {
             ...columnConstructor.field,
             dependType: Z_DependencyTypes.enum.FULL,
         };
+    }
+    if (
+        columnConstructor.onDependChange &&
+        typeof columnConstructor.onDependChange === "object" &&
+        !Array.isArray(columnConstructor.onDependChange)
+    ) {
+        if (
+            !columnConstructor.onDependChange.onTrue &&
+            columnConstructor.onDependChange.onFalse &&
+            ([] as DependencyActionType[])
+                .concat(columnConstructor.onDependChange.onFalse)
+                .includes(Z_DependencyActions.enum.HIDE)
+        ) {
+            columnConstructor.onDependChange.onTrue = [];
+        } else if (
+            !columnConstructor.onDependChange.onFalse &&
+            columnConstructor.onDependChange.onTrue &&
+            ([] as DependencyActionType[])
+                .concat(columnConstructor.onDependChange.onTrue)
+                .includes(Z_DependencyActions.enum.HIDE)
+        ) {
+            columnConstructor.onDependChange.onFalse = [];
+        }
     }
 
     if (columnConstructor.field?.type === Z_TableFieldTypes.enum.MULTISELECT) {
@@ -398,6 +428,8 @@ export const parseConfig = (config: object, isSafeParse = true) => {
             } catch (error) {
                 return null;
             }
+        } else {
+            console.log(initialParse.error);
         }
     } else {
         const initialParse = TableConfigInitialSchema.parse(config);

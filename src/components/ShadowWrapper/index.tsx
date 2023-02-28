@@ -1,5 +1,7 @@
 import { useState, useContext, useEffect, useRef } from "react";
 import ConfigContext from "../../context/ConfigContext";
+import DataContext from "../../context/DataContext";
+import DataFetchContext from "../../context/DataFetchContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { useScrollWithShadow } from "../../functions/useScrollWithShadow";
@@ -10,12 +12,12 @@ const ShadowWrapper = ({ children }: { children: React.ReactNode }) => {
     const { scrollContainer, boxShadowClasses, onScrollHandler, doShadow } = useScrollWithShadow();
     const configContext = useContext(ConfigContext);
     const stateContext = useContext(StateContext);
-    const propsContext = useContext(PropsContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const [isLeftPinsVisible, setLeftPinsVisible] = useState(true);
 
     useEffect(() => {
         doShadow();
-    }, [configContext.tableConfig, propsContext.data]);
+    }, [configContext.tableConfig, dataFetchContext.data]);
 
     useEffect(() => {
         stateContext.setTableHasLeftShadow(boxShadowClasses.includes("left"));

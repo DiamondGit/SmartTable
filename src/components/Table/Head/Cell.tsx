@@ -1,15 +1,15 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import { useContext, useEffect, useRef, MouseEventHandler } from "react";
+import { MouseEventHandler, useContext, useEffect, useRef } from "react";
 import { FLAG } from "../../../constants/general";
 import DataContext from "../../../context/DataContext";
-import PaginationContext from "../../../context/PaginationContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import { getColumnStyle, getPinSide } from "../../../functions/global";
-import { Z_TablePinOptions, Z_SortOptions } from "../../../types/enums";
-import { ColumnPinType, ColumnType, GeneralObject } from "../../../types/general";
+import { Z_SortOptions, Z_TablePinOptions } from "../../../types/enums";
+import { ColumnType, GeneralObject } from "../../../types/general";
 import style from "../Table.module.scss";
 
 type HeadCellType = { column: ColumnType; order: number };
@@ -19,6 +19,7 @@ const Cell = ({ column, order }: HeadCellType) => {
     const stateContext = useContext(StateContext);
     const propsContext = useContext(PropsContext);
     const dataContext = useContext(DataContext);
+    const dataFetchContext = useContext(DataFetchContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
@@ -44,11 +45,7 @@ const Cell = ({ column, order }: HeadCellType) => {
         } else {
             updateCurrentColumnPin();
         }
-        // window.addEventListener("resize", updateCurrentColumnPin);
-        // return () => {
-        //     window.removeEventListener("resize", updateCurrentColumnPin);
-        // };
-    }, [headingRef.current?.getClientRects()[0].width, order, propsContext.data]);
+    }, [headingRef.current?.getClientRects()[0].width, order, propsContext.data, dataFetchContext.isDataLoading]);
 
     const SortingIcon = () => {
         const props = {
@@ -111,14 +108,21 @@ const Cell = ({ column, order }: HeadCellType) => {
     if (column[FLAG.rowSpan] !== 1) computedSpan.rowSpan = column[FLAG.rowSpan];
 
     const handleClick: MouseEventHandler | undefined = (event: React.MouseEvent) => {
-        if (column.subcolumns || !column.dataIndex || propsContext.isDataError || dataContext.isSelectingToDelete) return;
+        if (
+            column.subcolumns ||
+            !column.dataIndex ||
+            !column.sortable ||
+            dataFetchContext.isDataError ||
+            dataContext.isSelectingToDelete
+        )
+            return;
         headContext.handleClick(column[FLAG.path])(event);
     };
 
     return (
         <th
             key={column[FLAG.namedDataIndex]}
-            className={getColumnClasses(column, isPinned, propsContext.isDataError || false).join(" ")}
+            className={getColumnClasses(column, isPinned, dataFetchContext.isDataError || false).join(" ")}
             onClick={handleClick}
             ref={headingRef}
             style={getColumnStyle(isPinned, column.pin, stateContext.columnPins, column[FLAG.namedDataIndex])}

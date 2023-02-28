@@ -27,7 +27,7 @@ export type TableFilterHighlightType = {
     filterIds: number[];
 };
 
-export const Z_DependencyActions = z.enum(["FETCH", "SHOW", "HIDE", "RESET"]);
+export const Z_DependencyActions = z.enum(["FETCH", "HIDE", "RESET"]);
 export type DependencyActionType = z.infer<typeof Z_DependencyActions>;
 
 export const Z_DependencyTypes = z.enum(["INDEP", "PARTIAL", "FULL"]);

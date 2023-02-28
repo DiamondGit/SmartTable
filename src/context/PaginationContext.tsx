@@ -1,7 +1,6 @@
 import { createContext } from "react";
 
 export interface PaginationContextType {
-    defaultPageSizeOptions: number[];
     computedPageSizeOptions: number[];
 
     searchValue: string;

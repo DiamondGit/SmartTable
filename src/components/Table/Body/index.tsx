@@ -1,17 +1,21 @@
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import Aligner from "../../Aligner";
 import style from "../Table.module.scss";
 import Row from "./Row";
 
-const Body = ({ data }: { data: any[] }) => {
+const Body = ({ data, defaultRowCount }: { data: any[]; defaultRowCount: number }) => {
     const { tableConfig } = useContext(ConfigContext);
+    const { isDataLoading } = useContext(DataFetchContext);
 
     if (!tableConfig) return null;
     return (
         <>
-            {data.length > 0 ? (
-                data.map((dataRow) => <Row dataRow={dataRow} key={dataRow.id} index={dataRow.id} />)
+            {data.length > 0 || isDataLoading ? (
+                (!isDataLoading ? data : [...Array(defaultRowCount)].map((_, index) => ({ id: index }))).map((dataRow) => (
+                    <Row dataRow={dataRow} key={dataRow.id} index={dataRow.id} />
+                ))
             ) : (
                 <tr>
                     <td

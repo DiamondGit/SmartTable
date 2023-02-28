@@ -1,41 +1,17 @@
-import { IconButton, Menu, MenuItem } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import ControlPointDuplicateIcon from "@mui/icons-material/ControlPointDuplicate";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import EditIcon from "@mui/icons-material/Edit";
+import { IconButton, Menu, MenuItem } from "@mui/material";
+import { useState } from "react";
+import { ActionMenuType } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "../Table/Table.module.scss";
-import { useState, useContext } from "react";
-import { GeneralObject } from "../../types/general";
-import { Z_ModalTypes } from "../../types/enums";
-import DataContext from "../../context/DataContext";
 
-const ActionMenu = ({ dataRow }: { dataRow: GeneralObject }) => {
-    const dataContext = useContext(DataContext);
-
-    const deleteOption = "Delete";
-
-    const options = [
-        {
-            Icon: ControlPointDuplicateIcon,
-            text: "Создать на основе",
-            value: Z_ModalTypes.enum.ADD_BASED,
-            color: "#7ABB6D",
-        },
-        {
-            Icon: EditIcon,
-            text: "Изменить",
-            value: Z_ModalTypes.enum.EDIT,
-            color: "#F5A225",
-        },
-        {
-            Icon: DeleteOutlineIcon,
-            text: "Удалить",
-            value: deleteOption,
-            color: "#FA6855",
-        },
-    ];
-
+const ActionMenu = ({
+    actionMenuOptions,
+    handleClickActionOption,
+}: {
+    actionMenuOptions: ActionMenuType;
+    handleClickActionOption: (option: string) => () => void;
+}) => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
     const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -43,12 +19,7 @@ const ActionMenu = ({ dataRow }: { dataRow: GeneralObject }) => {
     };
     const handleClose = (option?: string) => () => {
         if (option) {
-            if (option === Z_ModalTypes.enum.ADD_BASED || option === Z_ModalTypes.enum.EDIT) {
-                dataContext.openDataModal(option, dataRow);
-            } else if (option === deleteOption) {
-                dataContext.setSelectingToDelete(true);
-                dataContext.setDataListToDelete((prevList) => [...prevList, dataRow.id]);
-            }
+            handleClickActionOption(option)();
         }
         setAnchorEl(null);
     };
@@ -69,7 +40,7 @@ const ActionMenu = ({ dataRow }: { dataRow: GeneralObject }) => {
                     },
                 }}
             >
-                {options.map((option) => (
+                {actionMenuOptions.map((option) => (
                     <MenuItem key={option.text} onClick={handleClose(option.value)}>
                         <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
                             <option.Icon style={{ color: option.color }} />
