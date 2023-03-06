@@ -35,61 +35,43 @@
         }
         .topBar {
             display: grid;
-            grid-template-columns: 1fr max-content;
+            grid-template-columns: auto 1fr;
+            align-items: center;
             margin-bottom: 12px;
+            gap: 6px;
             .bar {
                 display: grid;
+                grid-template-columns: 1fr auto;
                 align-items: center;
                 gap: 6px;
-                &.left {
-                    grid-template-columns: auto auto 1fr;
+                .left, .right {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .left {
+                    justify-content: flex-start;
                     .searchBar {
-                        display: flex;
+                        width: 100%;
+                        max-width: 300px;
+                        display: grid;
+                        grid-template-columns: auto 1fr;
                         align-items: center;
-                        &.loading {
-                            cursor: wait;
-                            opacity: 0.5;
-                            .searchBtn {
-                                pointer-events: none !important;
-                            }
-                        }
+                        gap: 8px;
                         .slider {
                             overflow: hidden;
                             width: 0;
                             transition: width 0.3s linear;
-                            left: 100%;
-                            transform: translateX(8px);
-                            .inputContainer {
-                                display: flex;
-                                justify-content: flex-start;
-                                align-items: center;
-                                max-width: 300px;
-                            }
                         }
                         &.open {
                             .slider {
                                 width: 100%;
-                                min-width: 100px;
                             }
-                        }
-                        .searchBtn {
-                            width: 32px;
-                            height: 32px;
-                            border-radius: 8px;
-                            cursor: pointer;
-                            color: $black-400;
-                            transition: background 0.2s;
-                            &:hover {
-                                background-color: rgba(0, 0, 0, 0.1);
-                            }
-                        }
-                        &.loading .searchBtn {
-                            pointer-events: none;
                         }
                     }
                 }
-                &.right {
-                    grid-template-columns: 1fr 1fr 1fr;
+                .right {
+                    justify-content: flex-end;
                 }
                 .acitveIcon {
                     color: $orange-400;
@@ -296,7 +278,8 @@
                 }
                 .emptyBoxImg {
                     width: 150px;
-                    height: 165px;
+                    height: 100%;
+                    min-height: 165px;
                     background-image: url("../../pictures/open_empty_box.png");
                     background-repeat: no-repeat;
                     background-position: bottom center;
@@ -328,7 +311,8 @@
                 }
             }
             .loadingError {
-                height: 165px;
+                height: 100%;
+                min-height: 165px;
                 user-select: none;
             }
             th.actionCell,

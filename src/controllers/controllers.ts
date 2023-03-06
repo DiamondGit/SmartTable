@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { CancelToken } from "axios";
 import { CreateConfigType, UpdateConfigType } from "../types/general";
 import CONFIG_URL from "./configURL";
 
@@ -11,8 +11,13 @@ export const requester = axios.create({
     },
 });
 
-export const getUserConfigs = async (tableName: string) => {
-    return await requester.get(CONFIG_URL.get(tableName));
+export const getUserConfigs = async (tableName: string, cancelToken: CancelToken) => {
+    return await requester.get(CONFIG_URL.get, {
+        params: {
+            tableName,
+        },
+        cancelToken,
+    });
 };
 
 export const chooseConfig = async (tableName: string, userConfigId: number) => {

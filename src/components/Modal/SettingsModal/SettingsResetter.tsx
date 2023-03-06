@@ -1,21 +1,19 @@
+import { Button } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
-import UIContext from "../../../context/UIContext";
+import SettingsContext from "../../../context/SettingsContext";
 import Aligner from "../../Aligner";
 
 interface SettingsResetterType {
+    isDefaultSettings: boolean;
     isResettedHard: boolean;
     resetSettings: () => void;
     resetHardSettings: () => void;
 }
 
-const SettingsResetter = ({ isResettedHard, resetSettings, resetHardSettings }: SettingsResetterType) => {
-    const UI = useContext(UIContext);
+const SettingsResetter = ({ isDefaultSettings, isResettedHard, resetSettings, resetHardSettings }: SettingsResetterType) => {
     const configContext = useContext(ConfigContext);
-
-    const isDefaultSettings =
-        JSON.stringify(configContext.modalTableConfig) === JSON.stringify(configContext.defaultTableConfig) &&
-        configContext.modalSelectedSavedConfigId === undefined;
+    const { isLoading } = useContext(SettingsContext);
 
     const activeSavedConfig = configContext.getSavedConfigById(configContext.modalSelectedSavedConfigId);
 
@@ -30,18 +28,18 @@ const SettingsResetter = ({ isResettedHard, resetSettings, resetHardSettings }: 
             <Aligner style={{ justifyContent: "flex-start" }} gutter={4}>
                 Сбросить настройки:
             </Aligner>
-            <Aligner gutter={8}>
-                <UI.SecondaryBtn onClick={resetHardSettings}>
+            <Aligner style={{ flexDirection: "row-reverse", justifyContent: "flex-start" }} gutter={8}>
+                <Button onClick={resetHardSettings} disabled={isLoading}>
                     <Aligner gutter={6}>
                         <span>По умолчанию</span>
                     </Aligner>
-                </UI.SecondaryBtn>
+                </Button>
                 {isSavedSettings && isSavedSettingsChanged && !isResettedHard && (
-                    <UI.SecondaryBtn onClick={resetSettings}>
+                    <Button onClick={resetSettings} disabled={isLoading}>
                         <Aligner gutter={6}>
-                            <span>По настройке</span>
+                            <span>{`По настройке "${activeSavedConfig?.configName}"`}</span>
                         </Aligner>
-                    </UI.SecondaryBtn>
+                    </Button>
                 )}
             </Aligner>
         </Aligner>

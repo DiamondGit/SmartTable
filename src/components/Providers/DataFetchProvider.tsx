@@ -1,18 +1,28 @@
-import { useState } from "react";
+import axios, { CancelTokenSource } from "axios";
+import { useContext, useEffect, useRef, useState } from "react";
+import { ERR_CANCELED } from "../../constants/general";
 import DataFetchContext from "../../context/DataFetchContext";
+import PropsContext from "../../context/PropsContext";
 import { requester } from "../../controllers/controllers";
 import { Z_SortOptions } from "../../types/enums";
+import { GeneralObject } from "../../types/general";
 
 interface PaginationProviderType {
     children: React.ReactNode;
 }
 
 const DataFetchProvider = ({ children }: PaginationProviderType) => {
+    const propsContext = useContext(PropsContext);
+
     const [data, setData] = useState<any[]>([]);
     const [dataComputedCount, setDataComputedCount] = useState({
         totalItems: 0,
         totalPages: 0,
     });
+
+    const [requestController, setRequestController] = useState<CancelTokenSource>();
+    const requestControllerRef = useRef(requestController);
+
     const [isDataLoading, setDataLoading] = useState(false);
     const [isDataError, setDataError] = useState(false);
 
@@ -21,48 +31,79 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
     const [dataUpdateApi, setDataUpdateApi] = useState("");
     const [dataDeleteApi, setDataDeleteApi] = useState("");
 
+    const [isSingleData, setSignleData] = useState(false);
+    const [fetchResultDataIndex, setFetchResultDataIndex] = useState("");
+    const [globalDependField, setGlobalDependField] = useState("");
+
     const defaultPageSizeOptions = [10, 20, 50, 100];
 
     const getData = (params: { [key: string]: any }) => {
+        requestController?.cancel();
+
+        setDataLoading(true);
+        setDataError(false);
+
+        const {
+            currentPage = 1,
+            pageSize = defaultPageSizeOptions[0] || 10,
+            filters = {},
+            search = "",
+            sortField = "id",
+            sortDir = Z_SortOptions.enum.DESC,
+        } = params;
+
+        const dependency: GeneralObject = {};
+        if (globalDependField) {
+            dependency[globalDependField] = propsContext.globalDependencies?.[globalDependField] || null;
+        }
+
+        const cancelSource = axios.CancelToken.source();
         if (dataGetApi) {
-            setDataLoading(true);
-            setDataError(false);
-
-            const {
-                currentPage = 1,
-                pageSize = defaultPageSizeOptions[0] || 10,
-                filters = {},
-                search = "",
-                sortField = "id",
-                sortDir = Z_SortOptions.enum.DESC,
-            } = params;
-
             requester
                 .get(dataGetApi, {
-                    params: {
-                        pageSize: pageSize,
-                        sortField: sortField,
-                        sortDir: sortDir,
-                        pageNo: currentPage,
-                        search: search,
-                        ...filters,
-                    },
+                    cancelToken: cancelSource.token,
+                    params: !isSingleData
+                        ? {
+                              pageSize: pageSize,
+                              sortField: sortField,
+                              sortDir: sortDir,
+                              pageNo: currentPage,
+                              search: search,
+                              ...dependency,
+                              ...filters,
+                          }
+                        : {},
                 })
                 .then((response) => {
-                    setData(response.data.transports || []);
+                    let fetchResult = [];
+                    if (fetchResultDataIndex) {
+                        fetchResult = response.data[fetchResultDataIndex] || [];
+                        if (!Array.isArray(fetchResult)) fetchResult = [];
+                    }
+                    setData(fetchResult);
                     setDataComputedCount({
                         totalItems: response.data.totalItems,
                         totalPages: response.data.totalPages,
                     });
+                    setDataLoading(false);
                 })
                 .catch((error) => {
-                    setDataError(true);
-                })
-                .finally(() => {
-                    setDataLoading(false);
+                    if (error.code !== ERR_CANCELED) {
+                        setDataError(true);
+                        setDataLoading(false);
+                    }
                 });
         }
+
+        requestControllerRef.current = cancelSource;
+        setRequestController(() => cancelSource);
     };
+
+    useEffect(() => {
+        return () => {
+            requestControllerRef.current?.cancel();
+        };
+    }, []);
 
     const createData = async (params: { [key: string]: any }) => {
         return await requester.post(dataCreateApi, params);
@@ -105,6 +146,17 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
                 deleteData,
 
                 defaultPageSizeOptions,
+
+                isSingleData,
+                setSignleData,
+
+                fetchResultDataIndex,
+                setFetchResultDataIndex,
+
+                globalDependField,
+                setGlobalDependField,
+
+                requestController,
             }}
         >
             {children}

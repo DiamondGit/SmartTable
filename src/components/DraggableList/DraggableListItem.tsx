@@ -3,24 +3,29 @@ import ArrowLeftIcon from "@mui/icons-material/ArrowLeft";
 import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import DragHandleIcon from "@mui/icons-material/DragHandle";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LightbulbIcon from "@mui/icons-material/Lightbulb";
 import PushPinIcon from "@mui/icons-material/PushPin";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { IconButton } from "@mui/material";
+import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
+import MuiAccordionDetails, { AccordionDetailsProps } from "@mui/material/AccordionDetails";
+import MuiAccordionSummary, { AccordionSummaryProps } from "@mui/material/AccordionSummary";
+import Checkbox from "@mui/material/Checkbox/Checkbox";
+import { styled } from "@mui/material/styles";
+import { Button } from "antd";
 import { useContext, useState } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { FLAG } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
+import SettingsContext from "../../context/SettingsContext";
 import StateContext from "../../context/StateContext";
-import UIContext from "../../context/UIContext";
 import { TablePinOptions, Z_SortOptions, Z_TablePinOptions } from "../../types/enums";
 import { ColumnType } from "../../types/general";
 import Aligner from "../Aligner";
 import style from "./DraggableList.module.scss";
-import MuiAccordion, { AccordionProps } from "@mui/material/Accordion";
-import MuiAccordionDetails, { AccordionDetailsProps } from "@mui/material/AccordionDetails";
-import { styled } from "@mui/material/styles";
-import MuiAccordionSummary, { AccordionSummaryProps } from "@mui/material/AccordionSummary";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type DraggableListItemProps = {
     column: ColumnType;
@@ -53,9 +58,9 @@ const AccordionSummary = styled((props: AccordionSummaryProps) => <MuiAccordionS
 }));
 
 const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
-    const UI = useContext(UIContext);
     const configContext = useContext(ConfigContext);
     const stateContext = useContext(StateContext);
+    const { isLoading, isConfigEditable } = useContext(SettingsContext);
     const [accordionOpen, setAccordionOpen] = useState(false);
 
     const getComputedDataIndex = (targetColumn: ColumnType) => {
@@ -162,10 +167,14 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
     const Content = ({ expandable = false }: { expandable?: boolean }) => (
         <Aligner style={{ width: "100%", justifyContent: "space-between" }}>
             <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
-                <UI.Checkbox
+                <Checkbox
                     checked={column.visible}
                     onChange={setVisibleTableColumn}
-                    disabled={!column.hidable || stateContext.sortingColumn === computedDataIndex}
+                    disabled={
+                        !column.hidable || stateContext.sortingColumn === computedDataIndex || isLoading || !isConfigEditable
+                    }
+                    icon={<VisibilityOffIcon />}
+                    checkedIcon={<VisibilityIcon />}
                 />
                 <span className={style.title}>{column.title}</span>
                 <Aligner className={style.sortingArrow}>
@@ -181,26 +190,37 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
                 </Aligner>
             </Aligner>
             <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
-                <Aligner
-                    style={{ justifyContent: "flex-end" }}
-                    gutter={16}
-                >
+                <Aligner style={{ justifyContent: "flex-end" }} gutter={16}>
                     {expandable && (
-                        <UI.SecondaryBtn onClick={toggleAccordion}>
+                        <IconButton onClick={toggleAccordion} disabled={isLoading || !isConfigEditable}>
                             {accordionOpen ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </UI.SecondaryBtn>
+                        </IconButton>
                     )}
-                    <UI.SecondaryBtn onClick={toggleColumnPin} className={pinBtnClasses.join(" ")}>
-                        {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
-                        <PushPinIcon className={pinClasses.join(" ")} />
-                        {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
-                    </UI.SecondaryBtn>
-                    {
-                        false &&
-                        <UI.SecondaryBtn onClick={toggleHighlight} className={highlightBtnClasses.join(" ")}>
-                            <LightbulbIcon className={highlightClasses.join(" ")} />
-                        </UI.SecondaryBtn>
-                    }
+                    <Button
+                        onClick={toggleColumnPin}
+                        className={pinBtnClasses.join(" ")}
+                        disabled={isLoading || !isConfigEditable}
+                        shape="circle"
+                        type="ghost"
+                        style={!isConfigEditable ? { cursor: "default" } : {}}
+                        icon={
+                            <>
+                                {isPinnedLeft && <ArrowLeftIcon className={leftPinArrowClasses.join(" ")} />}
+                                <PushPinIcon className={pinClasses.join(" ")} />
+                                {isPinnedRight && <ArrowRightIcon className={rightPinArrowClasses.join(" ")} />}
+                            </>
+                        }
+                    />
+                    {false && (
+                        <Button
+                            onClick={toggleHighlight}
+                            className={highlightBtnClasses.join(" ")}
+                            disabled={isLoading || !isConfigEditable}
+                            shape="circle"
+                            type="ghost"
+                            icon={<LightbulbIcon className={highlightClasses.join(" ")} />}
+                        />
+                    )}
                 </Aligner>
                 <DragHandleIcon className={style.dragIcon} />
             </Aligner>
@@ -209,7 +229,7 @@ const DraggableListItem = ({ column, index }: DraggableListItemProps) => {
 
     return (
         <div className={style.draggableContainer}>
-            <Draggable draggableId={computedDataIndex} index={index}>
+            <Draggable draggableId={computedDataIndex} index={index} isDragDisabled={isLoading || !isConfigEditable}>
                 {(provided, snapshot) => {
                     if (snapshot.isDragging && !snapshot.isDropAnimating) dragItemClasses.push(style.dragging);
                     return (

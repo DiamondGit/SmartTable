@@ -1,9 +1,7 @@
 import { ConfigProvider as AntdConfigProvider } from "antd";
 import ruRU from "antd/locale/ru_RU";
-import UIContext from "../../context/UIContext";
 import "../../styles/global.scss";
 import { TableCreateType, TableInitializationType } from "../../types/general";
-import { TableUIType } from "../../types/UI";
 import ConfigProvider from "../Providers/ConfigProvider";
 import DataFetchProvider from "../Providers/DataFetchProvider";
 import FilterProvider from "../Providers/FilterProvider";
@@ -13,11 +11,9 @@ import StateProvider from "../Providers/StateProvider";
 import MainContent from "./MainContent";
 
 type TableStartingType = TableInitializationType &
-    TableCreateType & {
-        customUI: TableUIType;
-    };
+    TableCreateType;
 
-const Table = ({ customUI, ...props }: TableStartingType) => {
+const Table = ({ ...props }: TableStartingType) => {
     return (
         <PropsProvider {...{ props }}>
             <StateProvider>
@@ -25,18 +21,16 @@ const Table = ({ customUI, ...props }: TableStartingType) => {
                     <ConfigProvider {...{ defaultConfigPath: `${props.configsStoragePath}/${props.configPath}.json` }}>
                         <PaginationProvider>
                             <FilterProvider>
-                                <UIContext.Provider value={customUI}>
-                                    <AntdConfigProvider
-                                        theme={{
-                                            token: {
-                                                colorPrimary: "#223c60",
-                                            },
-                                        }}
-                                        locale={ruRU}
-                                    >
-                                        <MainContent />
-                                    </AntdConfigProvider>
-                                </UIContext.Provider>
+                                <AntdConfigProvider
+                                    theme={{
+                                        token: {
+                                            colorPrimary: "#223c60",
+                                        },
+                                    }}
+                                    locale={ruRU}
+                                >
+                                    <MainContent />
+                                </AntdConfigProvider>
                             </FilterProvider>
                         </PaginationProvider>
                     </ConfigProvider>

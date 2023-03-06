@@ -63,21 +63,21 @@ const LoginForm = () => {
                     <>
                         <Input
                             style={{ width: "200px" }}
-                            type={"text"}
+                            type="text"
                             value={data.username}
                             onChange={(event) => {
                                 setData({ ...data, username: event.target.value });
                             }}
-                            placeholder={"username"}
+                            placeholder="username"
                         />
                         <Input
                             style={{ width: "200px" }}
-                            type={"password"}
+                            type="password"
                             value={data.password}
                             onChange={(event) => {
                                 setData({ ...data, password: event.target.value });
                             }}
-                            placeholder={"password"}
+                            placeholder="password"
                         />
                         <Button onClick={login}>Войти</Button>
                     </>

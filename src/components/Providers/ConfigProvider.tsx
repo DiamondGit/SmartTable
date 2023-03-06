@@ -1,5 +1,6 @@
-import axios from "axios";
-import { useContext, useEffect, useState } from "react";
+import axios, { CancelTokenSource } from "axios";
+import { useContext, useEffect, useRef, useState } from "react";
+import { ERR_CANCELED } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
 import DataFetchContext from "../../context/DataFetchContext";
 import PropsContext from "../../context/PropsContext";
@@ -37,13 +38,17 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
     const [selectedSavedConfigId, setSelectedSavedConfigId] = useState<number>();
     const [modalSelectedSavedConfigId, setModalSelectedSavedConfigId] = useState(selectedSavedConfigId);
 
-    useEffect(() => {
-        stateContext.setDefaultConfigLoading(true);
-        stateContext.setDefaultConfigLoadingError(false);
-        dataFetchContext.setDataLoading(true);
+    const defaultControllerRef = useRef<CancelTokenSource>();
+    const savedControllerRef = useRef<CancelTokenSource>();
 
+    const requestDefaultConfig = () => {
+        stateContext.setDefaultConfigLoading(true);
+        dataFetchContext.setDataLoading(true);
+        stateContext.setDefaultConfigLoadingError(false);
+
+        const cancelSource = axios.CancelToken.source();
         axios
-            .get(defaultConfigPath)
+            .get(defaultConfigPath, { cancelToken: cancelSource.token })
             .then((json) => parseConfig(json.data, false))
             .then((defaultConfig) => {
                 if (!defaultConfig) throw new Error("parse Error");
@@ -73,23 +78,34 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 if (defaultConfig.dataDeleteApi) {
                     dataFetchContext.setDataDeleteApi(defaultConfig.dataDeleteApi);
                 }
+                if (defaultConfig.globalDependField) {
+                    dataFetchContext.setGlobalDependField(defaultConfig.globalDependField);
+                }
+                dataFetchContext.setSignleData(!!defaultConfig.isSingleData);
+                dataFetchContext.setFetchResultDataIndex(defaultConfig.fetchResultDataIndex);
+                stateContext.setDefaultConfigLoading(false);
             })
             .catch((error) => {
-                console.log("--- Error DEFAULT CONFIG ---\n", error.issues ?? error);
+                console.error("--- Error DEFAULT CONFIG ---\n", error.issues ?? error);
                 stateContext.setDefaultConfigLoadingError(true);
                 dataFetchContext.setDataLoading(false);
-            })
-            .finally(() => {
-                stateContext.setDefaultConfigLoading(false);
+                if (error.code !== ERR_CANCELED) {
+                    stateContext.setDefaultConfigLoading(false);
+                }
             });
+        defaultControllerRef.current = cancelSource;
+    };
+
+    useEffect(() => {
+        requestDefaultConfig();
     }, [defaultConfigPath]);
 
     const requestSavedConfigs = (defaultConfig = defaultTableConfig) => {
         if (!defaultConfig) return;
         stateContext.setSavedConfigsLoading(true);
-        stateContext.setSavedConfigsLoadingError(false);
 
-        getUserConfigs(propsContext.configPath)
+        const cancelSource = axios.CancelToken.source();
+        getUserConfigs(propsContext.configPath, cancelSource.token)
             .then((res) => {
                 let filteredList = (Array.isArray(res.data) ? res.data : [])
                     .filter((savedConfig) => SavedTableConfigInitialSchema.safeParse(savedConfig).success)
@@ -119,20 +135,34 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 }
 
                 const recentSavedConfig = computedList.find((savedConfig) => savedConfig.recent === true);
-                if (recentSavedConfig) setSelectedSavedConfigId(recentSavedConfig.id);
+                if (recentSavedConfig) {
+                    setModalTableConfig(recentSavedConfig.configParams);
+                    setSelectedSavedConfigId(recentSavedConfig.id);
+                    setModalSelectedSavedConfigId(recentSavedConfig.id);
+                }
 
                 const configToSet = recentSavedConfig?.configParams || defaultConfig;
                 setTableConfig(() => configToSet);
+                stateContext.setSavedConfigsLoading(false);
+                stateContext.setSavedConfigsLoadingError(false);
             })
             .catch((error) => {
-                console.log("--- Error SAVED CONFIGS ---");
+                console.error("--- Error SAVED CONFIGS ---");
                 stateContext.setSavedConfigsLoadingError(true);
                 setTableConfig(() => defaultConfig);
-            })
-            .finally(() => {
-                stateContext.setSavedConfigsLoading(false);
+                if (error.code !== ERR_CANCELED) {
+                    stateContext.setSavedConfigsLoading(false);
+                }
             });
+        savedControllerRef.current = cancelSource;
     };
+
+    useEffect(() => {
+        return () => {
+            defaultControllerRef.current?.cancel();
+            savedControllerRef.current?.cancel();
+        };
+    }, []);
 
     const setAndCompareTempTableConfig = (newTableConfig: TableConfigType) => {
         setModalTableConfig(newTableConfig);
@@ -173,6 +203,7 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
 
                 getSavedConfigById,
 
+                requestDefaultConfig,
                 requestSavedConfigs,
 
                 hasLeftPin: checkHasPin(Z_TablePinOptions.enum.LEFT),
@@ -182,7 +213,7 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 modalConfig,
 
                 hasActionColumn:
-                    (defaultTableConfig?.addable && stateContext.canCreate) ||
+                    (defaultTableConfig?.creatable && stateContext.canCreate) ||
                     (defaultTableConfig?.updatable && stateContext.canUpdate) ||
                     (defaultTableConfig?.deletable && stateContext.canDelete) ||
                     false,

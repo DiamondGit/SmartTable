@@ -183,35 +183,51 @@ export const ColumnInitialSchema: z.ZodType<ColumnInitialType> = z.lazy(() =>
 );
 
 const tableConfigDefaults = {
-    cellSize: Z_TableCellSizes.enum.MEDIUM,
-    addable: true,
-    updatable: true,
-    deletable: true,
-    searchable: true,
-    isDashboard: false,
-    loadable: false,
-    highlightable: true,
-    warningText: null,
+    isSingleData: columnBooleanDefaults.disabled,
+    fetchResultDataIndex: emptyString,
+    
     dataGetApi: emptyString,
     dataCreateApi: emptyString,
     dataDeleteApi: emptyString,
     dataUpdateApi: emptyString,
+
+    globalDependField: emptyString,
+
+    cellSize: Z_TableCellSizes.enum.MEDIUM,
+    creatable: columnBooleanDefaults.enabled,
+    updatable: columnBooleanDefaults.enabled,
+    deletable: columnBooleanDefaults.enabled,
+    searchable: columnBooleanDefaults.enabled,
+    isDashboard: false,
+    loadable: false,
+    highlightable: true,
+    warningText: null,
+    expandable: columnBooleanDefaults.enabled,
+    editableTable: columnBooleanDefaults.enabled,
 };
 
 const TableConfigBaseSchema = z.object({
-    cellSize: Z_TableCellSizes.default(tableConfigDefaults.cellSize).catch(tableConfigDefaults.cellSize),
-    addable: z.boolean().default(tableConfigDefaults.addable).catch(tableConfigDefaults.addable),
-    updatable: z.boolean().default(tableConfigDefaults.updatable).catch(tableConfigDefaults.updatable),
-    deletable: z.boolean().default(tableConfigDefaults.deletable).catch(tableConfigDefaults.deletable),
-    searchable: z.boolean().default(tableConfigDefaults.searchable).catch(tableConfigDefaults.searchable),
-    isDashboard: z.boolean().default(tableConfigDefaults.isDashboard).catch(tableConfigDefaults.isDashboard),
-    loadable: z.boolean().default(tableConfigDefaults.loadable).catch(tableConfigDefaults.loadable),
-    highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
-    warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
+    isSingleData: z.boolean().default(tableConfigDefaults.isSingleData.default).catch(tableConfigDefaults.isSingleData.catch),
+    fetchResultDataIndex: z.string().default(tableConfigDefaults.fetchResultDataIndex).catch(tableConfigDefaults.fetchResultDataIndex),
+    
     dataGetApi: z.string().default(tableConfigDefaults.dataGetApi).catch(tableConfigDefaults.dataGetApi),
     dataCreateApi: z.string().default(tableConfigDefaults.dataCreateApi).catch(tableConfigDefaults.dataCreateApi),
     dataDeleteApi: z.string().default(tableConfigDefaults.dataDeleteApi).catch(tableConfigDefaults.dataDeleteApi),
     dataUpdateApi: z.string().default(tableConfigDefaults.dataUpdateApi).catch(tableConfigDefaults.dataUpdateApi),
+    
+    globalDependField: z.string().catch(tableConfigDefaults.globalDependField),
+
+    cellSize: Z_TableCellSizes.default(tableConfigDefaults.cellSize).catch(tableConfigDefaults.cellSize),
+    creatable: z.boolean().default(tableConfigDefaults.creatable.default).catch(tableConfigDefaults.creatable.catch),
+    updatable: z.boolean().default(tableConfigDefaults.updatable.default).catch(tableConfigDefaults.updatable.catch),
+    deletable: z.boolean().default(tableConfigDefaults.deletable.default).catch(tableConfigDefaults.deletable.catch),
+    searchable: z.boolean().default(tableConfigDefaults.searchable.default).catch(tableConfigDefaults.searchable.catch),
+    isDashboard: z.boolean().default(tableConfigDefaults.isDashboard).catch(tableConfigDefaults.isDashboard),
+    loadable: z.boolean().default(tableConfigDefaults.loadable).catch(tableConfigDefaults.loadable),
+    highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
+    warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
+    expandable: z.boolean().default(tableConfigDefaults.expandable.default).catch(tableConfigDefaults.expandable.catch),
+    editableTable: z.boolean().default(tableConfigDefaults.editableTable.default).catch(tableConfigDefaults.editableTable.catch),
 });
 type TableConfigBaseType = z.infer<typeof TableConfigBaseSchema>;
 
@@ -256,15 +272,6 @@ const defaultPaginationPosition = Z_PaginationPositions.enum.RIGHT;
 export const PaginationPositionSchema =
     Z_PaginationPositions.default(defaultPaginationPosition).catch(defaultPaginationPosition);
 
-type GetDataRequestParamsType = {
-    currentPage: number;
-    pageSize: number;
-    filters?: GeneralObject;
-    search?: string;
-    sortField?: string;
-    sortDir?: string;
-};
-
 export type PaginationConfigType = {
     hideTotal?: boolean;
     hideSizeChanger?: boolean;
@@ -272,7 +279,6 @@ export type PaginationConfigType = {
     hideTop?: boolean;
     hideBottom?: boolean;
     bottomPosition?: PaginationPositionType;
-    singleData?: boolean;
 };
 
 export type TableFilterItemType = {
@@ -294,7 +300,6 @@ export type ColumnPinType = {
 
 export type TableCreateType = {
     configsStoragePath: string;
-    customUI?: TableUIStartingType;
 };
 
 export type TableInitializationType = {
@@ -309,6 +314,7 @@ export type TableInitializationType = {
     paginationConfig?: PaginationConfigType;
     dataRefreshTrigger?: number;
     contentModifier?: { [key: string]: (record: GeneralObject) => JSX.Element | string | number };
+    globalDependencies?: GeneralObject;
     data?: any[];
     hasAccessTo?: {
         create?: boolean;

@@ -38,7 +38,7 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
 
     const actionMenuOptions: ActionMenuType = [];
 
-    if (configContext.defaultTableConfig?.addable && stateContext.canCreate)
+    if (configContext.defaultTableConfig?.creatable && stateContext.canCreate)
         actionMenuOptions.push({
             Icon: ControlPointDuplicateIcon,
             text: "Создать на основе",
@@ -49,7 +49,7 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
         actionMenuOptions.push({
             Icon: EditIcon,
             text: "Изменить",
-            value: Z_ModalTypes.enum.EDIT,
+            value: Z_ModalTypes.enum.UPDATE,
             color: "#F5A225",
         });
     if (configContext.defaultTableConfig?.deletable && stateContext.canDelete)
@@ -61,7 +61,7 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
         });
 
     const handleClickActionOption = (option: string) => () => {
-        if (option === Z_ModalTypes.enum.ADD_BASED || option === Z_ModalTypes.enum.EDIT) {
+        if (option === Z_ModalTypes.enum.ADD_BASED || option === Z_ModalTypes.enum.UPDATE) {
             dataContext.openDataModal(option, dataRow);
         } else if (option === DELETE_OPTION) {
             dataContext.setSelectingToDelete(true);
@@ -118,7 +118,7 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
                                     />
                                 ) : (
                                     <IconButton
-                                        size={"small"}
+                                        size="small"
                                         onClick={handleClickActionOption(actionMenuOptions[0].value)}
                                         className={style.actionButton}
                                         style={{ color: actionMenuOptions[0].color }}

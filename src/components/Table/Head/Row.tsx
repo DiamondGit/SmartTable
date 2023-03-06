@@ -41,7 +41,7 @@ const Row = ({ level, rowLevel, actionCellRef }: HeadRowType) => {
 
     return (
         <tr ref={rowRef} style={{ position: "relative", zIndex: "auto" }}>
-            {level === 0 && hasActionColumn && (
+            {level === 0 && hasActionColumn && !dataFetchContext.isDataError && (
                 <th className={actionCellClasses.join(" ")} ref={actionCellRef} rowSpan={stateContext.maxHeadingDepth}>
                     {dataContext.isSelectingToDelete && (
                         <Aligner>

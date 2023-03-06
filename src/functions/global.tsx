@@ -3,9 +3,11 @@ import { DefaultOptionType } from "antd/es/select";
 import { FLAG, INDEX_JOINER } from "../constants/general";
 import {
     DependencyActionType,
+    ModalTypes,
     TablePinOptions,
     Z_DependencyActions,
     Z_DependencyTypes,
+    Z_ModalTypes,
     Z_TableFieldTypes,
     Z_TablePinOptions,
 } from "../types/enums";
@@ -20,6 +22,9 @@ import {
     TableConfigInitialSchema,
     TableConfigType,
 } from "../types/general";
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import EditIcon from "@mui/icons-material/Edit";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 
 export const formatDate = (date: string) =>
     new Date(date).toLocaleString("ru", { year: "numeric", month: "numeric", day: "numeric" }).split("г.")[0];
@@ -352,6 +357,7 @@ const computeColumnSchema = (
     ) {
         columnConstructor.valueOptionDataIndex = "id";
     }
+
     if (!columnConstructor.title) {
         return columnConstructor;
     }
@@ -604,4 +610,42 @@ export const showMessageDeleteRecordByCount = (count: number, isSuccess = true) 
     } else {
         message.error(`При попытке удаления ${declension("записи", "записей", "записей")(count)} возникла ошибка.`, 4);
     }
+};
+
+export const getModalTitle = (modalType: ModalTypes, tableTitle?: string) => {
+    let title = null;
+    switch (modalType) {
+        case Z_ModalTypes.enum.ADD:
+        case Z_ModalTypes.enum.ADD_BASED:
+            title = "Добавление";
+            break;
+        case Z_ModalTypes.enum.UPDATE:
+            title = "Изменение";
+            break;
+        case Z_ModalTypes.enum.FILTER:
+            title = `Фильтр${tableTitle ? ` таблицы "${tableTitle}"` : ""}`;
+            break;
+    }
+
+    let icon = null;
+    const iconStyle = { fontSize: 24 };
+    switch (modalType) {
+        case Z_ModalTypes.enum.ADD:
+        case Z_ModalTypes.enum.ADD_BASED:
+            icon = <AddBoxIcon sx={iconStyle} />;
+            break;
+        case Z_ModalTypes.enum.UPDATE:
+            icon = <EditIcon sx={iconStyle} />;
+            break;
+        case Z_ModalTypes.enum.FILTER:
+            icon = <FilterAltIcon sx={iconStyle} />;
+            break;
+    }
+
+    return (
+        <>
+            {icon}
+            {title}
+        </>
+    );
 };

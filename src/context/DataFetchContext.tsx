@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import { AxiosResponse, CancelTokenSource } from "axios";
 import { createContext } from "react";
 import { GeneralObject } from "../types/general";
 
@@ -25,13 +25,24 @@ export interface DataFetchContextType {
     
     dataDeleteApi: string;
     setDataDeleteApi: React.Dispatch<React.SetStateAction<string>>;
-
+    
     getData: (dataRequestParams: GeneralObject) => void;
     createData: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
     updateData: (dataRequestParams: GeneralObject) => Promise<AxiosResponse<any, any>>;
     deleteData: (dataId: number) => Promise<AxiosResponse<any, any>>;
-
+    
     defaultPageSizeOptions: number[];
+
+    isSingleData: boolean;
+    setSignleData: React.Dispatch<React.SetStateAction<boolean>>;
+
+    fetchResultDataIndex: string;
+    setFetchResultDataIndex: React.Dispatch<React.SetStateAction<string>>;
+    
+    globalDependField: string;
+    setGlobalDependField: React.Dispatch<React.SetStateAction<string>>;
+
+    requestController: CancelTokenSource | undefined;
 }
 
 const DataFetchContext = createContext<DataFetchContextType>({} as DataFetchContextType);

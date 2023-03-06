@@ -30,6 +30,10 @@ $hover_transition: .3s;
     z-index: $zIndex_modal;
 }
 
+.ant-message, .ant-popover {
+    z-index: $zIndex_modal + 500;
+}
+
 .MuiModal-root.MuiPopover-root.MuiMenu-root {
     z-index: $zIndex_mui_popover;
 }

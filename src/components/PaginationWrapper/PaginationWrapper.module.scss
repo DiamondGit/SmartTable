@@ -3,7 +3,16 @@
     overflow: auto;
     display: grid;
     grid-template-columns: 100%;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: 1fr;
+    &.withTopPagination:not(.withButtomPagination) {
+        grid-template-rows: auto 1fr;
+    }
+    &.withButtomPagination:not(.withTopPagination) {
+        grid-template-rows: 1fr auto;
+    }
+    &.withTopPagination.withButtomPagination {
+        grid-template-rows: auto 1fr auto;
+    }
     gap: 8px;
     .paginationContainer {
         position: relative;

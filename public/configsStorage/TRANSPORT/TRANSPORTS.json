@@ -1,8 +1,10 @@
 {
+    "fetchResultDataIndex": "transports",
     "dataGetApi": "/transports-dimensions//transport/all-enabled-only-transports/page",
     "dataCreateApi": "/transports-dimensions/transport/create-transport",
     "dataUpdateApi": "/transports-dimensions/transport/update-transport",
     "dataDeleteApi": "/transports-dimensions/transport/delete-transport?transportId=",
+    "globalDependField": "companyId",
     "table": [
         {
             "title": "Наименование",

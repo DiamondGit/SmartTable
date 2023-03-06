@@ -50,7 +50,7 @@ $hover_transition: .3s;
                         position: absolute;
                         top: 50%;
                         transform: translateY(calc(-50% - 3px));
-                        $pinsShift: -14px;
+                        $pinsShift: -10px;
                         font-size: 24px;
                         transition: color $hover_transition;
                         pointer-events: none;

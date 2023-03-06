@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const Z_ModalTypes = z.enum(["ADD", "ADD_BASED", "EDIT", "FILTER", "SETTINGS"]);
+export const Z_ModalTypes = z.enum(["ADD", "ADD_BASED", "UPDATE", "FILTER", "SETTINGS"]);
 export type ModalTypes = z.infer<typeof Z_ModalTypes>;
 
 export const Z_TableCellSizes = z.enum(["SMALL", "MEDIUM", "LARGE"]);

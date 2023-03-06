@@ -26,7 +26,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
     const { paginationConfig = {} as PaginationConfigType } = useContext(PropsContext);
 
     const computedPaginationConfig = {
-        total: paginationConfig.singleData ? dataFetchContext.data.length : dataFetchContext.dataComputedCount.totalItems,
+        total: dataFetchContext.isSingleData ? dataFetchContext.data.length : dataFetchContext.dataComputedCount.totalItems,
         pageSize: paginationContext.pageSize,
         showTotal:
             paginationConfig.hideTotal === undefined
@@ -46,11 +46,13 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         const computedNewCurrentPage = newPageSize !== paginationContext.pageSize ? 1 : newCurrentPage;
         paginationContext.setCurrentPage(computedNewCurrentPage);
         paginationContext.setPageSize(newPageSize);
-        dataFetchContext.getData({
-            ...filterContext.queryProps,
-            currentPage: computedNewCurrentPage,
-            pageSize: newPageSize,
-        });
+        if (!dataFetchContext.isSingleData) {
+            dataFetchContext.getData({
+                ...filterContext.queryProps,
+                currentPage: computedNewCurrentPage,
+                pageSize: newPageSize,
+            });
+        }
     };
 
     const Pagination = ({ position }: { position?: PaginationPositionType }) => (
@@ -63,7 +65,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
                 pageSize={computedPaginationConfig.pageSize}
                 showSizeChanger={!computedPaginationConfig.hideSizeChanger}
                 pageSizeOptions={computedPaginationConfig.pageSizeOptions}
-                size={"small"}
+                size="small"
                 disabled={
                     stateContext.isDefaultConfigLoading || dataFetchContext.isDataLoading || dataContext.isSelectingToDelete
                 }
@@ -91,18 +93,23 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
     );
 
     const hasData = dataFetchContext.data.length > 0;
+    const isError = stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError;
     const visibleTopPagination = hasData && !computedPaginationConfig.hideTop;
     const visibleBottomPagination = hasData && !computedPaginationConfig.hideBottom;
 
+    const wrapperClasses = [style.wrapper];
+    if (visibleTopPagination && !isError) wrapperClasses.push(style.withTopPagination);
+    if (visibleBottomPagination && !isError) wrapperClasses.push(style.withButtomPagination);
+
     return (
-        <div className={style.wrapper}>
-            {visibleTopPagination && !(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError) && (
+        <div className={wrapperClasses.join(" ")}>
+            {visibleTopPagination && !isError && (
                 <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr max-content" }}>
                     {visibleTopPagination && <Pagination />}
                 </div>
             )}
             <div className={style.content}>{children}</div>
-            {visibleBottomPagination && !(stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError) && (
+            {visibleBottomPagination && !isError && (
                 <Pagination position={computedPaginationConfig.bottomPosition} />
             )}
         </div>

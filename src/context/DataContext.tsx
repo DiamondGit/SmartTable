@@ -1,4 +1,4 @@
-import { AxiosResponse } from "axios";
+import { AxiosResponse, CancelTokenSource } from "axios";
 import { createContext } from "react";
 import { ModalTypes } from "../types/enums";
 import { GeneralObject } from "../types/general";
@@ -47,6 +47,9 @@ export interface DataContextType {
 
     dataListToDelete: number[];
     setDataListToDelete: React.Dispatch<React.SetStateAction<number[]>>;
+
+    dataFieldControllers: { [key: string]: CancelTokenSource };
+    setDataFieldControllers: React.Dispatch<React.SetStateAction<{ [key: string]: CancelTokenSource }>>;
 
     isSelectingToDelete: boolean;
     setSelectingToDelete: React.Dispatch<React.SetStateAction<boolean>>;

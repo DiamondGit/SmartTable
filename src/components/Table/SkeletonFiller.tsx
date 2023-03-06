@@ -30,7 +30,7 @@ const SkeletonFiller = ({ columnCount, isHeading = false, rowCount = 1 }: Skelet
                             {!isDefaultConfigLoading && hasActionColumn && (
                                 <td className={style.actionCell}>
                                     <Aligner style={{ width: "100%" }}>
-                                        <Skeleton variant={"rounded"} width={"18px"} height={"18px"} animation={"wave"} />
+                                        <Skeleton variant="rounded" width="18px" height="18px" animation="wave" />
                                     </Aligner>
                                 </td>
                             )}

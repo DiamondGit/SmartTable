@@ -1,3 +1,4 @@
+import { CancelTokenSource } from "axios";
 import { useContext, useState } from "react";
 import FilterContext from "../../context/FilterContext";
 import PaginationContext from "../../context/PaginationContext";
@@ -17,6 +18,7 @@ const FilterProvider = ({ children }: FilterProviderType) => {
 
     const [filterFieldLists, setFilterFieldLists] = useState<{ [key: string]: any[] }>({});
     const [filterFieldLoadings, setFilterFieldLoadings] = useState<{ [key: string]: boolean }>({});
+    const [filterFieldControllers, setFilterFieldControllers] = useState<{ [key: string]: CancelTokenSource }>({});
 
     return (
         <FilterContext.Provider
@@ -26,6 +28,9 @@ const FilterProvider = ({ children }: FilterProviderType) => {
 
                 modalFilterValues,
                 setModalFilterValues,
+
+                filterFieldControllers,
+                setFilterFieldControllers,
 
                 hasFilters: JSON.stringify(filterValues) !== "{}",
 

@@ -20,6 +20,7 @@ interface ConfigContextType {
 
     selectedSavedTableConfigId: number | null;
 
+    requestDefaultConfig: () => void;
     requestSavedConfigs: (defaultConfig?: TableConfigType | undefined) => void;
 
     getSavedConfigById: (configId: number | undefined) => SavedTableConfigType | undefined;

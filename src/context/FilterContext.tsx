@@ -1,12 +1,16 @@
+import { CancelTokenSource } from "axios";
 import { createContext } from "react";
 import { GeneralObject } from "../types/general";
 
 interface FilterContextType {
     filterValues: GeneralObject;
     setFilterValues: React.Dispatch<React.SetStateAction<GeneralObject>>;
+
     modalFilterValues: GeneralObject;
     setModalFilterValues: React.Dispatch<React.SetStateAction<GeneralObject>>;
+
     hasFilters: boolean;
+
     filterFieldLists: {
         [key: string]: any[];
     };
@@ -15,6 +19,7 @@ interface FilterContextType {
             [key: string]: any[];
         }>
     >;
+
     filterFieldLoadings: {
         [key: string]: boolean;
     };
@@ -23,6 +28,10 @@ interface FilterContextType {
             [key: string]: boolean;
         }>
     >;
+
+    filterFieldControllers: { [key: string]: CancelTokenSource };
+    setFilterFieldControllers: React.Dispatch<React.SetStateAction<{ [key: string]: CancelTokenSource }>>;
+
     queryProps: {
         currentPage: number;
         pageSize: number;

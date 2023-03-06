@@ -4,7 +4,8 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Skeleton } from "@mui/lab";
-import { Popconfirm } from "antd";
+import { IconButton } from "@mui/material";
+import { Button, Popconfirm } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
@@ -12,10 +13,8 @@ import DataFetchContext from "../../../context/DataFetchContext";
 import FilterContext from "../../../context/FilterContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
-import UIContext from "../../../context/UIContext";
 import { askDeleteRecordByCount, showMessageDeleteRecordByCount } from "../../../functions/global";
-import { Z_ModalTypes } from "../../../types/enums";
-import Aligner from "../../Aligner";
+import { ModalTypes, Z_ModalTypes } from "../../../types/enums";
 import Tooltip from "../../Tooltip";
 import style from "../Table.module.scss";
 import SearchInput from "./SearchInput";
@@ -30,7 +29,7 @@ interface TopBarType {
     };
     toggleFullscreen: () => void;
     openSettingsModal: () => void;
-    openFilterModal: () => void;
+    openFieldModal: (modalType: ModalTypes) => () => void;
 }
 
 const TopBar = ({
@@ -38,7 +37,7 @@ const TopBar = ({
     computedLoadingConfig,
     toggleFullscreen,
     openSettingsModal,
-    openFilterModal,
+    openFieldModal,
 }: TopBarType) => {
     const { isDefaultConfigLoading, isDefaultConfigLoadingError } = useContext(StateContext);
     const configContext = useContext(ConfigContext);
@@ -47,7 +46,6 @@ const TopBar = ({
     const stateContext = useContext(StateContext);
     const dataContext = useContext(DataContext);
     const dataFetchContext = useContext(DataFetchContext);
-    const UI = useContext(UIContext);
     const { isDataLoading, isDataError } = dataFetchContext;
 
     const isError = isDefaultConfigLoadingError || isDataError;
@@ -81,7 +79,7 @@ const TopBar = ({
         dataContext.setDeleting(true);
         Promise.allSettled(
             dataContext.dataListToDelete.map((dataId) =>
-            dataFetchContext
+                dataFetchContext
                     .deleteData(dataId)
                     .then((result) =>
                         Promise.resolve({
@@ -95,7 +93,6 @@ const TopBar = ({
                             dataId: dataId,
                         })
                     )
-                    
             )
         )
             .then((results) => {
@@ -142,129 +139,159 @@ const TopBar = ({
 
     return (
         <div className={style.topBar}>
-            <div className={`${style.bar} ${style.left}`}>
-                <h3 className={style.title}>{propsContext.tableTitle}</h3>
-                {!dataContext.isSelectingToDelete ? (
-                    !isDefaultConfigLoading ? (
-                        isAllowedToShowButtons && (
-                            <>
-                                {configContext.defaultTableConfig.addable && stateContext.canCreate && (
-                                    <Tooltip
-                                        title={"Добавить"}
-                                        placement={"top"}
-                                        disableHoverListener={isDataLoading || isError}
-                                    >
-                                        <UI.PrimaryBtn loading={isDataLoading} disabled={isError} onClick={handleAddData}>
-                                            <AddIcon sx={iconStyle} />
-                                        </UI.PrimaryBtn>
-                                    </Tooltip>
-                                )}
-                                {!isError && configContext.defaultTableConfig.searchable && (
-                                    <SearchInput loading={isDataLoading} />
-                                )}
-                            </>
+            <h3 className={style.title}>{propsContext.tableTitle}</h3>
+            <div className={style.bar}>
+                <div className={style.left}>
+                    {!dataContext.isSelectingToDelete ? (
+                        !isDefaultConfigLoading ? (
+                            isAllowedToShowButtons && (
+                                <>
+                                    {configContext.defaultTableConfig.creatable && stateContext.canCreate && (
+                                        <Tooltip
+                                            title="Добавить"
+                                            placement="top"
+                                            disableHoverListener={isDataLoading || isError}
+                                        >
+                                            <Button
+                                                type="primary"
+                                                disabled={isError || isDataLoading}
+                                                onClick={handleAddData}
+                                                style={{ width: "48px", ...(isDataLoading ? { cursor: "wait" } : {}) }}
+                                                icon={<AddIcon sx={iconStyle} />}
+                                            />
+                                        </Tooltip>
+                                    )}
+                                    {configContext.defaultTableConfig.searchable && <SearchInput isError={isError} />}
+                                </>
+                            )
+                        ) : (
+                            !computedLoadingConfig.noFuncBtnsLeft && (
+                                <>
+                                    <Skeleton variant="rounded" width={48} height={32} animation="wave" />
+                                    <Skeleton variant="rounded" width={32} height={32} animation="wave" />
+                                </>
+                            )
                         )
                     ) : (
-                        !computedLoadingConfig.noFuncBtnsLeft && (
-                            <>
-                                <Skeleton variant={"rounded"} width={40} height={32} animation={"wave"} />
-                                <Skeleton variant={"rounded"} width={32} height={32} animation={"wave"} />
-                            </>
-                        )
-                    )
-                ) : (
-                    <>
-                        {dataContext.dataListToDelete.length > 0 && (
-                            <Popconfirm
-                                title={askDeleteRecordByCount(dataContext.dataListToDelete.length)}
-                                okText="Да"
-                                okButtonProps={{
-                                    danger: true,
-                                    size: "middle",
-                                }}
-                                onConfirm={deleteSelectedDatas}
-                                cancelText="Нет"
-                                cancelButtonProps={{
-                                    size: "middle",
-                                }}
-                            >
-                                <Tooltip title={"Отсутствует API для удаления!"} disableHoverListener={hasDeleteApi}>
-                                    <UI.PrimaryBtn loading={dataContext.isDeleting} disabled={!hasDeleteApi}>
-                                        {dataContext.isDeleting ? "Удаление" : "Удалить"} (
-                                        {dataContext.dataListToDelete.length})
-                                    </UI.PrimaryBtn>
-                                </Tooltip>
-                            </Popconfirm>
-                        )}
-                        <div style={{ width: "max-content" }}>
-                            <UI.SecondaryBtn onClick={cancelDelete()} disabled={dataContext.isDeleting}>
-                                Отменить удаление
-                            </UI.SecondaryBtn>
-                        </div>
-                    </>
-                )}
-            </div>
-            <div className={`${style.bar} ${style.right}`}>
-                {!isDefaultConfigLoading
-                    ? isAllowedToShowButtons && (
-                          <>
-                              <Tooltip
-                                  title={"Полноэкранный режим"}
-                                  placement={"top"}
-                                  disableHoverListener={isDataLoading || isError}
-                              >
-                                  <UI.SecondaryBtn loading={isDataLoading} onClick={toggleFullscreen} disabled={isError}>
-                                      {isFullscreen ? (
-                                          <CloseFullscreenIcon
-                                              sx={iconStyle}
-                                              className={isFullscreen ? style.activeIcon : ""}
-                                          />
-                                      ) : (
-                                          <OpenInFullIcon sx={iconStyle} />
-                                      )}
-                                  </UI.SecondaryBtn>
-                              </Tooltip>
-                              <Tooltip
-                                  title={"Фильтр"}
-                                  placement={"top-end"}
-                                  disableHoverListener={isDataLoading || isError || dataContext.isSelectingToDelete}
-                              >
-                                  <UI.SecondaryBtn
-                                      loading={isDataLoading}
-                                      onClick={openFilterModal}
-                                      disabled={isError || dataContext.isSelectingToDelete}
-                                  >
-                                      <FilterAltIcon
-                                          sx={iconStyle}
-                                          className={filterContext.hasFilters ? style.acitveIcon : ""}
-                                      />
-                                  </UI.SecondaryBtn>
-                              </Tooltip>
-                              <Tooltip
-                                  title={"Настройка таблицы"}
-                                  placement={"top-end"}
-                                  disableHoverListener={isDataLoading || isError || dataContext.isDeleting}
-                              >
-                                  <UI.SecondaryBtn
-                                      loading={isDataLoading}
-                                      onClick={openSettingsModal}
-                                      disabled={isError || dataContext.isDeleting}
-                                  >
-                                      <SettingsIcon
-                                          sx={iconStyle}
-                                          className={!isTableDefaultSettings ? style.acitveIcon : ""}
-                                      />
-                                  </UI.SecondaryBtn>
-                              </Tooltip>
-                          </>
-                      )
-                    : !computedLoadingConfig.noFuncBtnsRight && (
-                          <Aligner style={{ gap: "18px", opacity: "0.75" }}>
-                              {[...Array(3)].map((_, index) => (
-                                  <Skeleton variant={"circular"} width={32} height={32} animation={"wave"} key={index} />
-                              ))}
-                          </Aligner>
-                      )}
+                        <>
+                            {dataContext.dataListToDelete.length > 0 && (
+                                <Popconfirm
+                                    title={askDeleteRecordByCount(dataContext.dataListToDelete.length)}
+                                    okText="Да"
+                                    okButtonProps={{
+                                        danger: true,
+                                        size: "middle",
+                                    }}
+                                    onConfirm={deleteSelectedDatas}
+                                    cancelText="Нет"
+                                    cancelButtonProps={{
+                                        size: "middle",
+                                    }}
+                                >
+                                    <Tooltip title="Отсутствует API для удаления!" disableHoverListener={hasDeleteApi}>
+                                        <Button type="primary" loading={dataContext.isDeleting} disabled={!hasDeleteApi}>
+                                            {dataContext.isDeleting ? "Удаление" : "Удалить"} (
+                                            {dataContext.dataListToDelete.length})
+                                        </Button>
+                                    </Tooltip>
+                                </Popconfirm>
+                            )}
+                            <div style={{ width: "max-content" }}>
+                                <Button onClick={cancelDelete()} disabled={dataContext.isDeleting}>
+                                    Отменить удаление
+                                </Button>
+                            </div>
+                        </>
+                    )}
+                </div>
+                <div className={style.right}>
+                    {!isDefaultConfigLoading
+                        ? isAllowedToShowButtons && (
+                              <>
+                                  {configContext.defaultTableConfig.expandable && (
+                                      <Tooltip
+                                          title="Полноэкранный режим"
+                                          placement="top"
+                                          disableHoverListener={isDataLoading || isError}
+                                      >
+                                          <IconButton
+                                              onClick={toggleFullscreen}
+                                          >
+                                              {isFullscreen ? (
+                                                  <CloseFullscreenIcon
+                                                      sx={iconStyle}
+                                                      className={isFullscreen ? style.activeIcon : ""}
+                                                  />
+                                              ) : (
+                                                  <OpenInFullIcon sx={iconStyle} />
+                                              )}
+                                          </IconButton>
+                                      </Tooltip>
+                                  )}
+                                  {configContext.filterConfig.length > 0 && (
+                                      <Tooltip
+                                          title="Фильтр"
+                                          placement="top-end"
+                                          disableHoverListener={isDataLoading || isError || dataContext.isSelectingToDelete}
+                                      >
+                                          <IconButton
+                                              onClick={openFieldModal(Z_ModalTypes.enum.FILTER)}
+                                              disabled={isDataLoading || isError || dataContext.isSelectingToDelete}
+                                              style={
+                                                  isDataLoading
+                                                      ? { cursor: "wait", opacity: 0.5 }
+                                                      : isError
+                                                      ? { cursor: "not-allowed" }
+                                                      : {}
+                                              }
+                                          >
+                                              {
+                                                  <FilterAltIcon
+                                                      sx={iconStyle}
+                                                      className={filterContext.hasFilters ? style.acitveIcon : ""}
+                                                  />
+                                              }
+                                          </IconButton>
+                                      </Tooltip>
+                                  )}
+                                  {configContext.defaultTableConfig.editableTable && (
+                                      <Tooltip
+                                          title="Настройка таблицы"
+                                          placement="top-end"
+                                          disableHoverListener={isDataLoading || isError || dataContext.isDeleting}
+                                      >
+                                          <IconButton
+                                              onClick={openSettingsModal}
+                                              disabled={isDataLoading || isError || dataContext.isDeleting}
+                                              style={
+                                                  isDataLoading
+                                                      ? { cursor: "wait", opacity: 0.5 }
+                                                      : isError
+                                                      ? { cursor: "not-allowed" }
+                                                      : {}
+                                              }
+                                          >
+                                              {
+                                                  <SettingsIcon
+                                                      sx={iconStyle}
+                                                      className={!isTableDefaultSettings ? style.acitveIcon : ""}
+                                                  />
+                                              }
+                                          </IconButton>
+                                      </Tooltip>
+                                  )}
+                              </>
+                          )
+                        : !computedLoadingConfig.noFuncBtnsRight && (
+                              <>
+                                  {[...Array(3)].map((_, index) => (
+                                      <div key={index} style={{ padding: "8px" }}>
+                                          <Skeleton variant="circular" width={22} height={22} animation="wave" />
+                                      </div>
+                                  ))}
+                              </>
+                          )}
+                </div>
             </div>
         </div>
     );

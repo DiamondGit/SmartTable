@@ -2,12 +2,14 @@ import { useContext } from "react";
 import { DragDropContext, Droppable, DropResult } from "react-beautiful-dnd";
 import { FLAG } from "../../constants/general";
 import ConfigContext from "../../context/ConfigContext";
+import SettingsContext from "../../context/SettingsContext";
 import { ColumnType } from "../../types/general";
 import style from "./DraggableList.module.scss";
 import DraggableListItem from "./DraggableListItem";
 
 const DraggableList = () => {
     const configContext = useContext(ConfigContext);
+    const { isLoading } = useContext(SettingsContext);
 
     if (!configContext.modalTableConfig) return null;
     const columns = configContext.modalTableConfig.table.filter((column) => column.title && column.dataIndex);
@@ -47,20 +49,22 @@ const DraggableList = () => {
     };
 
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="droppable-list" ignoreContainerClipping>
-                {(provided) => {
-                    return (
-                        <div ref={provided.innerRef} {...provided.droppableProps} className={style.draggableList}>
-                            {columns.map((column, index) => (
-                                <DraggableListItem column={column} index={index} key={column[FLAG.namedDataIndex]} />
-                            ))}
-                            {provided.placeholder}
-                        </div>
-                    );
-                }}
-            </Droppable>
-        </DragDropContext>
+        <div style={{ opacity: isLoading ? 0.5 : 1 }}>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <Droppable droppableId="droppable-list" ignoreContainerClipping>
+                    {(provided) => {
+                        return (
+                            <div ref={provided.innerRef} {...provided.droppableProps} className={style.draggableList}>
+                                {columns.map((column, index) => (
+                                    <DraggableListItem column={column} index={index} key={column[FLAG.namedDataIndex]} />
+                                ))}
+                                {provided.placeholder}
+                            </div>
+                        );
+                    }}
+                </Droppable>
+            </DragDropContext>
+        </div>
     );
 };
 

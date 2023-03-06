@@ -26,7 +26,7 @@ const ActionMenu = ({
 
     return (
         <>
-            <IconButton size={"small"} onClick={handleClick} className={style.actionButton}>
+            <IconButton size="small" onClick={handleClick} className={style.actionButton}>
                 <MoreVertIcon />
             </IconButton>
             <Menu

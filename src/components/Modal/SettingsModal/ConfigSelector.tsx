@@ -1,10 +1,12 @@
-import { FormControl, FormLabel, MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
-import ConfigContext from "../../../context/ConfigContext";
+import { MenuItem, Select, SelectChangeEvent, Typography } from "@mui/material";
 import { useContext } from "react";
+import ConfigContext from "../../../context/ConfigContext";
+import SettingsContext from "../../../context/SettingsContext";
 import Aligner from "../../Aligner";
 
 const ConfigSelector = ({ isEditingSavedConfig }: { isEditingSavedConfig: boolean }) => {
     const configContext = useContext(ConfigContext);
+    const { isLoading, setConfigEditable } = useContext(SettingsContext);
 
     const defaultOption = `${undefined}`;
 
@@ -26,9 +28,11 @@ const ConfigSelector = ({ isEditingSavedConfig }: { isEditingSavedConfig: boolea
             )?.configParams;
 
             if (selectedConfig) {
+                setConfigEditable(false);
                 configContext.setModalTableConfig(selectedConfig);
                 configContext.setModalSelectedSavedConfigId(selectedId);
             } else {
+                setConfigEditable(true);
                 handleSetDefaultConfig();
             }
         }
@@ -44,10 +48,10 @@ const ConfigSelector = ({ isEditingSavedConfig }: { isEditingSavedConfig: boolea
                 onChange={handleChange}
                 displayEmpty
                 size="small"
-                disabled={isEditingSavedConfig}
+                disabled={isEditingSavedConfig || isLoading}
             >
                 <MenuItem value={defaultOption}>
-                    <em>None</em>
+                    <em>По умолчанию</em>
                 </MenuItem>
                 {configContext.savedTableConfigs.map((savedTableConfig) => (
                     <MenuItem value={savedTableConfig.id} key={savedTableConfig.configName}>

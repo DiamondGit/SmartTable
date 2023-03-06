@@ -1,9 +1,8 @@
 import CloseIcon from "@mui/icons-material/Close";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { Modal as AntdModal } from "antd";
+import { Button, Modal as AntdModal } from "antd";
 import { useContext, useRef, useState } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
-import UIContext from "../../context/UIContext";
 import { ModalTypes, Z_ModalTypes } from "../../types/enums";
 import style from "./Modal.module.scss";
 
@@ -38,7 +37,6 @@ const Modal = ({
     children,
     ...props
 }: ModalType) => {
-    const UI = useContext(UIContext);
     const [disabled, setDisabled] = useState(true);
     const [bounds, setBounds] = useState({ left: 0, top: 0, bottom: 0, right: 0 });
     const draggleRef = useRef<HTMLDivElement>(null);
@@ -71,11 +69,11 @@ const Modal = ({
                                 className={style.draggable}
                                 onMouseEnter={() => {
                                     if (disabled) {
-                                        setDisabled((prevState) => false);
+                                        setDisabled(() => false);
                                     }
                                 }}
                                 onMouseLeave={() => {
-                                    setDisabled((prevState) => true);
+                                    setDisabled(() => true);
                                 }}
                                 onFocus={() => {}}
                                 onBlur={() => {}}
@@ -103,8 +101,8 @@ const Modal = ({
                                     <>{rightFooter}</>
                                 ) : (
                                     <>
-                                        <UI.SecondaryBtn onClick={onCancel}>{defaultCancelText}</UI.SecondaryBtn>
-                                        <UI.PrimaryBtn onClick={onConfirm}>{defaultOkText}</UI.PrimaryBtn>
+                                        <Button onClick={onCancel}>{defaultCancelText}</Button>
+                                        <Button type="primary" onClick={onConfirm}>{defaultOkText}</Button>
                                     </>
                                 )}
                             </div>

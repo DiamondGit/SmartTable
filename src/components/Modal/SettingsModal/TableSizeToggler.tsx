@@ -1,11 +1,13 @@
 import { ToggleButton, ToggleButtonGroup } from "@mui/lab";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../../context/ConfigContext";
+import SettingsContext from "../../../context/SettingsContext";
 import { TableCellSizes, Z_TableCellSizes } from "../../../types/enums";
 import Aligner from "../../Aligner";
 
 const TableSizeToggler = () => {
     const configContext = useContext(ConfigContext);
+    const { isLoading, isConfigEditable } = useContext(SettingsContext);
     const [tableSize, setTableSize] = useState<TableCellSizes>(Z_TableCellSizes.enum.MEDIUM);
 
     useEffect(() => {
@@ -50,7 +52,7 @@ const TableSizeToggler = () => {
     return (
         <Aligner style={{ alignItems: "flex-start" }} isVertical gutter={4}>
             Размер ячеек:
-            <ToggleButtonGroup size={"small"} {...tableSizeControl}>
+            <ToggleButtonGroup size="small" {...tableSizeControl} disabled={isLoading || !isConfigEditable}>
                 {tableSizeOptions.map((tableSizeOption) => (
                     <ToggleButton value={tableSizeOption.key} key={tableSizeOption.key}>
                         <span style={{ width: "16px" }}>{tableSizeOption.label}</span>

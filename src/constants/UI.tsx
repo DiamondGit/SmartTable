@@ -11,10 +11,10 @@ export const TableDataSkeleton = ({ dataType = Z_TableDataTypes.enum.TEXT, isHea
     return (
         <Skeleton
             className={isHeadingRow ? "headingSkeleton" : ""}
-            variant={"rounded"}
+            variant="rounded"
             width={`${isHeadingRow ? Math.random() * 30 + 60 : Math.random() * 20 + 60}%`}
-            height={"18px"}
-            animation={"wave"}
+            height="18px"
+            animation="wave"
             style={placement}
 
         />
