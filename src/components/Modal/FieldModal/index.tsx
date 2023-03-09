@@ -7,13 +7,11 @@ import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
 import DataFetchContext from "../../../context/DataFetchContext";
 import FieldModalContext, {
-    FieldActionType,
     FieldFieldConfigType,
-    FieldModalConfigType,
+    FieldModalConfigType
 } from "../../../context/FieldModalContext";
 import FilterContext from "../../../context/FilterContext";
 import PropsContext from "../../../context/PropsContext";
-import { requester } from "../../../controllers/controllers";
 import { getModalTitle } from "../../../functions/global";
 import { ModalTypes, TableFieldTypes, Z_DependencyTypes, Z_ModalTypes, Z_TableFieldTypes } from "../../../types/enums";
 import { GeneralObject } from "../../../types/general";
@@ -391,7 +389,7 @@ const FieldModal = ({ modalType, isModalOpen, setModalOpen }: FieldModalType) =>
 
                         const source = axios.CancelToken.source();
                         dataContext.dataFieldControllers[tempDataIndex]?.cancel();
-                        requester
+                        dataFetchContext.requester
                             .get(dependColumn.fieldGetApi, {
                                 params,
                                 cancelToken: source.token,
@@ -428,7 +426,7 @@ const FieldModal = ({ modalType, isModalOpen, setModalOpen }: FieldModalType) =>
                         setLoadingByDataIndex(tempDataIndex, true);
                         const source = axios.CancelToken.source();
                         CONTROLLERS[tempDataIndex]?.cancel();
-                        requester
+                        dataFetchContext.requester
                             .get(selectField.fieldGetApi, { params, cancelToken: source.token })
                             .then((response) => {
                                 setListByDataIndex(tempDataIndex, response.data || []);

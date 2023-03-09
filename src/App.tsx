@@ -1,12 +1,15 @@
+import { Button, Form, Segmented, Switch } from "antd";
+import { useState } from "react";
 import Aligner from "./components/Aligner";
+import LoginForm from "./LoginForm";
 import MyTable from "./MyTable";
 import "./styles/resetStyles.css";
-import { useState } from "react";
-import LoginForm from "./LoginForm";
-import { Button, Form, Segmented, Switch } from "antd";
+import DescriptionIcon from '@mui/icons-material/Description';
+import CachedIcon from '@mui/icons-material/Cached';
+import UploadIcon from '@mui/icons-material/Upload';
 
 const storageUser = localStorage.getItem("user");
-const token = (storageUser && JSON.parse(storageUser)?.token) || "";
+const userToken = (storageUser && JSON.parse(storageUser)?.token) || "";
 
 const companies = [
     {
@@ -19,8 +22,9 @@ const companies = [
     },
 ];
 
+
 const App = () => {
-    const [isAuthorized] = useState(!!token);
+    const [isAuthorized] = useState(!!userToken);
     const [companyId, setCompanyId] = useState<number | null>(null);
     const [dataRefreshTrigger, setDataRefreshTrigger] = useState(Date.now());
 
@@ -37,6 +41,31 @@ const App = () => {
             <div>{(parseFloat(record.size.width.meter) * 39.36).toFixed(2)}</div>
         ),
     };
+
+    const functionModifier = [
+        {
+            title: "Импорт",
+            icon: <DescriptionIcon sx={{ transform: "scale(1.5)" }} />,
+            disabled: true,
+            onClick: () => {
+                alert("clicked Import");
+            },
+        },
+        {
+            title: "Перерасчет",
+            icon: <CachedIcon sx={{ transform: "scale(1.5)" }} />,
+            onClick: () => {
+                console.log("clicked Recalculate");
+            },
+        },
+        {
+            title: "Загрузить",
+            icon: <UploadIcon sx={{ transform: "scale(1.5)" }} />,
+            onClick: () => {
+                console.log("clicked Upload");
+            },
+        },
+    ];
 
     const handleRefreshTable = () => {
         setDataRefreshTrigger(() => Date.now());
@@ -78,6 +107,8 @@ const App = () => {
                                 loadingConfig: { columnCount: 12 },
                                 dataRefreshTrigger,
                                 contentModifier,
+                                functionModifier,
+                                userToken,
                                 globalDependencies: {
                                     companyId,
                                 },

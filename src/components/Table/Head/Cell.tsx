@@ -6,7 +6,6 @@ import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
 import DataFetchContext from "../../../context/DataFetchContext";
 import PaginationContext from "../../../context/PaginationContext";
-import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
 import { getColumnStyle, getPinSide } from "../../../functions/global";

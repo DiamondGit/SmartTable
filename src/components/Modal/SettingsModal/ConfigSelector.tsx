@@ -1,13 +1,13 @@
-import { MenuItem, SelectChangeEvent, Typography } from "@mui/material";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import ClearIcon from "@mui/icons-material/Clear";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import EditIcon from "@mui/icons-material/Edit";
+import { Typography } from "@mui/material";
 import { Button, Input, Popconfirm, Select } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import SettingsContext from "../../../context/SettingsContext";
 import Aligner from "../../Aligner";
-import ClearIcon from "@mui/icons-material/Clear";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import EditIcon from "@mui/icons-material/Edit";
 
 const ConfigSelector = () => {
     const configContext = useContext(ConfigContext);

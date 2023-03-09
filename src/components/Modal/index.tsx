@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { Button, Modal as AntdModal } from "antd";
-import { useContext, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Draggable, { DraggableData, DraggableEvent } from "react-draggable";
 import { ModalTypes, Z_ModalTypes } from "../../types/enums";
 import style from "./Modal.module.scss";

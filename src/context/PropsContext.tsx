@@ -1,6 +1,6 @@
 import { createContext } from "react";
-import { TableInitializationType } from "../types/general";
+import { PropsContextType } from "../types/general";
 
-const PropsContext = createContext<TableInitializationType>({} as TableInitializationType);
+const PropsContext = createContext<PropsContextType>({} as PropsContextType);
 
 export default PropsContext;

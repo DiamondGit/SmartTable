@@ -1,18 +1,17 @@
-import DeleteIcon from "@mui/icons-material/Delete";
 import PreviewIcon from "@mui/icons-material/Preview";
 import SettingsIcon from "@mui/icons-material/Settings";
-import { Alert, IconButton, TextField } from "@mui/material";
-import { Button, message, Popconfirm } from "antd";
+import { Alert, IconButton } from "@mui/material";
+import { Button, message } from "antd";
 import { useContext, useEffect, useState } from "react";
 import Modal, { ModalType } from "..";
 import { MESSAGE } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import PropsContext from "../../../context/PropsContext";
 import SettingsContext from "../../../context/SettingsContext";
 import StateContext from "../../../context/StateContext";
-import { chooseConfig, createConfig, deleteConfig, setDefaultConfig, updateConfig } from "../../../controllers/controllers";
 import { Z_ModalTypes } from "../../../types/enums";
-import { GeneralObject } from "../../../types/general";
+import { CreateConfigType } from "../../../types/general";
 import Aligner from "../../Aligner";
 import DraggableList from "../../DraggableList";
 import Tooltip from "../../Tooltip";
@@ -29,6 +28,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     const stateContext = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const propsContext = useContext(PropsContext);
+    const dataFetchContext = useContext(DataFetchContext);
 
     const [settingsName, setSettingsName] = useState("");
 
@@ -78,6 +78,15 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         }
     };
 
+    const chooseConfig = async (tableName: string, userConfigId: number) => {
+        return await dataFetchContext.requester.put(propsContext.controllers.choose, null, {
+            params: {
+                tableName,
+                userConfigId,
+            },
+        });
+    };
+
     const handleApplyConfig = () => {
         const applyConfig = (isDefault = false, isError = false) => {
             if (configContext.modalTableConfig) {
@@ -117,7 +126,10 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 configContext.modalSelectedSavedConfigId === undefined
             ) {
                 setModalLoading(true);
-                setDefaultConfig(propsContext.configPath)
+                dataFetchContext.requester
+                    .put(propsContext.controllers.setDefault, null, {
+                        params: { tableName: propsContext.configPath },
+                    })
                     .then(() => {
                         applyConfig(true);
                     })
@@ -132,6 +144,12 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 closeModal();
             }
         }
+    };
+
+    const createConfig = async (data: CreateConfigType) => {
+        return await dataFetchContext.requester.post(propsContext.controllers.create, {
+            ...{ ...data, configParams: JSON.stringify(data.configParams) },
+        });
     };
 
     const confirmSaveSettings = () => {
@@ -164,12 +182,13 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         } else if (isEditingSavedConfig && configContext.modalSelectedSavedConfigId && configContext.modalTableConfig) {
             if (isSavedSettingsChanged || settingsName !== currentSavedConfigName) {
                 setModalLoading(true);
-                updateConfig({
-                    id: configContext.modalSelectedSavedConfigId,
-                    configName: settingsName,
-                    configParams: configContext.modalTableConfig,
-                    tableName: propsContext.configPath,
-                })
+                dataFetchContext.requester
+                    .put(propsContext.controllers.update, {
+                        id: configContext.modalSelectedSavedConfigId,
+                        configName: settingsName,
+                        configParams: JSON.stringify(configContext.modalTableConfig),
+                        tableName: propsContext.configPath,
+                    })
                     .then(() => {
                         if (configContext.modalSelectedSavedConfigId) {
                             chooseConfig(propsContext.configPath, configContext.modalSelectedSavedConfigId)
@@ -278,7 +297,10 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         if (configContext.modalSelectedSavedConfigId && configContext.defaultTableConfig) {
             const configName = configContext.getSavedConfigById(configContext.modalSelectedSavedConfigId)?.configName || " ";
             setModalLoading(true);
-            deleteConfig(configContext.modalSelectedSavedConfigId)
+            dataFetchContext.requester
+                .put(propsContext.controllers.delete, null, {
+                    params: { userConfigId: configContext.modalSelectedSavedConfigId },
+                })
                 .then(() => {
                     message.success(MESSAGE.success.config.delete(configName));
                     configContext.requestSavedConfigs();

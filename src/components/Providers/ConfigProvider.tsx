@@ -5,7 +5,6 @@ import ConfigContext from "../../context/ConfigContext";
 import DataFetchContext from "../../context/DataFetchContext";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
-import { deleteConfig, getUserConfigs } from "../../controllers/controllers";
 import { getFilterFields, getMaxHeadingDepth, getModalFields, parseConfig } from "../../functions/global";
 import { TablePinOptions, Z_TablePinOptions } from "../../types/enums";
 import {
@@ -13,7 +12,7 @@ import {
     SavedTableConfigInitialSchema,
     SavedTableConfigInitialType,
     SavedTableConfigType,
-    TableConfigType,
+    TableConfigType
 } from "../../types/general";
 
 interface ConfigProviderType {
@@ -105,7 +104,13 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
         stateContext.setSavedConfigsLoading(true);
 
         const cancelSource = axios.CancelToken.source();
-        getUserConfigs(propsContext.configPath, cancelSource.token)
+        dataFetchContext.requester
+            .get(propsContext.controllers.get, {
+                params: {
+                    tableName: propsContext.configPath,
+                },
+                cancelToken: cancelSource.token,
+            })
             .then((res) => {
                 let filteredList = (Array.isArray(res.data) ? res.data : [])
                     .filter((savedConfig) => SavedTableConfigInitialSchema.safeParse(savedConfig).success)
@@ -130,7 +135,9 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 if (notValidSavedConfigs.length > 0) {
                     console.log(`Not valid SAVED CONFIGS`, notValidSavedConfigs);
                     notValidSavedConfigs.forEach((notValidSavedConfig) => {
-                        deleteConfig(notValidSavedConfig.id);
+                        dataFetchContext.requester.put(propsContext.controllers.delete, null, {
+                            params: { userConfigId: notValidSavedConfig.id },
+                        });
                     });
                 }
 

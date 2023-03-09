@@ -1,4 +1,4 @@
-import { AxiosResponse, CancelTokenSource } from "axios";
+import { CancelTokenSource } from "axios";
 import { createContext } from "react";
 import { ModalTypes } from "../types/enums";
 import { GeneralObject } from "../types/general";

@@ -1,6 +1,5 @@
 import { SvgIconTypeMap } from "@mui/material";
 import { OverridableComponent } from "@mui/material/OverridableComponent";
-import { AxiosResponse } from "axios";
 import z from "zod";
 import { FLAG } from "../constants/general";
 import {
@@ -14,7 +13,6 @@ import {
     Z_TableFieldTypes,
     Z_TablePinOptions,
 } from "./enums";
-import { TableUIStartingType } from "./UI";
 
 export type WithRequired<T, K extends keyof T> = T & { [P in K]-?: T[P] };
 
@@ -185,7 +183,7 @@ export const ColumnInitialSchema: z.ZodType<ColumnInitialType> = z.lazy(() =>
 const tableConfigDefaults = {
     isSingleData: columnBooleanDefaults.disabled,
     fetchResultDataIndex: emptyString,
-    
+
     dataGetApi: emptyString,
     dataCreateApi: emptyString,
     dataDeleteApi: emptyString,
@@ -207,14 +205,20 @@ const tableConfigDefaults = {
 };
 
 const TableConfigBaseSchema = z.object({
-    isSingleData: z.boolean().default(tableConfigDefaults.isSingleData.default).catch(tableConfigDefaults.isSingleData.catch),
-    fetchResultDataIndex: z.string().default(tableConfigDefaults.fetchResultDataIndex).catch(tableConfigDefaults.fetchResultDataIndex),
-    
+    isSingleData: z
+        .boolean()
+        .default(tableConfigDefaults.isSingleData.default)
+        .catch(tableConfigDefaults.isSingleData.catch),
+    fetchResultDataIndex: z
+        .string()
+        .default(tableConfigDefaults.fetchResultDataIndex)
+        .catch(tableConfigDefaults.fetchResultDataIndex),
+
     dataGetApi: z.string().default(tableConfigDefaults.dataGetApi).catch(tableConfigDefaults.dataGetApi),
     dataCreateApi: z.string().default(tableConfigDefaults.dataCreateApi).catch(tableConfigDefaults.dataCreateApi),
     dataDeleteApi: z.string().default(tableConfigDefaults.dataDeleteApi).catch(tableConfigDefaults.dataDeleteApi),
     dataUpdateApi: z.string().default(tableConfigDefaults.dataUpdateApi).catch(tableConfigDefaults.dataUpdateApi),
-    
+
     globalDependField: z.string().catch(tableConfigDefaults.globalDependField),
 
     cellSize: Z_TableCellSizes.default(tableConfigDefaults.cellSize).catch(tableConfigDefaults.cellSize),
@@ -227,7 +231,10 @@ const TableConfigBaseSchema = z.object({
     highlightable: z.boolean().default(tableConfigDefaults.highlightable).catch(tableConfigDefaults.highlightable),
     warningText: z.string().nullable().default(tableConfigDefaults.warningText).catch(tableConfigDefaults.warningText),
     expandable: z.boolean().default(tableConfigDefaults.expandable.default).catch(tableConfigDefaults.expandable.catch),
-    editableTable: z.boolean().default(tableConfigDefaults.editableTable.default).catch(tableConfigDefaults.editableTable.catch),
+    editableTable: z
+        .boolean()
+        .default(tableConfigDefaults.editableTable.default)
+        .catch(tableConfigDefaults.editableTable.catch),
 });
 type TableConfigBaseType = z.infer<typeof TableConfigBaseSchema>;
 
@@ -300,7 +307,17 @@ export type ColumnPinType = {
 
 export type TableCreateType = {
     configsStoragePath: string;
+    controllers: {
+        create: string;
+        get: string;
+        choose: string;
+        delete: string;
+        setDefault: string;
+        update: string;
+    };
 };
+
+type FunctionModifier = { title: React.ReactNode; disabled?: boolean; icon?: React.ReactNode; onClick: () => void };
 
 export type TableInitializationType = {
     tableTitle: string;
@@ -313,15 +330,19 @@ export type TableInitializationType = {
     };
     paginationConfig?: PaginationConfigType;
     dataRefreshTrigger?: number;
-    contentModifier?: { [key: string]: (record: GeneralObject) => JSX.Element | string | number };
+    contentModifier?: { [key: string]: (record: GeneralObject) => React.ReactNode };
+    functionModifier?: FunctionModifier[];
+    userToken?: string;
     globalDependencies?: GeneralObject;
     data?: any[];
     hasAccessTo?: {
         create?: boolean;
         update?: boolean;
         delete?: boolean;
-    }
+    };
 };
+
+export type PropsContextType = TableCreateType & TableInitializationType;
 
 export type ComputedRowType = ColumnType[];
 

@@ -1,4 +1,4 @@
-import { AxiosResponse, CancelTokenSource } from "axios";
+import { AxiosInstance, AxiosResponse, CancelTokenSource } from "axios";
 import { createContext } from "react";
 import { GeneralObject } from "../types/general";
 
@@ -47,6 +47,8 @@ export interface DataFetchContextType {
     columnWidthRefreshTrigger: number;
 
     hasGetApi: boolean;
+
+    requester: AxiosInstance;
 }
 
 const DataFetchContext = createContext<DataFetchContextType>({} as DataFetchContextType);

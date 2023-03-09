@@ -1,8 +1,8 @@
+import { useContext, useEffect, useState } from "react";
+import { FLAG } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
 import { TablePinOptions, Z_TablePinOptions } from "../../../types/enums";
-import { useContext, useState, useEffect } from "react";
 import { ColumnType } from "../../../types/general";
-import { FLAG } from "../../../constants/general";
 import Cell from "./Cell";
 
 const Side = ({ side = Z_TablePinOptions.enum.NONE }: { side?: TablePinOptions }) => {

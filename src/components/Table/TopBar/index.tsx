@@ -5,7 +5,7 @@ import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Skeleton } from "@mui/lab";
 import { IconButton } from "@mui/material";
-import { Button, Popconfirm } from "antd";
+import { Button, Dropdown, MenuProps, Popconfirm } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
@@ -18,6 +18,7 @@ import { ModalTypes, Z_ModalTypes } from "../../../types/enums";
 import Tooltip from "../../Tooltip";
 import style from "../Table.module.scss";
 import SearchInput from "./SearchInput";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
 
 interface TopBarType {
     computedLoadingConfig: {
@@ -134,6 +135,24 @@ const TopBar = ({ computedLoadingConfig, toggleFullscreen, openSettingsModal, op
     const topBarClasses = [style.topBar];
     if (isFullscreen) topBarClasses.push(style.isFullscreen);
 
+    const additionalFunctionalModifiers: MenuProps["items"] = [];
+    propsContext.functionModifier?.forEach((modifier, index) => {
+        if (index !== 0) {
+            additionalFunctionalModifiers.push({
+                type: "divider",
+            });
+        }
+
+        const computedMenuItem = {
+            label: <div onClick={!modifier.disabled ? modifier.onClick : () => {}}>{modifier.title}</div>,
+            key: index,
+            ...(modifier.disabled ? { disabled: true } : {}),
+            ...(modifier.icon ? { icon: modifier.icon } : {}),
+        };
+
+        additionalFunctionalModifiers.push(computedMenuItem);
+    });
+
     return (
         <div className={topBarClasses.join(" ")}>
             <h3 className={style.title}>{propsContext.tableTitle}</h3>
@@ -203,6 +222,19 @@ const TopBar = ({ computedLoadingConfig, toggleFullscreen, openSettingsModal, op
                     {!isDefaultConfigLoading
                         ? isAllowedToShowButtons && (
                               <>
+                                  {!!propsContext.functionModifier && propsContext.functionModifier.length > 0 && (
+                                      <Dropdown
+                                          placement="bottomRight"
+                                          menu={{
+                                              items: additionalFunctionalModifiers,
+                                          }}
+                                          trigger={["click"]}
+                                      >
+                                          <IconButton>
+                                              <MoreVertIcon sx={iconStyle} />
+                                          </IconButton>
+                                      </Dropdown>
+                                  )}
                                   {configContext.defaultTableConfig.expandable && (
                                       <Tooltip
                                           title="Полноэкранный режим"

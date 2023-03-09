@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import { useContext, useState } from "react";
 import PropsContext from "../../context/PropsContext";
 import StateContext from "../../context/StateContext";
 import { SortOptions, Z_SortOptions } from "../../types/enums";

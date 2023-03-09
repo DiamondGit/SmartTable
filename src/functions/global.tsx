@@ -1,3 +1,6 @@
+import AddBoxIcon from "@mui/icons-material/AddBox";
+import EditIcon from "@mui/icons-material/Edit";
+import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import { message } from "antd";
 import { DefaultOptionType } from "antd/es/select";
 import { FLAG, INDEX_JOINER } from "../constants/general";
@@ -9,22 +12,16 @@ import {
     Z_DependencyTypes,
     Z_ModalTypes,
     Z_TableFieldTypes,
-    Z_TablePinOptions,
+    Z_TablePinOptions
 } from "../types/enums";
 import {
     ColumnBaseSchema,
     ColumnInitialType,
     ColumnPinType,
-    ColumnType,
-    FieldType,
-    FilterItemType,
-    GeneralObject,
+    ColumnType, GeneralObject,
     TableConfigInitialSchema,
-    TableConfigType,
+    TableConfigType
 } from "../types/general";
-import AddBoxIcon from "@mui/icons-material/AddBox";
-import EditIcon from "@mui/icons-material/Edit";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
 
 export const formatDate = (date: string) =>
     new Date(date).toLocaleString("ru", { year: "numeric", month: "numeric", day: "numeric" }).split("г.")[0];

@@ -1,10 +1,10 @@
-import { Input, InputRef, Select, Switch } from "antd";
+import { Input, Select, Switch } from "antd";
 import axios from "axios";
-import { useContext, useRef } from "react";
+import { useContext } from "react";
 import { ERR_CANCELED, PLACEHOLDER } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import FieldModalContext from "../../../context/FieldModalContext";
-import { requester } from "../../../controllers/controllers";
 import { filterOption, getOptionTitle, getOptionValue } from "../../../functions/global";
 import { DependencyActionType, Z_DependencyActions, Z_TableFieldTypes } from "../../../types/enums";
 import { ColumnType, GeneralObject } from "../../../types/general";
@@ -12,6 +12,7 @@ import { ColumnType, GeneralObject } from "../../../types/general";
 const FieldInput = ({ field: currentField, isError = false }: { field: ColumnType; isError: boolean }) => {
     const fieldModalContext = useContext(FieldModalContext);
     const configContext = useContext(ConfigContext);
+    const dataFetchContext = useContext(DataFetchContext);
 
     const { config, modalConfig, actions, isFilterModal, LOADINGS, LISTS, VALUES, CONTROLLERS } = fieldModalContext;
 
@@ -78,7 +79,7 @@ const FieldInput = ({ field: currentField, isError = false }: { field: ColumnTyp
                             : DEPEND_DATA_INDEX;
                         const source = axios.CancelToken.source();
                         CONTROLLERS[DEPEND_DATA_INDEX || ""]?.cancel();
-                        requester
+                        dataFetchContext.requester
                             .get(dependField.fieldGetApi, {
                                 params: { [computedParam]: newValue },
                                 cancelToken: source.token,
@@ -112,7 +113,7 @@ const FieldInput = ({ field: currentField, isError = false }: { field: ColumnTyp
                             actions.setLoadingByDataIndex(DEPEND_DATA_INDEX, true);
                             const source = axios.CancelToken.source();
                             CONTROLLERS[DEPEND_DATA_INDEX || ""]?.cancel();
-                            requester
+                            dataFetchContext.requester
                                 .get(dependField.fieldGetApi, { params: dependParams, cancelToken: source.token })
                                 .then((response) => {
                                     actions.setListByDataIndex(DEPEND_DATA_INDEX, response.data || []);
@@ -247,7 +248,7 @@ const FieldInput = ({ field: currentField, isError = false }: { field: ColumnTyp
                 actions.setLoadingByDataIndex(DATA_INDEX, true);
                 actions.setListByDataIndex(DATA_INDEX, []);
                 actions.setValueByDataIndex(DATA_INDEX, null);
-                requester
+                dataFetchContext.requester
                     .get(currentField.fieldGetApi)
                     .then((response) => {
                         actions.setListByDataIndex(DATA_INDEX, response.data || []);

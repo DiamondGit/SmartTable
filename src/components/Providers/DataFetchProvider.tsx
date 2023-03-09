@@ -3,7 +3,6 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { ERR_CANCELED } from "../../constants/general";
 import DataFetchContext from "../../context/DataFetchContext";
 import PropsContext from "../../context/PropsContext";
-import { requester } from "../../controllers/controllers";
 import { Z_SortOptions } from "../../types/enums";
 import { GeneralObject } from "../../types/general";
 
@@ -40,6 +39,12 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
     const [columnWidthRefreshTrigger, setColumnWidthRefreshTrigger] = useState(Date.now());
 
     const defaultPageSizeOptions = [10, 20, 50, 100];
+
+    const requester = axios.create({
+        headers: {
+            Authorization: `Bearer ${propsContext.userToken || ""}`,
+        },
+    });
 
     const getData = (params: { [key: string]: any }) => {
         requestController?.cancel();
@@ -170,6 +175,8 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
                 columnWidthRefreshTrigger,
 
                 hasGetApi,
+
+                requester,
             }}
         >
             {children}

@@ -1,17 +1,15 @@
-import { useRef, useContext, useEffect } from "react";
+import { Checkbox, ConfigProvider as AntdConfigProvider } from "antd";
+import { useContext, useEffect, useRef } from "react";
+import { ACTION_COLUMN_NAME } from "../../../constants/general";
+import ConfigContext from "../../../context/ConfigContext";
+import DataContext from "../../../context/DataContext";
+import DataFetchContext from "../../../context/DataFetchContext";
 import StateContext from "../../../context/StateContext";
 import { Z_TablePinOptions } from "../../../types/enums";
-import Side from "./Side";
-import style from "../Table.module.scss";
-import ConfigContext from "../../../context/ConfigContext";
 import { ColumnPinType, ComputedRowLevelType } from "../../../types/general";
-import TableHeadContext from "../../../context/TableHeadContext";
-import DataContext from "../../../context/DataContext";
-import { Checkbox, ConfigProvider as AntdConfigProvider } from "antd";
 import Aligner from "../../Aligner";
-import PropsContext from "../../../context/PropsContext";
-import DataFetchContext from "../../../context/DataFetchContext";
-import { ACTION_COLUMN_NAME } from "../../../constants/general";
+import style from "../Table.module.scss";
+import Side from "./Side";
 
 type HeadRowType = {
     level: number;

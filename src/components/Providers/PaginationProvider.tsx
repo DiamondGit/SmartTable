@@ -1,7 +1,7 @@
-import PaginationContext from "../../context/PaginationContext";
-import { useState, useContext } from "react";
-import PropsContext from "../../context/PropsContext";
+import { useContext, useState } from "react";
 import DataFetchContext from "../../context/DataFetchContext";
+import PaginationContext from "../../context/PaginationContext";
+import PropsContext from "../../context/PropsContext";
 
 interface PaginationProviderType {
     children: React.ReactNode;

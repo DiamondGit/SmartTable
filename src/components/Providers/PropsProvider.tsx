@@ -1,9 +1,9 @@
 import PropsContext from "../../context/PropsContext";
-import { TableInitializationType } from "../../types/general";
+import { PropsContextType } from "../../types/general";
 
 interface PropsProviderType {
     children: React.ReactNode;
-    props: TableInitializationType;
+    props: PropsContextType;
 }
 
 const PropsProvider = ({children, props}: PropsProviderType) => {

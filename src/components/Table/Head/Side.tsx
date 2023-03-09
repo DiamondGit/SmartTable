@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import { useContext } from "react";
 import { FLAG } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
 import { TablePinOptions, Z_TablePinOptions } from "../../../types/enums";
