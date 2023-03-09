@@ -61,7 +61,10 @@ export const getPinOffset = (columnPins: ColumnPinType[], pin: TablePinOptions, 
                 (currentColumn.level === 0 || columnPin.mainOrder === currentColumn.mainOrder)
         );
         const ownOffset = neighborColumns.reduce((widthSum, columnWidth) => widthSum + columnWidth.width, 0) + parentOffset;
-
+        // if (namedDataIndex === "Система") {
+        //     console.log(neighborColumns);
+        //     console.log(namedDataIndex, ownOffset);
+        // }
         if (currentColumn.namedDataIndex === targetColumn.namedDataIndex) {
             return ownOffset;
         }

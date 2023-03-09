@@ -11,11 +11,10 @@
         overflow: auto;
         left: 0;
         background-color: white;
-        padding: 24px 0;
+        padding: 24px 0 0 0;
         margin: 0;
     }
     &.active .tableContainer {
-        padding: 0 24px;
         max-height: 100%;
         overflow-y: hidden;
         .table thead tr {
@@ -29,7 +28,6 @@
         display: grid;
         grid-template-columns: 100%;
         grid-template-rows: auto 1fr;
-        font-family: Arial, Helvetica, sans-serif;
         .activeIcon {
             color: $orange-400;
         }
@@ -39,12 +37,16 @@
             align-items: center;
             margin-bottom: 12px;
             gap: 6px;
+            &.isFullscreen {
+                padding: 0 24px;
+            }
             .bar {
                 display: grid;
                 grid-template-columns: 1fr auto;
                 align-items: center;
                 gap: 6px;
-                .left, .right {
+                .left,
+                .right {
                     display: flex;
                     align-items: center;
                     gap: 12px;
@@ -78,8 +80,9 @@
                 }
             }
             .title {
-                font-size: 28px;
-                font-weight: 700;
+                font-family: $main_font_title;
+                font-weight: 600;
+                font-size: 32px;
                 margin-right: 8px;
                 line-height: 32px;
             }
@@ -113,7 +116,6 @@
         }
         .table {
             width: 100%;
-            height: 100%;
             border-spacing: 0;
             &.loading::after {
                 content: "";
@@ -129,17 +131,22 @@
                 position: absolute;
                 background-color: rgba(230, 230, 230, 0.5);
             }
+            &.isFullscreenLoading {
+                mask-image: linear-gradient(to bottom, rgba(black, 1) 40%, rgba(black, 0) 90%);
+            }
             thead {
                 tr {
+                    $color: $blue-400;
+                    $color_darker: $blue-500;
                     font-size: 16px;
-                    background-color: $blue-400;
                     position: sticky;
                     z-index: $zIndex_table_thead;
                     th {
                         color: $white-400;
                         line-height: 18px;
                         user-select: none;
-                        background-color: $blue-400;
+                        background-color: $color;
+                        font-weight: 500;
                         &::before {
                             content: "";
                             position: absolute;
@@ -149,16 +156,19 @@
                             width: 1px;
                             height: calc(100% - 20px);
                             transform: translateY(10px);
-                            background-color: rgba($blue-200, .35);
+                            background-color: rgba($blue-200, 0.35);
+                        }
+                        &.actionCell {
+                            background-color: $color;
                         }
                         &:not(.actionCell):hover {
-                            background-color: $blue-500;
+                            background-color: $color_darker;
                             &:not(:first-child) {
-                                border-left-color: $blue-500;
+                                border-left-color: $color_darker;
                             }
                         }
                         &:not(:first-child) {
-                            border-left: 1px solid $blue-400;
+                            border-left: 1px solid $color;
                         }
                         &.skeletonFiller {
                             min-width: 150px;
@@ -212,7 +222,7 @@
                 td {
                     line-height: 18px;
                     background-color: $white-400;
-                    transition: background .2s;
+                    transition: background 0.2s, border 0.2s;
                     &:not(.actionCell) {
                         text-align: left;
                         vertical-align: top;
@@ -233,11 +243,24 @@
                         }
                     }
                     &:not(:first-child) {
-                        border-left: 1px solid $gray-300;
+                        border-left-width: 1px;
+                        border-left-style: solid;
+                        border-left-color: $blue-175;
                     }
-                    // &.pin.left {
-                    //     border-right: 1px solid $gray-300;
-                    // }
+                    &.errorContent .resultContainer {
+                        width: max-content;
+                        height: 100%;
+                        position: sticky;
+                        left: 50%;
+                        transform: translateX(-50%);
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        img {
+                            user-select: none;
+                            -webkit-user-drag: none;
+                        }
+                    }
                     &.numericField {
                         text-align: right;
                     }
@@ -262,10 +285,11 @@
                 }
                 &.selected {
                     td {
-                        background-color: $gray-350;
+                        background-color: $gray-300;
+                        border-left-color: $blue-250;
                     }
                     &:hover td {
-                        background-color: $gray-400;
+                        background-color: $gray-350;
                     }
                     &.deletingError {
                         td {
@@ -280,7 +304,7 @@
                     width: 150px;
                     height: 100%;
                     min-height: 165px;
-                    background-image: url("../../pictures/open_empty_box.png");
+                    background-image: url("../../pictures/empty-box.png");
                     background-repeat: no-repeat;
                     background-position: bottom center;
                     background-size: contain;
@@ -320,12 +344,11 @@
                 padding: 4px !important;
                 text-align: center;
             }
-            td.actionCell .actionButton {
-                color: $black-300;
-                padding: 2px;
-            }
-            th.actionCell {
-                background-color: $blue-400;
+            td.actionCell {
+                .actionButton {
+                    color: $black-300;
+                    padding: 2px;
+                }
             }
         }
     }

@@ -68,6 +68,8 @@ export interface DataContextType {
 
     availableData: any[];
     setAvailableData: React.Dispatch<React.SetStateAction<any[]>>;
+
+    isFullscreen: boolean;
 }
 
 const DataContext = createContext<DataContextType>({} as DataContextType);

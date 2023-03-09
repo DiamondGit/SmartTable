@@ -2,7 +2,9 @@ $black-400: #1b1c1e;
 $black-300: #2d2e30;
 
 $gray-500: #657893;
+$gray-450: #95a5bb;
 $gray-400: #a0acbd;
+$gray-375: #bbc7d8;
 $gray-350: #c5cdd8;
 $gray-300: #ced4dc;
 $gray-260: #d8e0ec;
@@ -13,21 +15,23 @@ $white-400: #f8f8f8;
 
 $blue-500: #192c47;
 $blue-400: #223c60;
-// $blue-400: #223c6080;
 $blue-300: #718aad;
+$blue-275: #8da1bd;
+$blue-250: #b2c5e0;
 $blue-200: #bed1ec;
-$blue-150: #e6e9ec;
+$blue-175: #dfe3e7;
+$blue-150: #e4eaf0;
 $blue-100: #eff1f5;
 
-$orange-500: #8F5D12;
-$orange-400: #F5A225;
+$orange-500: #8f5d12;
+$orange-400: #f5a225;
 $orange-200: #ffeed4;
 
 $green-500: #427338;
-$green-400: #7ABB6D;
+$green-400: #7abb6d;
 
-$red-500: #A03123;
-$red-400: #FA6855;
+$red-500: #a03123;
+$red-400: #fa6855;
 $red-250: #fcada2;
 $red-200: #ffbfb7;
 
@@ -44,3 +48,6 @@ $zIndex_table_thead_pinned: 1100;
 
 $zIndex_table_tbody: 500;
 $zIndex_table_tbody_pinned: 600;
+
+$main_font: "Noto Sans", sans-serif;
+$main_font_title: "Source Sans Pro", sans-serif;

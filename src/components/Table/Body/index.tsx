@@ -1,13 +1,14 @@
+import { Result } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import DataFetchContext from "../../../context/DataFetchContext";
-import Aligner from "../../Aligner";
 import style from "../Table.module.scss";
 import Row from "./Row";
 
 const Body = ({ data, defaultRowCount }: { data: any[]; defaultRowCount: number }) => {
     const { tableConfig } = useContext(ConfigContext);
     const { isDataLoading } = useContext(DataFetchContext);
+    const emptyBox = require("../../../pictures/empty-box.png");
 
     if (!tableConfig) return null;
     return (
@@ -25,16 +26,13 @@ const Body = ({ data, defaultRowCount }: { data: any[]; defaultRowCount: number 
                             padding: 0,
                         }}
                     >
-                        <Aligner
-                            style={{
-                                padding: "40px 0",
-                                backgroundColor: "rgb(248, 248, 248)",
-                            }}
-                        >
-                            <Aligner className={style.emptyBoxImg}>
-                                <span className={style.label}>Нет данных</span>
-                            </Aligner>
-                        </Aligner>
+                        <div className={style.resultContainer}>
+                            <Result
+                                status="info"
+                                title="Нет данных"
+                                icon={<img width={150} src={emptyBox} alt="Нет данных" />}
+                            />
+                        </div>
                     </td>
                 </tr>
             )}

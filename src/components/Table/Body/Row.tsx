@@ -2,7 +2,7 @@ import ControlPointDuplicateIcon from "@mui/icons-material/ControlPointDuplicate
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import EditIcon from "@mui/icons-material/Edit";
 import { IconButton } from "@mui/material";
-import { Checkbox, ConfigProvider as AntdConfigProvider } from "antd";
+import { Checkbox, ConfigProvider as AntdConfigProvider, message } from "antd";
 import { useContext, useRef } from "react";
 import { DELETE_OPTION } from "../../../constants/general";
 import ConfigContext from "../../../context/ConfigContext";
@@ -64,8 +64,12 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
         if (option === Z_ModalTypes.enum.ADD_BASED || option === Z_ModalTypes.enum.UPDATE) {
             dataContext.openDataModal(option, dataRow);
         } else if (option === DELETE_OPTION) {
-            dataContext.setSelectingToDelete(true);
-            dataContext.setDataListToDelete((prevList) => [...prevList, dataRow.id]);
+            if (!!configContext.defaultTableConfig?.dataDeleteApi) {
+                dataContext.setSelectingToDelete(true);
+                dataContext.setDataListToDelete((prevList) => [...prevList, dataRow.id]);
+            } else {
+                message.warning("Отсутствует API удаления данных!");
+            }
         }
     };
 
@@ -90,25 +94,25 @@ const Row = ({ dataRow, index }: { dataRow: any; index: number }) => {
                         ref={actionCellRef}
                     >
                         {dataContext.isSelectingToDelete ? (
-                            <Aligner style={{ margin: "0 4px" }}>
-                                <AntdConfigProvider
-                                    theme={
-                                        dataContext.isDeletingError
-                                            ? {
-                                                  token: {
-                                                      colorPrimary: "#ff5555",
-                                                  },
-                                              }
-                                            : undefined
-                                    }
-                                >
+                            <AntdConfigProvider
+                                theme={
+                                    dataContext.isDeletingError
+                                        ? {
+                                              token: {
+                                                  colorPrimary: "#ff5555",
+                                              },
+                                          }
+                                        : undefined
+                                }
+                            >
+                                <Aligner style={{ margin: "0 4px" }}>
                                     <Checkbox
                                         disabled={dataContext.isDeleting}
                                         onChange={handleSelectRow}
                                         checked={dataContext.dataListToDelete.includes(dataRow.id)}
                                     />
-                                </AntdConfigProvider>
-                            </Aligner>
+                                </Aligner>
+                            </AntdConfigProvider>
                         ) : (
                             <Aligner>
                                 {actionMenuOptions.length > 1 ? (

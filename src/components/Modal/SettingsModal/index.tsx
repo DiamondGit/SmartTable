@@ -37,9 +37,6 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     const [isTransparentModal, setTransparentModal] = useState(false);
     const [isEditingSavedConfig, setEditingSavedConfig] = useState(false);
 
-    const [configError, setConfigError] = useState<GeneralObject>({});
-    const hasError = Object.values(configError).some((error) => !!error);
-
     const [modalLoading, setModalLoading] = useState(false);
     const [isConfigEditable, setConfigEditable] = useState(false);
 
@@ -48,15 +45,13 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         setSavingSettings(false);
         setResettedHard(false);
         setEditingSavedConfig(false);
-        setConfigError({});
     };
 
     const currentSavedConfig = configContext.getSavedConfigById(configContext.modalSelectedSavedConfigId);
     const currentSavedConfigName = currentSavedConfig?.configName || "";
 
     const isDefaultSettings =
-        JSON.stringify(configContext.modalTableConfig) === JSON.stringify(configContext.defaultTableConfig) &&
-        configContext.modalSelectedSavedConfigId === undefined;
+        JSON.stringify(configContext.modalTableConfig) === JSON.stringify(configContext.defaultTableConfig);
 
     const isSavedSettingsChanged = currentSavedConfig
         ? JSON.stringify(currentSavedConfig?.configParams) !== JSON.stringify(configContext.modalTableConfig)
@@ -76,9 +71,10 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         if (configContext.defaultTableConfig) {
             setResettedHard(true);
             setConfigEditable(true);
-            setEditingSavedConfig(false);
+            if (!isEditingSavedConfig) {
+                configContext.setModalSelectedSavedConfigId(undefined);
+            }
             configContext.setModalTableConfig(configContext.defaultTableConfig);
-            configContext.setModalSelectedSavedConfigId(undefined);
         }
     };
 
@@ -116,7 +112,10 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 closeModal();
             }
         } else {
-            if (isDefaultSettings && configContext.selectedSavedConfigId !== configContext.modalSelectedSavedConfigId) {
+            if (
+                configContext.selectedSavedConfigId !== configContext.modalSelectedSavedConfigId &&
+                configContext.modalSelectedSavedConfigId === undefined
+            ) {
                 setModalLoading(true);
                 setDefaultConfig(propsContext.configPath)
                     .then(() => {
@@ -136,7 +135,33 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     };
 
     const confirmSaveSettings = () => {
-        if (isEditingSavedConfig && configContext.modalSelectedSavedConfigId && configContext.modalTableConfig) {
+        if (
+            isEditingSavedConfig &&
+            isSavingSettings &&
+            configContext.modalSelectedSavedConfigId &&
+            configContext.modalTableConfig
+        ) {
+            setModalLoading(true);
+            createConfig({
+                configName: settingsName,
+                configParams: configContext.modalTableConfig,
+                tableName: propsContext.configPath,
+            })
+                .then(() => {
+                    setSavingSettings(false);
+                    configContext.requestSavedConfigs();
+                    message.success(MESSAGE.success.config.create(settingsName));
+                    closeModal();
+                })
+                .catch((error) => {
+                    message.error(
+                        `${MESSAGE.error.create}${error?.response?.data?.errors ? `: ${error?.response?.data?.errors}` : ""}`
+                    );
+                })
+                .finally(() => {
+                    setModalLoading(false);
+                });
+        } else if (isEditingSavedConfig && configContext.modalSelectedSavedConfigId && configContext.modalTableConfig) {
             if (isSavedSettingsChanged || settingsName !== currentSavedConfigName) {
                 setModalLoading(true);
                 updateConfig({
@@ -166,8 +191,11 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                         configContext.requestSavedConfigs();
                     })
                     .catch((error) => {
-                        message.error(MESSAGE.error.update);
-                        setConfigError(error?.response?.data?.errors || {});
+                        message.error(
+                            `${MESSAGE.error.update}${
+                                error?.response?.data?.errors ? `: ${error?.response?.data?.errors}` : ""
+                            }`
+                        );
                         setModalLoading(false);
                     });
             } else {
@@ -189,10 +217,12 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                     setSavingSettings(false);
                     configContext.requestSavedConfigs();
                     message.success(MESSAGE.success.config.create(settingsName));
+                    closeModal();
                 })
                 .catch((error) => {
-                    message.error(MESSAGE.error.create);
-                    setConfigError(error?.response?.data?.errors || {});
+                    message.error(
+                        `${MESSAGE.error.create}${error?.response?.data?.errors ? `: ${error?.response?.data?.errors}` : ""}`
+                    );
                 })
                 .finally(() => {
                     setModalLoading(false);
@@ -206,7 +236,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     };
 
     const handleCancelSaveSettings = () => {
-        if (isEditingSavedConfig) {
+        const resetEdit = () => {
             const selectedConfig = configContext.savedTableConfigs.find(
                 (savedConfig) => savedConfig.id === configContext.modalSelectedSavedConfigId
             )?.configParams;
@@ -215,6 +245,13 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 setConfigEditable(false);
                 configContext.setModalTableConfig(selectedConfig);
             }
+        };
+        if (isEditingSavedConfig && isSavingSettings) {
+            resetEdit();
+            setSavingSettings(false);
+        }
+        if (isEditingSavedConfig) {
+            resetEdit();
         } else if (isSavingSettings) {
             setSavingSettings(false);
         }
@@ -223,6 +260,10 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     const startSaveSettings = () => {
         setSettingsName("");
         setSavingSettings(true);
+        if (configContext.modalSelectedSavedConfigId) {
+            setConfigEditable(true);
+            setEditingSavedConfig(true);
+        }
     };
 
     const handleMouseDownTransparent = () => {
@@ -241,6 +282,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                 .then(() => {
                     message.success(MESSAGE.success.config.delete(configName));
                     configContext.requestSavedConfigs();
+                    setEditingSavedConfig(false);
                     configContext.setSelectedSavedConfigId(undefined);
                     configContext.setModalSelectedSavedConfigId(undefined);
                     if (configContext.defaultTableConfig) {
@@ -264,12 +306,13 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
     }, [configContext.modalSelectedSavedConfigId]);
 
     useEffect(() => {
-        setResettedHard(false);
+        if (!isDefaultSettings) {
+            setResettedHard(false);
+        }
     }, [configContext.modalTableConfig]);
 
     const handleChangeSettingsName = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setConfigError({});
-        if (event.target.value.length < 16) setSettingsName(event.target.value);
+        setSettingsName(event.target.value);
     };
 
     const handleEditSavedSettings = () => {
@@ -307,69 +350,11 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
         type: Z_ModalTypes.enum.SETTINGS,
         isTransparentModal: isTransparentModal,
         closable: !modalLoading,
-        leftFooter: isUsingDefaultSettings ? (
-            configContext.savedTableConfigs.length < 5 ? (
-                isSavingSettings ? (
-                    <TextField
-                        error={hasError}
-                        helperText={configError.configName}
-                        label="Название"
-                        variant="outlined"
-                        size="small"
-                        style={{ width: "150px" }}
-                        value={settingsName}
-                        onChange={handleChangeSettingsName}
-                        disabled={modalLoading}
-                    />
-                ) : (
-                    <Button onClick={startSaveSettings} disabled={modalLoading}>
-                        Сохранить настройку
-                    </Button>
-                )
-            ) : undefined
-        ) : isEditingSavedConfig ? (
-            <TextField
-                error={hasError}
-                helperText={configError.configName}
-                label="Название"
-                variant="outlined"
-                size="small"
-                style={{ width: "150px" }}
-                value={settingsName}
-                onChange={handleChangeSettingsName}
-                disabled={modalLoading}
-            />
-        ) : (
-            <>
-                <Button onClick={handleEditSavedSettings} disabled={modalLoading}>
-                    Изменить
-                </Button>
-                <Popconfirm
-                    title={`Удалить настройку "${currentSavedConfig?.configName}"?`}
-                    okText="Да"
-                    okButtonProps={{
-                        danger: true,
-                        size: "small",
-                        style: { width: "50px" },
-                    }}
-                    onConfirm={handleDeleteSavedConfig}
-                    cancelText="Нет"
-                    cancelButtonProps={{
-                        size: "small",
-                        style: { width: "50px" },
-                    }}
-                >
-                    <IconButton size="small" disabled={modalLoading}>
-                        <DeleteIcon />
-                    </IconButton>
-                </Popconfirm>
-            </>
-        ),
         rightFooter:
             isEditingSavedConfig || isSavingSettings ? (
                 <>
                     <Button onClick={handleCancelSaveSettings} disabled={modalLoading}>
-                        Отмена
+                        Отменить изменения
                     </Button>
                     <Button type="primary" onClick={confirmSaveSettings} disabled={modalLoading}>
                         Сохранить и применить
@@ -381,7 +366,15 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                         Отмена
                     </Button>
                     <Button type="primary" onClick={handleApplyConfig} disabled={modalLoading}>
-                        Применить
+                        {`Применить${
+                            configContext.modalSelectedSavedConfigId !== configContext.selectedSavedConfigId
+                                ? ` "${
+                                      configContext.modalSelectedSavedConfigId === undefined
+                                          ? "По умолчанию"
+                                          : currentSavedConfigName
+                                  }"`
+                                : ""
+                        }`}
                     </Button>
                 </>
             ),
@@ -389,7 +382,24 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
 
     if (stateContext.isDefaultConfigLoadingError || !configContext.modalTableConfig) return null;
     return (
-        <SettingsContext.Provider value={{ isLoading: modalLoading, isConfigEditable, setConfigEditable }}>
+        <SettingsContext.Provider
+            value={{
+                isLoading: modalLoading,
+                isConfigEditable,
+                setConfigEditable,
+                isUsingDefaultSettings,
+                canAdd: configContext.savedTableConfigs.length < 5,
+                isSavingSettings,
+                isEditingSavedConfig,
+                startSaveSettings,
+                handleEditSavedSettings,
+                handleDeleteSavedConfig,
+                handleChangeSettingsName,
+                handleCancelSaveSettings,
+                currentSavedConfigName,
+                settingsName,
+            }}
+        >
             <Modal {...modalProps}>
                 <Aligner isVertical style={{ alignItems: "stretch" }}>
                     <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "8px", alignItems: "start" }}>
@@ -418,7 +428,7 @@ const SettingsModal = ({ open, setOpen }: SettingsModalType) => {
                             При загрузке сохраненных настроек произошла ошибка!
                         </Alert>
                     ) : (
-                        <ConfigSelector isEditingSavedConfig={isEditingSavedConfig || isSavingSettings} />
+                        <ConfigSelector />
                     )}
                 </Aligner>
             </Modal>

@@ -7,7 +7,7 @@ import StateContext from "../../../context/StateContext";
 import TableBodyContext from "../../../context/TableBodyContext";
 import { formatDate, getColumnStyle, getDeepValue, getPinSide } from "../../../functions/global";
 import { Z_TableDataTypes, Z_TablePinOptions } from "../../../types/enums";
-import { ColumnPinType, ColumnType } from "../../../types/general";
+import { ColumnType } from "../../../types/general";
 import style from "../Table.module.scss";
 
 type BodyCellType = { column: ColumnType; order: number };

@@ -3,13 +3,13 @@ import { ColumnType, SavedTableConfigType, TableConfigType } from "../types/gene
 
 interface ConfigContextType {
     readonly defaultTableConfig: TableConfigType | undefined;
-    
+
     tableConfig: TableConfigType | undefined;
     setTableConfig: (newTableConfig: TableConfigType) => void;
 
     modalTableConfig: TableConfigType | undefined;
     setModalTableConfig: (newTableConfig: TableConfigType) => void;
-    
+
     savedTableConfigs: SavedTableConfigType[];
 
     selectedSavedConfigId: number | undefined;
@@ -24,7 +24,7 @@ interface ConfigContextType {
     requestSavedConfigs: (defaultConfig?: TableConfigType | undefined) => void;
 
     getSavedConfigById: (configId: number | undefined) => SavedTableConfigType | undefined;
-    
+
     hasLeftPin: boolean;
     hasRightPin: boolean;
 

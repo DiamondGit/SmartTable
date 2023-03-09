@@ -1,9 +1,11 @@
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
-import { MouseEventHandler, useContext, useEffect, useRef } from "react";
+import { MouseEventHandler, useContext, useEffect, useRef, useState } from "react";
 import { FLAG } from "../../../constants/general";
+import ConfigContext from "../../../context/ConfigContext";
 import DataContext from "../../../context/DataContext";
 import DataFetchContext from "../../../context/DataFetchContext";
+import PaginationContext from "../../../context/PaginationContext";
 import PropsContext from "../../../context/PropsContext";
 import StateContext from "../../../context/StateContext";
 import TableHeadContext from "../../../context/TableHeadContext";
@@ -17,13 +19,34 @@ type HeadCellType = { column: ColumnType; order: number };
 const Cell = ({ column, order }: HeadCellType) => {
     const headContext = useContext(TableHeadContext);
     const stateContext = useContext(StateContext);
-    const propsContext = useContext(PropsContext);
+    const paginationContext = useContext(PaginationContext);
     const dataContext = useContext(DataContext);
+    const configContext = useContext(ConfigContext);
     const dataFetchContext = useContext(DataFetchContext);
     const headingRef = useRef<HTMLTableCellElement>(null);
     const isPinned = column.pin !== Z_TablePinOptions.enum.NONE;
 
+    const [localColumnWidthRefreshTrigger, setLocalColumnWidthRefreshTrigger] = useState(
+        dataFetchContext.columnWidthRefreshTrigger
+    );
+
+    const columnRefreshDependencies = [
+        configContext.tableConfig,
+        configContext.selectedSavedConfigId,
+        configContext.selectedSavedTableConfigId,
+        dataFetchContext.data,
+        dataFetchContext.isDataLoading,
+        dataFetchContext.columnWidthRefreshTrigger,
+        dataContext.isFullscreen,
+        headingRef.current?.getClientRects()[0].width,
+        order,
+    ];
+
     useEffect(() => {
+        setLocalColumnWidthRefreshTrigger(Date.now());
+    }, columnRefreshDependencies);
+
+    const updateColumnWidth = () => {
         const computedData = {
             namedDataIndex: column[FLAG.namedDataIndex],
             order: order,
@@ -33,19 +56,26 @@ const Cell = ({ column, order }: HeadCellType) => {
             width: headingRef.current?.getClientRects()[0].width || 0,
         };
 
-        const updateCurrentColumnPin = () => {
-            headContext.updateColumnPin(computedData);
-        };
-
         if (
             !stateContext.columnPins.some((columnPin) => columnPin.namedDataIndex === column[FLAG.namedDataIndex]) &&
             !!headingRef.current?.getClientRects()[0].width
         ) {
             headContext.addOrReplaceColumnPin(computedData);
         } else {
-            updateCurrentColumnPin();
+            headContext.updateColumnPin(computedData);
         }
-    }, [headingRef.current?.getClientRects()[0].width, order, propsContext.data, dataFetchContext.isDataLoading]);
+    };
+
+    useEffect(() => {
+        window.addEventListener("resize", updateColumnWidth);
+        return () => {
+            window.removeEventListener("resize", updateColumnWidth);
+        };
+    }, []);
+
+    useEffect(() => {
+        updateColumnWidth();
+    }, [...columnRefreshDependencies, localColumnWidthRefreshTrigger]);
 
     const SortingIcon = () => {
         const props = {

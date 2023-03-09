@@ -23,6 +23,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
     const filterContext = useContext(FilterContext);
     const stateContext = useContext(StateContext);
     const dataContext = useContext(DataContext);
+    const { isFullscreen } = dataContext;
     const { paginationConfig = {} as PaginationConfigType } = useContext(PropsContext);
 
     const computedPaginationConfig = {
@@ -30,7 +31,7 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         pageSize: paginationContext.pageSize,
         showTotal:
             paginationConfig.hideTotal === undefined
-                ? (total: number, range: [number, number]) => `${range[0]}-${range[1]} из ${total}`
+                ? (total: number, range: [number, number]) => <span>{`${range[0]}-${range[1]} из ${total}`}</span>
                 : undefined,
         hideSizeChanger: paginationConfig.hideSizeChanger === undefined ? false : true,
         pageSizeOptions:
@@ -55,42 +56,49 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
         }
     };
 
-    const Pagination = ({ position }: { position?: PaginationPositionType }) => (
-        <div className={`${style.paginationContainer} ${style[`position_${PaginationPositionSchema.parse(position)}`]}`}>
-            <AntdPagination
-                total={computedPaginationConfig.total}
-                current={paginationContext.currentPage}
-                onChange={handlePageChange}
-                showTotal={computedPaginationConfig.showTotal}
-                pageSize={computedPaginationConfig.pageSize}
-                showSizeChanger={!computedPaginationConfig.hideSizeChanger}
-                pageSizeOptions={computedPaginationConfig.pageSizeOptions}
-                size="small"
-                disabled={
-                    stateContext.isDefaultConfigLoading || dataFetchContext.isDataLoading || dataContext.isSelectingToDelete
-                }
-                itemRender={(
-                    _page: number,
-                    type: "page" | "prev" | "next" | "jump-prev" | "jump-next",
-                    _element: React.ReactNode
-                ) => {
-                    if (type === "next")
-                        return (
-                            <Aligner style={{ height: "100%" }}>
-                                <NavigateNextIcon />
-                            </Aligner>
-                        );
-                    else if (type === "prev")
-                        return (
-                            <Aligner style={{ height: "100%" }}>
-                                <NavigateBeforeIcon />
-                            </Aligner>
-                        );
-                    return _element;
-                }}
-            />
-        </div>
-    );
+    const Pagination = ({ position }: { position?: PaginationPositionType }) => {
+        const paginationClasses = [style.paginationContainer, style[`position_${PaginationPositionSchema.parse(position)}`]];
+        if (isFullscreen) paginationClasses.push(style.isFullscreen);
+        return (
+            <div className={paginationClasses.join(" ")}>
+                <AntdPagination
+                    total={computedPaginationConfig.total}
+                    current={paginationContext.currentPage}
+                    onChange={handlePageChange}
+                    showTotal={computedPaginationConfig.showTotal}
+                    pageSize={computedPaginationConfig.pageSize}
+                    showSizeChanger={!computedPaginationConfig.hideSizeChanger}
+                    pageSizeOptions={computedPaginationConfig.pageSizeOptions}
+                    className={style.pagination}
+                    size="small"
+                    disabled={
+                        stateContext.isDefaultConfigLoading ||
+                        dataFetchContext.isDataLoading ||
+                        dataContext.isSelectingToDelete
+                    }
+                    itemRender={(
+                        _page: number,
+                        type: "page" | "prev" | "next" | "jump-prev" | "jump-next",
+                        _element: React.ReactNode
+                    ) => {
+                        if (type === "next")
+                            return (
+                                <Aligner style={{ height: "100%" }}>
+                                    <NavigateNextIcon />
+                                </Aligner>
+                            );
+                        else if (type === "prev")
+                            return (
+                                <Aligner style={{ height: "100%" }}>
+                                    <NavigateBeforeIcon />
+                                </Aligner>
+                            );
+                        return _element;
+                    }}
+                />
+            </div>
+        );
+    };
 
     const hasData = dataFetchContext.data.length > 0;
     const isError = stateContext.isDefaultConfigLoadingError || dataFetchContext.isDataError;
@@ -98,18 +106,14 @@ const PaginationWrapper = ({ children }: PaginationWrapperType) => {
     const visibleBottomPagination = hasData && !computedPaginationConfig.hideBottom;
 
     const wrapperClasses = [style.wrapper];
-    if (visibleTopPagination && !isError) wrapperClasses.push(style.withTopPagination);
-    if (visibleBottomPagination && !isError) wrapperClasses.push(style.withButtomPagination);
+    if ((visibleTopPagination && !isError) || isFullscreen) wrapperClasses.push(style.withTopPagination);
+    if (visibleBottomPagination && !isError && !isFullscreen) wrapperClasses.push(style.withButtomPagination);
 
     return (
         <div className={wrapperClasses.join(" ")}>
-            {visibleTopPagination && !isError && (
-                <div style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr max-content" }}>
-                    {visibleTopPagination && <Pagination />}
-                </div>
-            )}
+            {((visibleTopPagination && !isError) || isFullscreen) && <Pagination />}
             <div className={style.content}>{children}</div>
-            {visibleBottomPagination && !isError && (
+            {visibleBottomPagination && !isError && !isFullscreen && (
                 <Pagination position={computedPaginationConfig.bottomPosition} />
             )}
         </div>

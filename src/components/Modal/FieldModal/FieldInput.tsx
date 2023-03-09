@@ -311,10 +311,7 @@ const FieldInput = ({ field: currentField, isError = false }: { field: ColumnTyp
                 )}
             </div>
         );
-    const inputRender = () => {
-        return <Input {...commonFieldProps} type={getInputType()} />;
-    };
-    return inputRender();
+    return <Input {...commonFieldProps} type={getInputType()} suffix={<span />} />;
 };
 
 export default FieldInput;

@@ -1,4 +1,4 @@
-import { Button } from "antd";
+import { Button, Result } from "antd";
 import { CancelTokenSource } from "axios";
 import { useContext, useEffect, useState } from "react";
 import ConfigContext from "../../context/ConfigContext";
@@ -11,7 +11,6 @@ import StateContext from "../../context/StateContext";
 import { getDeepValue } from "../../functions/global";
 import { ModalTypes, Z_ModalTypes, Z_TableCellSizes, Z_TablePinOptions } from "../../types/enums";
 import { GeneralObject } from "../../types/general";
-import Aligner from "../Aligner";
 import FieldModal from "../Modal/FieldModal";
 import SettingsModal from "../Modal/SettingsModal";
 import PaginationWrapper from "../PaginationWrapper";
@@ -21,6 +20,9 @@ import Head from "./Head";
 import SkeletonFiller from "./SkeletonFiller";
 import style from "./Table.module.scss";
 import TopBar from "./TopBar";
+
+const configErrorIcon = require("../../pictures/corrupted-file.png");
+const dataErrorIcon = require("../../pictures/empty.png");
 
 const MainContent = () => {
     const dataFetchContext = useContext(DataFetchContext);
@@ -65,7 +67,7 @@ const MainContent = () => {
             dataFetchContext.isDataLoading && isConfigLoaded
                 ? configContext.tableConfig?.table.filter((column) => column.visible).length || defaultColumnCount
                 : defaultColumnCount,
-        rowCount: defaultRowCount,
+        rowCount: isFullscreen ? 24 : defaultRowCount,
         noFuncBtnsLeft: propsContext.loadingConfig?.noFuncBtnsLeft || false,
         noFuncBtnsRight: propsContext.loadingConfig?.noFuncBtnsRight || false,
     };
@@ -147,6 +149,7 @@ const MainContent = () => {
         stateContext.tableHasLeftShadow
     )
         tableClasses.push(style.withLeftShadow);
+    if (isFullscreen && dataFetchContext.isDataLoading) tableClasses.push(style.isFullscreenLoading);
 
     const currentData = isSelectingToDelete ? availableData : propsContext.data || dataFetchContext.data || [];
 
@@ -193,6 +196,8 @@ const MainContent = () => {
 
                 availableData,
                 setAvailableData,
+
+                isFullscreen,
             }}
         >
             <div className={fullscreenContainerClasses.join(" ")}>
@@ -201,7 +206,6 @@ const MainContent = () => {
                     <FieldModal modalType={fieldModalType} isModalOpen={isFieldModalOpen} setModalOpen={setFieldModalOpen} />
                     <TopBar
                         {...{
-                            isFullscreen,
                             computedLoadingConfig,
                             toggleFullscreen,
                             openSettingsModal,
@@ -209,7 +213,7 @@ const MainContent = () => {
                         }}
                     />
                     <PaginationWrapper>
-                        <ScrollWrapper isFullscreen={isFullscreen}>
+                        <ScrollWrapper>
                             <table className={tableClasses.join(" ")}>
                                 {(!stateContext.isDefaultConfigLoadingError || stateContext.isDefaultConfigLoading) && (
                                     <thead style={{ position: "sticky", top: 0, zIndex: 1000 }}>
@@ -258,23 +262,41 @@ const MainContent = () => {
                                                     padding: 0,
                                                 }}
                                             >
-                                                <Aligner
-                                                    className={style.loadingError}
-                                                    isVertical
-                                                    gutter={8}
-                                                    style={{
-                                                        width: "max-content",
-                                                        position: "sticky",
-                                                        left: "50%",
-                                                        transform: "translateX(-50%)",
-                                                    }}
-                                                >
-                                                    {stateContext.isDefaultConfigLoadingError && "ОШИБКА ТАБЛИЦЫ"}
-                                                    {dataFetchContext.isDataError && "ОШИБКА ДАННЫХ"}
-                                                    <Button type="primary" onClick={repeatRequest}>
-                                                        Повторить попытку
-                                                    </Button>
-                                                </Aligner>
+                                                <div className={style.resultContainer}>
+                                                    <Result
+                                                        status="error"
+                                                        title="Ошибка"
+                                                        subTitle={
+                                                            stateContext.isDefaultConfigLoadingError
+                                                                ? "Не удалось получить таблицу"
+                                                                : dataFetchContext.isDataError
+                                                                ? dataFetchContext.hasGetApi
+                                                                    ? "Не удалось получить данные"
+                                                                    : "Отсутствует API получения данных!"
+                                                                : null
+                                                        }
+                                                        extra={
+                                                            dataFetchContext.hasGetApi && (
+                                                                <Button type="primary" onClick={repeatRequest}>
+                                                                    Повторить попытку
+                                                                </Button>
+                                                            )
+                                                        }
+                                                        icon={
+                                                            <img
+                                                                width={150}
+                                                                src={
+                                                                    stateContext.isDefaultConfigLoadingError
+                                                                        ? configErrorIcon
+                                                                        : dataFetchContext.isDataError
+                                                                        ? dataErrorIcon
+                                                                        : null
+                                                                }
+                                                                alt={"Ошибка"}
+                                                            />
+                                                        }
+                                                    />
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>

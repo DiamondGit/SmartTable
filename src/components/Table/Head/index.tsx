@@ -12,24 +12,12 @@ import Row from "./Row";
 
 const Head = () => {
     const { tableConfig, hasLeftPin } = useContext(ConfigContext);
-    const actionCellRef = useRef<HTMLTableCellElement>(null);
     const stateContext = useContext(StateContext);
     const dataFetchContext = useContext(DataFetchContext);
     const filterContext = useContext(FilterContext);
 
     const defaultRowLevels: ComputedRowLevelsType = [];
     const [computedRowLevels, setComputedRowLevels] = useState<ComputedRowLevelsType>(defaultRowLevels);
-
-    useEffect(() => {
-        addOrReplaceColumnPin({
-            namedDataIndex: ACTION_COLUMN_NAME,
-            order: -1,
-            mainOrder: -1,
-            pin: Z_TablePinOptions.enum.LEFT,
-            level: 0,
-            width: actionCellRef.current?.getClientRects()[0].width || 0,
-        });
-    }, [actionCellRef.current?.getClientRects()[0].width]);
 
     const getHeadingByLevel = (column: ColumnType, level: number): ColumnType | ColumnType[] => {
         if (column[FLAG.rowLevel] === level) return column;
@@ -91,8 +79,6 @@ const Head = () => {
                     break;
                 case Z_SortOptions.enum.DESC:
                     updateSort("id");
-
-                    // stateContext.setSortingColumn("id");
                     break;
             }
         };
@@ -136,7 +122,7 @@ const Head = () => {
             }}
         >
             {computedRowLevels.map((rowLevel, level) => (
-                <Row level={level} rowLevel={rowLevel} key={level} actionCellRef={actionCellRef} />
+                <Row level={level} rowLevel={rowLevel} key={level} addOrReplaceColumnPin={addOrReplaceColumnPin} />
             ))}
         </TableHeadContext.Provider>
     );

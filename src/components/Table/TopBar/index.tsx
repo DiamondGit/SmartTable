@@ -20,7 +20,6 @@ import style from "../Table.module.scss";
 import SearchInput from "./SearchInput";
 
 interface TopBarType {
-    isFullscreen: boolean;
     computedLoadingConfig: {
         columnCount: number;
         rowCount: number;
@@ -32,13 +31,7 @@ interface TopBarType {
     openFieldModal: (modalType: ModalTypes) => () => void;
 }
 
-const TopBar = ({
-    isFullscreen,
-    computedLoadingConfig,
-    toggleFullscreen,
-    openSettingsModal,
-    openFieldModal,
-}: TopBarType) => {
+const TopBar = ({ computedLoadingConfig, toggleFullscreen, openSettingsModal, openFieldModal }: TopBarType) => {
     const { isDefaultConfigLoading, isDefaultConfigLoadingError } = useContext(StateContext);
     const configContext = useContext(ConfigContext);
     const filterContext = useContext(FilterContext);
@@ -47,6 +40,7 @@ const TopBar = ({
     const dataContext = useContext(DataContext);
     const dataFetchContext = useContext(DataFetchContext);
     const { isDataLoading, isDataError } = dataFetchContext;
+    const { isFullscreen } = dataContext;
 
     const isError = isDefaultConfigLoadingError || isDataError;
     const iconStyle = {
@@ -137,8 +131,11 @@ const TopBar = ({
 
     const hasDeleteApi = !!configContext.defaultTableConfig?.dataDeleteApi;
 
+    const topBarClasses = [style.topBar];
+    if (isFullscreen) topBarClasses.push(style.isFullscreen);
+
     return (
-        <div className={style.topBar}>
+        <div className={topBarClasses.join(" ")}>
             <h3 className={style.title}>{propsContext.tableTitle}</h3>
             <div className={style.bar}>
                 <div className={style.left}>
@@ -188,12 +185,10 @@ const TopBar = ({
                                         size: "middle",
                                     }}
                                 >
-                                    <Tooltip title="Отсутствует API для удаления!" disableHoverListener={hasDeleteApi}>
-                                        <Button type="primary" loading={dataContext.isDeleting} disabled={!hasDeleteApi}>
-                                            {dataContext.isDeleting ? "Удаление" : "Удалить"} (
-                                            {dataContext.dataListToDelete.length})
-                                        </Button>
-                                    </Tooltip>
+                                    <Button type="primary" danger loading={dataContext.isDeleting} disabled={!hasDeleteApi}>
+                                        {dataContext.isDeleting ? "Удаление" : "Удалить"} (
+                                        {dataContext.dataListToDelete.length})
+                                    </Button>
                                 </Popconfirm>
                             )}
                             <div style={{ width: "max-content" }}>
@@ -214,9 +209,7 @@ const TopBar = ({
                                           placement="top"
                                           disableHoverListener={isDataLoading || isError}
                                       >
-                                          <IconButton
-                                              onClick={toggleFullscreen}
-                                          >
+                                          <IconButton onClick={toggleFullscreen}>
                                               {isFullscreen ? (
                                                   <CloseFullscreenIcon
                                                       sx={iconStyle}

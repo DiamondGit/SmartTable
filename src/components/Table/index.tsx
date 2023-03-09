@@ -10,8 +10,7 @@ import PropsProvider from "../Providers/PropsProvider";
 import StateProvider from "../Providers/StateProvider";
 import MainContent from "./MainContent";
 
-type TableStartingType = TableInitializationType &
-    TableCreateType;
+type TableStartingType = TableInitializationType & TableCreateType;
 
 const Table = ({ ...props }: TableStartingType) => {
     return (

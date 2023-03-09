@@ -131,10 +131,10 @@ const FieldModal = ({ modalType, isModalOpen, setModalOpen }: FieldModalType) =>
 
     const LeftFooter = () => {
         if (isDataModal) {
-            if (isAddModal && !hasCreateApi) {
-                return <ErrorText text="Отсутствует API для создания!" />;
+            if ((isAddModal || isAddBasedModal) && !hasCreateApi) {
+                return <ErrorText text="Отсутствует API создания данных!" />;
             } else if (isUpdateModal && !hasUpdateApi) {
-                return <ErrorText text="Отсутствует API для изменения!" />;
+                return <ErrorText text="Отсутствует API изменения данных!" />;
             } else if (dataContext.dataFieldErrors.error !== undefined) {
                 return <ErrorText text={dataContext.dataFieldErrors.error} />;
             }
@@ -161,16 +161,16 @@ const FieldModal = ({ modalType, isModalOpen, setModalOpen }: FieldModalType) =>
         leftFooter: <LeftFooter />,
         rightFooter: isDataModal ? (
             <>
-                <Button onClick={handleCancel} loading={modalLoading}>
+                <Button onClick={handleCancel} disabled={modalLoading}>
                     Отмена
                 </Button>
                 <Button
                     type="primary"
                     onClick={handleConfirm}
                     loading={modalLoading}
-                    disabled={isAddModal ? !hasCreateApi : isUpdateModal ? !hasUpdateApi : false}
+                    disabled={(isAddModal || isAddBasedModal) ? !hasCreateApi : isUpdateModal ? !hasUpdateApi : false}
                 >
-                    {isAddModal ? "Добавить" : isUpdateModal ? "Изменить" : "Сохранить"}
+                    {(isAddModal || isAddBasedModal) ? "Добавить" : isUpdateModal ? "Изменить" : "Сохранить"}
                 </Button>
             </>
         ) : isFilterModal ? (

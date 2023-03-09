@@ -43,6 +43,10 @@ export interface DataFetchContextType {
     setGlobalDependField: React.Dispatch<React.SetStateAction<string>>;
 
     requestController: CancelTokenSource | undefined;
+
+    columnWidthRefreshTrigger: number;
+
+    hasGetApi: boolean;
 }
 
 const DataFetchContext = createContext<DataFetchContextType>({} as DataFetchContextType);

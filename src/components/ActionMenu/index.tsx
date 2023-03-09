@@ -42,7 +42,7 @@ const ActionMenu = ({
             >
                 {actionMenuOptions.map((option) => (
                     <MenuItem key={option.text} onClick={handleClose(option.value)}>
-                        <Aligner style={{ justifyContent: "flex-start" }} gutter={12}>
+                        <Aligner style={{ justifyContent: "flex-start" }} className={style.actionMenuItem} gutter={12}>
                             <option.Icon style={{ color: option.color }} />
                             {option.text}
                         </Aligner>

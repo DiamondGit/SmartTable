@@ -35,13 +35,14 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
     const [fetchResultDataIndex, setFetchResultDataIndex] = useState("");
     const [globalDependField, setGlobalDependField] = useState("");
 
+    const [hasGetApi, setHasGetApi] = useState(true);
+
+    const [columnWidthRefreshTrigger, setColumnWidthRefreshTrigger] = useState(Date.now());
+
     const defaultPageSizeOptions = [10, 20, 50, 100];
 
     const getData = (params: { [key: string]: any }) => {
         requestController?.cancel();
-
-        setDataLoading(true);
-        setDataError(false);
 
         const {
             currentPage = 1,
@@ -59,6 +60,9 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
 
         const cancelSource = axios.CancelToken.source();
         if (dataGetApi) {
+            setHasGetApi(true);
+            setDataLoading(true);
+            setDataError(false);
             requester
                 .get(dataGetApi, {
                     cancelToken: cancelSource.token,
@@ -92,7 +96,12 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
                         setDataError(true);
                         setDataLoading(false);
                     }
+                }).finally(() => {
+                    setColumnWidthRefreshTrigger(Date.now())
                 });
+        } else {
+            setHasGetApi(false);
+            setDataError(true);
         }
 
         requestControllerRef.current = cancelSource;
@@ -157,6 +166,10 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
                 setGlobalDependField,
 
                 requestController,
+
+                columnWidthRefreshTrigger,
+
+                hasGetApi,
             }}
         >
             {children}

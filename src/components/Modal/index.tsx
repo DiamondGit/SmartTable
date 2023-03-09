@@ -95,6 +95,7 @@ const Modal = ({
                 footer: (
                     <div className={style.footer}>
                         {!!leftFooter && <div className={`${style.btnContainer} ${style.left}`}>{leftFooter}</div>}
+                        <div />
                         {!hideRightFooter && (
                             <div className={`${style.btnContainer} ${style.right}`}>
                                 {!!rightFooter ? (
