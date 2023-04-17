@@ -50,41 +50,57 @@
             "dataIndex": "model.modelName",
             "dataType": "TEXT",
             "isRequired": true,
-            "dependField": "regionId",
-            "onDependChange": "FETCH",
             "displayOptionDataIndex": "modelName",
-            "fieldGetApi": "/transports-dimensions/model/as-and-carriages-by-region-id",
-            "paramOnDepend": "regionId",
+            "fieldGetApi": "/transports-dimensions/model/all-enabled",
             "field": {
                 "type": "SELECT",
                 "dataIndex_write": "modelId",
                 "dataIndex_read": "model.id"
-            },
-            "filterField": {
-                "type": "TEXT",
-                "dataIndex_write": "modelName"
             }
         },
         {
-            "title": "Подтип транспорта",
-            "dataIndex": "model.series.seriesName",
+            "title": "Вид транспорта",
+            "dataIndex": "typeTs.transportType",
             "dataType": "TEXT",
-            "displayOptionDataIndex": "seriesName",
-            "fieldGetApi": "/transports-dimensions/series/all-enabled",
-            "filterField": {
+            "isRequired": true,
+            "displayOptionDataIndex": "transportType",
+            "fieldGetApi": "/transports-dimensions/type-ts/all-enabled",
+            "field": {
                 "type": "SELECT",
-                "dataIndex_write": "seriesId"
+                "dataIndex_write": "typeTsId",
+                "dataIndex_read": "typeTs.id"
             }
         },
         {
             "title": "Тип транспорта",
-            "dataIndex": "model.series.subtypeTs.transportSubtype",
+            "dataIndex": "subtypeTs.transportSubtype",
             "dataType": "TEXT",
+            "isRequired": true,
+            "isFilterable": true,
             "displayOptionDataIndex": "transportSubtype",
             "fieldGetApi": "/transports-dimensions/subtype-ts/all-enabled",
+            "field": {
+                "type": "SELECT",
+                "dataIndex_write": "subtypeTsId",
+                "dataIndex_read": "subtypeTs.id"
+            },
             "filterField": {
                 "type": "SELECT",
                 "dataIndex_write": "subTypeId"
+            }
+        },
+        {
+            "title": "Подтип транспорта",
+            "dataIndex": "series.seriesName",
+            "dataType": "TEXT",
+            "isRequired": true,
+            "isFilterable": true,
+            "displayOptionDataIndex": "seriesName",
+            "fieldGetApi": "/transports-dimensions/series/all-enabled",
+            "field": {
+                "type": "SELECT",
+                "dataIndex_write": "seriesId",
+                "dataIndex_read": "series.id"
             }
         },
         {

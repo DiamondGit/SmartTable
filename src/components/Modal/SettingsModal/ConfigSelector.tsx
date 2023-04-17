@@ -8,6 +8,7 @@ import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
 import SettingsContext from "../../../context/SettingsContext";
 import Aligner from "../../Aligner";
+import { CONFIG_DEFAULT_VALUE } from "../../../constants/general";
 
 const ConfigSelector = () => {
     const configContext = useContext(ConfigContext);
@@ -35,7 +36,7 @@ const ConfigSelector = () => {
     };
 
     const handleChange = (event: any) => {
-        if (event === "DEFAULT") {
+        if (event === CONFIG_DEFAULT_VALUE) {
             handleSetDefaultConfig();
         } else {
             const selectedId = parseInt(event);
@@ -54,10 +55,9 @@ const ConfigSelector = () => {
         }
     };
 
-    if (configContext.savedTableConfigs.length === 0) return null;
     return (
         <Aligner style={{ justifyContent: "flex-start", flexWrap: "wrap" }} isVertical gutter={4}>
-            <Typography width={"100%"}>Сохраненные настройки ({configContext.savedTableConfigs.length}, макс. 5):</Typography>
+            <Typography width={"100%"}>Сохраненных настроек: {configContext.savedTableConfigs.length} (макс. 5)</Typography>
             <div
                 style={{
                     width: "100%",
@@ -79,11 +79,11 @@ const ConfigSelector = () => {
                     disabled={!canAdd || (isEditingSavedConfig && !isSavingSettings) || isLoading}
                 />
                 <Select
-                    value={configContext.modalSelectedSavedConfigId || "DEFAULT"}
+                    value={configContext.modalSelectedSavedConfigId || CONFIG_DEFAULT_VALUE}
                     onChange={handleChange}
                     disabled={isSavingSettings || isEditingSavedConfig || isLoading}
                 >
-                    <Select.Option value={"DEFAULT"}>
+                    <Select.Option value={CONFIG_DEFAULT_VALUE}>
                         <em>По умолчанию</em>
                     </Select.Option>
                     {configContext.savedTableConfigs.map((savedTableConfig) => (

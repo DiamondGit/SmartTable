@@ -15,6 +15,8 @@ export const DELETE_OPTION = "Delete";
 
 export const ERR_CANCELED = "ERR_CANCELED";
 
+export const CONFIG_DEFAULT_VALUE = "DEFAULT";
+
 export const PLACEHOLDER = {
     loading: "Загрузка...",
     select: (count: number = 0) => `Выберите, доступно ${count}`,

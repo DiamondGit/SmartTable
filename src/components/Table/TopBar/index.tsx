@@ -4,7 +4,8 @@ import FilterAltIcon from "@mui/icons-material/FilterAlt";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { Skeleton } from "@mui/lab";
-import { IconButton } from "@mui/material";
+import { IconButton, Button as MuiButton } from "@mui/material";
+import { styled } from "@mui/material/styles";
 import { Button, Dropdown, MenuProps, Popconfirm } from "antd";
 import { useContext } from "react";
 import ConfigContext from "../../../context/ConfigContext";
@@ -31,6 +32,15 @@ interface TopBarType {
     openSettingsModal: () => void;
     openFieldModal: (modalType: ModalTypes) => () => void;
 }
+
+const MuiButtonStyled = styled(MuiButton)({
+    width: "48px",
+    borderRadius: "6px",
+    backgroundColor: "#223c60",
+    "&:hover": {
+        backgroundColor: "#192c47",
+    }
+})
 
 const TopBar = ({ computedLoadingConfig, toggleFullscreen, openSettingsModal, openFieldModal }: TopBarType) => {
     const { isDefaultConfigLoading, isDefaultConfigLoadingError } = useContext(StateContext);
@@ -168,13 +178,16 @@ const TopBar = ({ computedLoadingConfig, toggleFullscreen, openSettingsModal, op
                                             placement="top"
                                             disableHoverListener={isDataLoading || isError}
                                         >
-                                            <Button
-                                                type="primary"
+                                            <MuiButtonStyled
+                                                variant="contained"
                                                 disabled={isError || isDataLoading}
                                                 onClick={handleAddData}
-                                                style={{ width: "48px", ...(isDataLoading ? { cursor: "wait" } : {}) }}
-                                                icon={<AddIcon sx={iconStyle} />}
-                                            />
+                                                style={{
+                                                    ...(isDataLoading ? { cursor: "wait" } : {}),
+                                                }}
+                                            >
+                                                <AddIcon sx={iconStyle} />
+                                            </MuiButtonStyled>
                                         </Tooltip>
                                     )}
                                     {configContext.defaultTableConfig.searchable && <SearchInput isError={isError} />}
