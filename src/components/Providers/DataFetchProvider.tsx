@@ -25,6 +25,7 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
     const [isDataLoading, setDataLoading] = useState(false);
     const [isDataError, setDataError] = useState(false);
 
+    const [isConfigFetched, setConfigFetched] = useState(false);
     const [dataGetApi, setDataGetApi] = useState("");
     const [dataCreateApi, setDataCreateApi] = useState("");
     const [dataUpdateApi, setDataUpdateApi] = useState("");
@@ -47,6 +48,7 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
     });
 
     const getData = (params: { [key: string]: any }) => {
+        if (!isConfigFetched) return;
         requestController?.cancel();
 
         const {
@@ -177,6 +179,9 @@ const DataFetchProvider = ({ children }: PaginationProviderType) => {
                 hasGetApi,
 
                 requester,
+
+                isConfigFetched,
+                setConfigFetched,
             }}
         >
             {children}

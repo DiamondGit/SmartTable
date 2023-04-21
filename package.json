@@ -1,5 +1,5 @@
 {
-  "name": "skynet-dynamic-table",
+  "name": "@skynet/dynamic-table",
   "version": "1.0.0",
   "dependencies": {
     "@emotion/react": "^11.10.5",

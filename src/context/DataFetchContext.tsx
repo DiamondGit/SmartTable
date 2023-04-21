@@ -35,20 +35,23 @@ export interface DataFetchContextType {
 
     isSingleData: boolean;
     setSignleData: React.Dispatch<React.SetStateAction<boolean>>;
-
+    
     fetchResultDataIndex: string;
     setFetchResultDataIndex: React.Dispatch<React.SetStateAction<string>>;
     
     globalDependField: string;
     setGlobalDependField: React.Dispatch<React.SetStateAction<string>>;
-
+    
     requestController: CancelTokenSource | undefined;
 
     columnWidthRefreshTrigger: number;
-
+    
     hasGetApi: boolean;
-
+    
     requester: AxiosInstance;
+
+    isConfigFetched: boolean;
+    setConfigFetched: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const DataFetchContext = createContext<DataFetchContextType>({} as DataFetchContextType);

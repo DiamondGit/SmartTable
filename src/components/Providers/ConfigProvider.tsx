@@ -64,6 +64,7 @@ const ConfigProvider = ({ defaultConfigPath, children }: ConfigProviderType) => 
                 setTableConfig(() => defaultConfig);
                 requestSavedConfigs(defaultConfig);
 
+                dataFetchContext.setConfigFetched(true);
                 if (defaultConfig.dataGetApi) {
                     dataFetchContext.setDataGetApi(defaultConfig.dataGetApi);
                     dataFetchContext.getData({});
