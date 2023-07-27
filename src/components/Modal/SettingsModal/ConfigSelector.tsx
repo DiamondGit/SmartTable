@@ -55,6 +55,7 @@ const ConfigSelector = () => {
         }
     };
 
+    if (configContext.savedTableConfigs.length === 0) return null;
     return (
         <Aligner style={{ justifyContent: "flex-start", flexWrap: "wrap" }} isVertical gutter={4}>
             <Typography width={"100%"}>Сохраненных настроек: {configContext.savedTableConfigs.length} (макс. 5)</Typography>
